@@ -1,6 +1,7 @@
 # dotfiles
 - config files
+- uses GNU stow
 
 # Usage
-- uses GNU stow
-- `stow <module name>` to load a module (ex: `stow zsh` inside `dotfile`)
+1) clone the repo
+2) `stow <module name>` to load a module (ex: `stow zsh` inside `dotfiles`)
