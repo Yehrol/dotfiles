@@ -1,0 +1,187 @@
+# This is the CoolerControl configuration file.
+# Comments and most formatting is preserved.
+# Most of this file you can edit by hand, but it is recommended to stop the daemon when doing so.
+# -------------------------------
+
+
+# Unique ID Device List
+# -------------------------------
+# This is a simple UID and device name key-value pair, that is automatically generated at startup
+#  to help humans distinguish which UID belongs to which device in this config file.
+#  Only the device name is given here, complete Device information can be requested from the API.
+#  UIDs are generated sha256 hashes based on specific criteria to help determine device uniqueness.
+# ANY CHANGES WILL BE OVERWRITTEN.
+# Example:
+# 21091c4fb341ceab6236e8c9e905ccc263a4ac08134b036ed415925ba4c1645d = "Nvidia GPU"
+[devices]
+4d5e7310aff29774aff03cb9fc7f9d87ebee8941a723ea491bd4a2da654d95d1 = "AMD Ryzen 7 5800X3D 8-Core Processor"
+30b0270ef7b580c59cf544df0780bb392595f019b122319481527f153f9650a6 = "asusec"
+1ccf99bf00655dab485770e79388b27f86dbf3b2a22dbb5a54ae9d2a80c8d864 = "nvme1"
+f6930b2b063df0f0d8802da442b0f8103ab1e9da3ec31503fb2480d23a6ef97c = "nvme1"
+6f0b2b07c274aa9e4e35a68a61c52f83e76e1c29c07bbda22cf23a68ee524ad0 = "nvme0"
+19e098e312e1b1b39163a343ea22b6ea17f18ec1a803ffe0ce44f5bacd6076ee = "Custom Sensors"
+13d8f4a5be256999d60cb90f5cb7c6418a3f5a70946d2761c2049de37081d0d1 = "amdgpu"
+f226946857a3141b80fefa0bae8de91cdba1c6eedf91d96ea7bef76ce88b4e90 = "ASUS Aura LED Controller"
+eead69d1c2d74cedc72b1eb9c18f86f281dd5a22a10548f38adf4576ef5926f6 = "jc42"
+af15705319fabcd511119d8ff2cb9b663126161237433a62fa92673ff499c313 = "jc42"
+17719df35451fa96ed6af361115a7f270c08866f8653bd04ad1fceb4f9343aab = "jc42"
+00a4da18625f56275c89e2fcd25a83c08c5ad3326452fa7e252fcc8a89c92493 = "nct6798"
+6525474e6a6065d56f5dbf669c59724e065cc2f5aa441dd3f0fa623888fdcee3 = "jc42"
+fb9a73695715e8f47c246fc9c90107d58573d8685f198d032305cf04167f2aaa = "amdgpu"
+
+
+# Legacy690 Option for devices
+# -------------------------------
+# There are 2 Asetek 690LC liquid coolers that have the same device ID.
+#  To tell them apart we need user input to know which cooler we're actually dealing with.
+#  This is an assignment of liquidctl AseTek690LC device UIDs to true/false:
+#   true = Legacy690 Cooler aka NZXT Kraken X40, X60, X31, X41, X51 and X61
+#   false = Modern690 Cooler aka EVGA CLC 120 (CLC12), 240, 280 and 360
+# Example:
+# 21091c4fb341ceab6236e8c9e905ccc263a4ac08134b036ed415925ba4c1645d = true
+[legacy690]
+
+
+# Device Settings
+# -------------------------------
+# This is where CoolerControl will save device settings for the cooresponding device.
+# Settings can be set here also specifically by hand. (restart required for applying)
+# These settings are applied on startup and each is overwritten once a new setting
+# has been applied.
+# Example:
+# [device-settings.4b9cd1bc5fb2921253e6b7dd5b1b011086ea529d915a86b3560c236084452807]
+# pump = { speed_fixed = 30 }
+# logo = { lighting = { mode = "fixed", colors = [[0, 255, 255]] } }
+# ring = { lighting = { mode = "spectrum-wave", backward = true, colors = [] } }
+[device-settings]
+
+[device-settings.13d8f4a5be256999d60cb90f5cb7c6418a3f5a70946d2761c2049de37081d0d1]
+fan1 = { profile_uid = "c41a2572-b9f8-43f7-bd55-e89c69e89db6" }
+
+[device-settings.00a4da18625f56275c89e2fcd25a83c08c5ad3326452fa7e252fcc8a89c92493]
+fan1 = { speed_fixed = 100 }
+fan2 = { profile_uid = "0840dd7f-04cb-4c72-9303-4d78f0e92a55" }
+fan3 = { profile_uid = "0840dd7f-04cb-4c72-9303-4d78f0e92a55" }
+fan4 = { speed_fixed = 30 }
+fan5 = { speed_fixed = 100 }
+fan6 = { speed_fixed = 100 }
+fan7 = { speed_fixed = 100 }
+
+[device-settings.fb9a73695715e8f47c246fc9c90107d58573d8685f198d032305cf04167f2aaa]
+fan1 = { profile_uid = "c41a2572-b9f8-43f7-bd55-e89c69e89db6" }
+
+
+# A list of profiles to be used with each device's settings
+# -------------------------------
+[[profiles]]
+uid = "0"
+name = "Default Profile"
+p_type = "Default"
+function = "0"
+
+[[profiles]]
+uid = "0840dd7f-04cb-4c72-9303-4d78f0e92a55"
+name = "CPU/GPU Max"
+p_type = "Graph"
+speed_profile = [[0.0, 30], [36.7, 30], [56.8, 33], [71.8, 47], [82.7, 74], [90.0, 100], [100.0, 100]]
+function_uid = "0"
+temp_source = { temp_name = "sensor1", device_uid = "19e098e312e1b1b39163a343ea22b6ea17f18ec1a803ffe0ce44f5bacd6076ee" }
+
+[[profiles]]
+uid = "c41a2572-b9f8-43f7-bd55-e89c69e89db6"
+name = "GPU"
+p_type = "Graph"
+speed_profile = [[25.0, 32], [56.0, 32], [74.5, 37], [84.5, 58], [90.0, 100], [100.0, 100]]
+temp_source = { temp_name = "temp2", device_uid = "fb9a73695715e8f47c246fc9c90107d58573d8685f198d032305cf04167f2aaa" }
+function_uid = "0"
+
+# A list of functions to be applied to the various profiles
+# -------------------------------
+[[functions]]
+uid = "0"
+name = "Default Function"
+f_type = "Identity"
+
+
+# Cooler Control Settings
+# -------------------------------
+# This is where CoolerControl specifc general and specifc device settings are set. These device
+# settings differ from the above Device Settings, in that they are applied to CoolerControl,
+# and not on the devices themselves. For ex. settings such as disabling/enabling a particular device.
+[settings]
+
+# whether to apply the saved device settings on daemon startup
+apply_on_boot = true
+
+# Will skip initialization calls for liquidctl devices. ONLY USE if you are doing initialiation manually.
+no_init = false
+
+# Handle dynamic temp sources like cpu and gpu with a moving average rather than immediately up and down.
+handle_dynamic_temps = false
+
+# Startup Delay (seconds) is an integer value between 0 and 10
+startup_delay = 2
+
+# Smoothing level (averaging) for temp and load values of CPU and GPU devices. (0-5)
+# This only affects the returned values from the /status endpoint, not internal values
+smoothing_level = 0
+
+# For ThinkPads, wheather to use the 'full-speed' option when settings the fan to 100%
+# This option drives the fan as fast as it can go, which might exceed hardware limits,
+# so use this level with caution.
+thinkpad_full_speed = false
+
+# There are some devices that are supported both by liquidctl and hwmon drivers. Normally the
+# preference is to use liquidctl as it supports more features such as RGB control. There are
+# some cases where the hwmon driver is preferred though. Note: Care should be taken to blacklist
+# one of the devices to avoid needlessly loading the device IO and avoid concurrency issues.
+# Use at your own risk.
+hide_duplicate_devices = true
+
+[settings.6525474e6a6065d56f5dbf669c59724e065cc2f5aa441dd3f0fa623888fdcee3]
+name = "jc42"
+disable = true
+
+[settings.eead69d1c2d74cedc72b1eb9c18f86f281dd5a22a10548f38adf4576ef5926f6]
+name = "jc42"
+disable = true
+
+[settings.17719df35451fa96ed6af361115a7f270c08866f8653bd04ad1fceb4f9343aab]
+name = "jc42"
+disable = true
+
+[settings.af15705319fabcd511119d8ff2cb9b663126161237433a62fa92673ff499c313]
+name = "jc42"
+disable = true
+
+[settings.f226946857a3141b80fefa0bae8de91cdba1c6eedf91d96ea7bef76ce88b4e90]
+name = "ASUS Aura LED Controller"
+disable = true
+
+[[custom_sensors]]
+id = "sensor1"
+cs_type = "Mix"
+mix_function = "Max"
+
+[[custom_sensors.sources]]
+temp_source = { temp_name = "temp1", device_uid = "4d5e7310aff29774aff03cb9fc7f9d87ebee8941a723ea491bd4a2da654d95d1" }
+weight = 1
+
+[[custom_sensors.sources]]
+temp_source = { temp_name = "temp2", device_uid = "13d8f4a5be256999d60cb90f5cb7c6418a3f5a70946d2761c2049de37081d0d1" }
+weight = 1
+
+# CoolerControl Device settings Example:
+# [settings.4b9cd1bc5fb2921253e6b7dd5b1b011086ea529d915a86b3560c236084452807]
+# disabled = true
+
+# API Address and Port:
+# The daemon by default uses port 11987 and the standard loopback IPv4 and IPv6 addresses.
+# You can set an IPv4, IPv6 or both addresses to listen on. An empty string will disable the address.
+# It is highly recommended to use the default settings unless you have a specific reason to change them
+# and understand the implications. The API is not secure and should not be exposed to a public network.
+# For more information see the project wiki.
+# Example:
+# port = 11987
+# ipv4_address = "127.0.0.1"
+# ipv6_address = "::1"
