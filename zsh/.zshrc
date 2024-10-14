@@ -20,6 +20,8 @@ zinit cdreplay -q
 
 # Oh my posh prompt theme
 eval "$(oh-my-posh init zsh --config $HOME/.config/oh-my-posh/omp.toml)"
+#eval "$(oh-my-posh init zsh --config https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/themes/catppuccin_mocha.omp.json)"
+#eval "$(oh-my-posh init zsh)"
 
 # Keybindings
 bindkey '^p' history-search-backward
@@ -45,8 +47,17 @@ zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 
 # Aliases
-alias ls='ls --color'
-alias ll='ls -alF'
+if [ -f ~/.aliases ]; then
+    . ~/.aliases
+fi
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# NEOVIM
+export PATH="$PATH:/opt/nvim-linux64/bin"
 
 # THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"

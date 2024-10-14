@@ -1,0 +1,8 @@
+alias ls='ls --color'
+alias ll='ls -alF'
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# use instead of pipenv shell on zsh, not activating otherwise
+alias pips='pipenv shell --fancy'

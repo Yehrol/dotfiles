@@ -20,6 +20,14 @@ console_title_template = '{{ .Shell }} in {{ .Folder }}'
       style = 'full'
 
   [[blocks.segments]]
+    type = "python"
+    style = "plain"
+    powerline_symbol = ""
+    background = "transparent"
+    foreground = "#F5C2E7"
+    template = "  {{ .Full }} "
+
+  [[blocks.segments]]
     type = 'git'
     style = 'plain'
     foreground = 'p:grey'
@@ -30,20 +38,6 @@ console_title_template = '{{ .Shell }} in {{ .Folder }}'
       branch_icon = ''
       commit_icon = '@'
       fetch_status = true
-
-[[blocks]]
-  type = 'rprompt'
-  overflow = 'hidden'
-
-  [[blocks.segments]]
-    type = 'executiontime'
-    style = 'plain'
-    foreground = 'yellow'
-    background = 'transparent'
-    template = '{{ .FormattedMs }}'
-
-    [blocks.segments.properties]
-      threshold = 5000
 
 [[blocks]]
   type = 'prompt'
@@ -59,6 +53,20 @@ console_title_template = '{{ .Shell }} in {{ .Folder }}'
     ]
     background = 'transparent'
     template = '❯'
+
+[[blocks]]
+  type = 'rprompt'
+  overflow = 'hidden'
+
+  [[blocks.segments]]
+    type = 'executiontime'
+    style = 'plain'
+    foreground = 'yellow'
+    background = 'transparent'
+    template = '{{ .FormattedMs }}'
+
+    [blocks.segments.properties]
+      threshold = 5000
 
 [transient_prompt]
   foreground_templates = [
