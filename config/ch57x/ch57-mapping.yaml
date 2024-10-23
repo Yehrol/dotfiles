@@ -1,0 +1,18 @@
+orientation: normal
+
+rows: 3
+columns: 4
+knobs: 2
+
+layers:
+  - buttons:
+      - ["prev", "play", "next", "mute"]
+      - ["2", "3", "4", "5"]
+      - ["6", "7", "8", "9"]
+    knobs:
+      - ccw: "volumedown"
+        press: "mute"
+        cw: "volumeup"
+      - ccw: "d"
+        press: "e"
+        cw: "f"
