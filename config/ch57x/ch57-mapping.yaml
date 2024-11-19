@@ -6,7 +6,7 @@ knobs: 2
 
 layers:
   - buttons:
-      - ["f8", "alt-f4", "f10", "f12"]
+      - ["f8", "shift-ctrl-alt-win-k", "f10", "f12"]
       - ["prev", "play", "next", "mute"]
       - ["prev", "play", "next", "mute"]
     knobs:
