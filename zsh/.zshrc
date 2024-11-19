@@ -1,5 +1,9 @@
-# FZF (git install)
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# oh-my-posh
+export PATH=$PATH:$HOME/.local/bin
+
+# FZF
+source <(fzf --zsh)
+#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # ZINIT Setup
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
