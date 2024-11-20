@@ -1,9 +1,17 @@
-# oh-my-posh
-export PATH=$PATH:$HOME/.local/bin
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+
+# keychain
+eval $(keychain --eval ~/.ssh/id_ed25519 ~/.ssh/id_rsa)
 
 # FZF
 source <(fzf --zsh)
-#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh # git installed
 
 # ZINIT Setup
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
