@@ -10,3 +10,12 @@ alias pips='pipenv shell --fancy'
 
 # OpenHue
 alias h='openhue set room Chambre -b'
+
+# KDE
+alias r='systemctl --user restart plasma-plasmashell'
+
+# Arch
+alias y='yay -S'
+alias yr='yay -R'
+alias yaya='yay -S --aur'
+alias yayr='yay -S --repo'
