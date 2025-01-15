@@ -12,7 +12,7 @@ alias pips='pipenv shell --fancy'
 alias h='openhue set room Chambre -b'
 
 # KDE
-alias r='systemctl --user restart plasma-plasmashell'
+alias r='plasmashell --replace && systemctl --user restart plasma-plasmashell'
 
 # Arch
 alias y='yay -S'
