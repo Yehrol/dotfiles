@@ -1,5 +1,6 @@
-# draft for a setup script. Should check if the packages are already installed,
-# the os and add arguments select what to install
+# draft for a setup script.
+# Should check if the packages are already installed, the os and add arguments
+# to select what to install
 
 # Oh My Posh
 curl -s https://ohmyposh.dev/install.sh | bash -s
