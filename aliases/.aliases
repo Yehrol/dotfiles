@@ -18,6 +18,7 @@ alias rr='plasmashell --replace && systemctl --user restart plasma-plasmashell'
 # Arch
 alias y='yay -S'
 alias yr='yay -R'
+alias ys='yay -Ss'
 alias yaya='yay -S --aur'
 alias yayr='yay -S --repo'
 
