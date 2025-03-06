@@ -24,7 +24,6 @@ final_space = true
   [[blocks.segments]]
     template = '  {{ .Full }} '
     foreground = '#F5C2E7'
-    powerline_symbol = ''
     type = 'python'
     style = 'plain'
 

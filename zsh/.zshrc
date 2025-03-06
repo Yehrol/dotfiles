@@ -1,4 +1,7 @@
-# set PATH so it includes user's private bin if it exists
+# ============================================================================ #
+#                                     PATH                                     #
+# ============================================================================ #
+# Used for oh-my-posh
 if [ -d "$HOME/bin" ] ; then
     PATH="$HOME/bin:$PATH"
 fi
@@ -6,10 +9,15 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 
-# FZF
+# ============================================================================ #
+#                                      FZF                                     #
+# ============================================================================ #
 source <(fzf --zsh)
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh # git installed
 
+# ============================================================================ #
+#                                     ZINIT                                    #
+# ============================================================================ #
 # ZINIT Setup
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 [ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
@@ -27,14 +35,20 @@ autoload -Uz compinit && compinit
 
 zinit cdreplay -q
 
-# Oh my posh prompt theme
+# ============================================================================ #
+#                                  OH MY POST                                  #
+# ============================================================================ #
 eval "$(oh-my-posh init zsh --config $HOME/.config/oh-my-posh/omp.toml)"
-#eval "$(oh-my-posh init zsh --config https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/themes/catppuccin_mocha.omp.json)"
-#eval "$(oh-my-posh init zsh)"
 
-# Keybindings
+# ============================================================================ #
+#                                  KEYBINDINGS                                 #
+# ============================================================================ #
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
+
+# ============================================================================ #
+#                              FIXING ZSH KEYCODE                              #
+# ============================================================================ #
 
 # create a zkbd compatible hash;
 # to add other keys to this hash, see: man 5 terminfo
@@ -77,7 +91,9 @@ if (( ${+terminfo[smkx]} && ${+terminfo[rmkx]} )); then
 	add-zle-hook-widget -Uz zle-line-finish zle_application_mode_stop
 fi
 
-# History
+# ============================================================================ #
+#                                    HISTORY                                   #
+# ============================================================================ #
 HISTSIZE=5000
 HISTFILE=~/.zsh_history
 SAVEHIST=$HISTSIZE
@@ -90,33 +106,53 @@ setopt hist_save_no_dups
 setopt hist_ignore_dups
 setopt hist_find_no_dups
 
-# Completion styling
+# ============================================================================ #
+#                              COMPLETION STYLING                              #
+# ============================================================================ #
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 
-# Aliases
+# ============================================================================ #
+#                                    ALIASES                                   #
+# ============================================================================ #
 if [ -f ~/.aliases ]; then
     . ~/.aliases
 fi
 
-# NVM
+# ============================================================================ #
+#                                      KDE                                     #
+# ============================================================================ #
+#export GDK_DEBUG=portals # fix multiple file explorer being used
+
+# ============================================================================ #
+#                                      NVM                                     #
+# ============================================================================ #
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-# NEOVIM
+# ============================================================================ #
+#                                    NEOVIM                                    #
+# ============================================================================ #
 export PATH="$PATH:/opt/nvim-linux64/bin"
 
-# PyEnv
+# ============================================================================ #
+#                                     PYENV                                    #
+# ============================================================================ #
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - zsh)"
 
-# Conda
+# ============================================================================ #
+#                                     CONDA                                    #
+# ============================================================================ #
 [ -f /opt/miniconda3/etc/profile.d/conda.sh ] && source /opt/miniconda3/etc/profile.d/conda.sh
 
+# ============================================================================ #
+#                                    SDKMAN                                    #
+# ============================================================================ #
 # THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"

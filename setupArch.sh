@@ -4,14 +4,18 @@
 
 # Oh My Posh
 curl -s https://ohmyposh.dev/install.sh | bash -s
+oh-my-posh font install JetBrainsMono
 
 # ZSH
 sudo pacman -S zsh
-sudo pacman -S zsh-completions
+#sudo pacman -S zsh-completions # shouldnt be needed
 chsh -s $(which zsh)
 
 # GNU Stow
 sudo pacman -S stow
+
+# FZF
+sudo pacman -S fzf
 
 # wezterm
 # maybe later
