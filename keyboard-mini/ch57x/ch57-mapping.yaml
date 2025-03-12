@@ -1,0 +1,18 @@
+orientation: normal
+
+rows: 3
+columns: 4
+knobs: 2
+
+layers:
+  - buttons:
+      - ["f8", "alt-f4", "f10", "f12"]
+      - ["win-ctrl-alt-1", "win-ctrl-alt-2", "win-ctrl-alt-3", "win-ctrl-alt-4"] # used by openhue cli to control lights
+      - ["prev", "play", "next", "win-ctrl-alt-5"]
+    knobs:
+      - ccw: "volumedown"
+        press: "mute"
+        cw: "volumeup"
+      - ccw: "volumedown"
+        press: "mute"
+        cw: "volumeup"

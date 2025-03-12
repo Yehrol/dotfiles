@@ -12,6 +12,7 @@ fi
 # ============================================================================ #
 #                                      FZF                                     #
 # ============================================================================ #
+# TODO: check if and how it is installed
 source <(fzf --zsh)
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh # git installed
 
@@ -109,8 +110,8 @@ setopt hist_find_no_dups
 # ============================================================================ #
 #                              COMPLETION STYLING                              #
 # ============================================================================ #
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}' # ignore case
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}" # color completion
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 
