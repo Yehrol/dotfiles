@@ -1,8 +1,15 @@
+@import "mocha.css"; 
+
+/* ========================================================================== */
+/*                                   GENERAL                                  */
+/* ========================================================================== */
+
 * {
 	border: none;
-	border-radius: 10px;
+	border-radius: 8px;
 	font-family: "JetbrainsMono Nerd Font" ;
-	font-size: 15px;
+	font-size: 16px;
+	font-weight: bold;
 	min-height: 10px;
 }
 
@@ -10,41 +17,69 @@ window#waybar {
 	background: transparent;
 }
 
-window#waybar.hidden {
+/* window#waybar.hidden {
 	opacity: 0.2;
+} */
+
+/* ========================================================================== */
+/*                              WORKSPACES STUFF                              */
+/* ========================================================================== */
+
+#workspaces button {
+	padding-left: 10pt;
+	padding-right: 10pt;
+	color: #ebdbb2;
+	background: #504945;
 }
 
+#workspaces button.visible {
+	color: #ebdbb2;
+	background: #b16286;
+}
+
+#workspaces button.active {
+	color: #ebdbb2;
+	background: #8ec07c;
+}
+
+#workspaces button.focused {
+	color: #282828;
+	background: #8ec07c;
+}
+
+#workspaces button.urgent {
+	color: #282828;
+	background: #fabd2f;
+}
+
+#workspaces button:hover {
+	background: #282828;
+	color: #ebdbb2;
+}
+
+/* ========================================================================== */
+/*                                OTHER MODULES                               */
+/* ========================================================================== */
+
 #network {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
 	padding-right: 10px;
-	margin-bottom: 0px;
-	border-radius: 10px;
 	transition: none;
 	color: #161320;
 	background: #bd93f9;
 }
 
 #pulseaudio {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
 	padding-right: 10px;
-	margin-bottom: 0px;
-	border-radius: 10px;
 	transition: none;
 	color: #1A1826;
 	background: #FAE3B0;
 }
 
 #battery {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
 	padding-right: 10px;
-	margin-bottom: 0px;
-	border-radius: 10px;
 	transition: none;
 	color: #161320;
 	background: #B5E8E0;
@@ -65,66 +100,41 @@ window#waybar.hidden {
 	animation-direction: alternate;
 }
 
-@keyframes blink {
-	to {
-		background-color: #BF616A;
-		color: #B5E8E0;
-	}
-}
-
 #backlight {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
 	padding-right: 10px;
-	margin-bottom: 0px;
-	border-radius: 10px;
 	transition: none;
 	color: #161320;
 	background: #F8BD96;
 }
+
 #clock {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
 	padding-right: 10px;
-	margin-bottom: 0px;
-	border-radius: 10px;
 	transition: none;
 	color: #161320;
 	background: #ABE9B3;
 }
 
 #memory {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
-	margin-bottom: 0px;
 	padding-right: 10px;
-	border-radius: 10px;
 	transition: none;
 	color: #161320;
 	background: #DDB6F2;
 }
+
 #cpu {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
-	margin-bottom: 0px;
 	padding-right: 10px;
-	border-radius: 10px;
 	transition: none;
 	color: #161320;
 	background: #96CDFB;
 }
 
 #tray {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
-	margin-bottom: 0px;
 	padding-right: 10px;
-	border-radius: 10px;
 	transition: none;
 	color: #B5E8E0;
 	background: #161320;
@@ -132,11 +142,8 @@ window#waybar.hidden {
 
 #custom-launcher {
 	font-size: 24px;
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
 	padding-right: 5px;
-	border-radius: 10px;
 	transition: none;
 	color: #89DCEB;
 	background: #161320;
@@ -144,25 +151,16 @@ window#waybar.hidden {
 
 #custom-power {
 	font-size: 20px;
-	margin-top: 6px;
-	margin-left: 8px;
-	margin-right: 8px;
 	padding-left: 10px;
-	padding-right: 5px;
-	margin-bottom: 0px;
-	border-radius: 10px;
+	padding-right: 3px;
 	transition: none;
 	color: #161320;
 	background: #F28FAD;
 }
 
 #custom-media {
-	margin-top: 6px;
-	margin-left: 8px;
 	padding-left: 10px;
 	padding-right: 10px;
-	margin-bottom: 0px;
-	border-radius: 10px;
 	transition: none;
 	color: #161320;
 	background: #F2CDCD;
