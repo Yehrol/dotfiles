@@ -140,6 +140,14 @@ window#waybar {
 	background: #96CDFB;
 }
 
+#disk {
+	padding-left: 10px;
+	padding-right: 10px;
+	transition: none;
+	color: #161320;
+	background: #F8BD96;
+}
+
 #tray {
 	padding-left: 10px;
 	padding-right: 10px;

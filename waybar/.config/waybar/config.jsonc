@@ -9,6 +9,7 @@
         // "custom/launcher",
         "cpu",
         "memory",
+        "disk",
         "tray"
         // "hyprland/window"
     ],
@@ -75,6 +76,10 @@
     },
     "memory": {
         "format": "{}% "
+    },
+    "disk": {
+        "format": "{free} \udb80\udeca",
+        "unit": "GB"
     },
     "temperature": {
         // "thermal-zone": 2,

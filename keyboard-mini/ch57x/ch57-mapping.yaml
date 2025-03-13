@@ -6,13 +6,13 @@ knobs: 2
 
 layers:
   - buttons:
-      - ["f8", "alt-f4", "f10", "f12"]
-      - ["win-ctrl-alt-1", "win-ctrl-alt-2", "win-ctrl-alt-3", "win-ctrl-alt-4"] # used by openhue cli to control lights
-      - ["prev", "play", "next", "win-ctrl-alt-5"]
+      - ["win-ctrl-alt-1", "win-ctrl-alt-2", "win-ctrl-alt-3", "win-ctrl-alt-4"]
+      - ["win-ctrl-alt-5", "win-ctrl-alt-6", "win-ctrl-alt-7", "win-ctrl-alt-8"]
+      - ["prev", "play", "next", "win-ctrl-alt-9"]
     knobs:
-      - ccw: "volumedown"
-        press: "mute"
-        cw: "volumeup"
+      - ccw: "ctrl-wheelup"
+        press: "ctrl-0"
+        cw: "ctrl-wheeldown"
       - ccw: "volumedown"
         press: "mute"
         cw: "volumeup"
