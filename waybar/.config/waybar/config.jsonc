@@ -7,9 +7,9 @@
     "margin-right": 5,
     "modules-left": [
         // "custom/launcher",
+        "disk",
         "cpu",
         "memory",
-        "disk",
         "tray"
         // "hyprland/window"
     ],

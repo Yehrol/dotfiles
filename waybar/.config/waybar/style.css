@@ -30,7 +30,7 @@ window#waybar {
 	padding-right: 20px;
 	color: #B5E8E0;
 	background: transparent;
-	border-radius: 2px;
+	border-radius: 4px;
 }
 
 #workspaces button.occupied {
