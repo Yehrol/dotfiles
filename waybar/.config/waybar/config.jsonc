@@ -36,15 +36,6 @@
         "all-outputs": true,
         "warp-on-scroll": false,
         "format": "{name}"
-        // "format-icons": {
-        //     // "1": "",
-        //     // "2": "",
-        //     // "3": "",
-        //     // "4": "",
-        //     // "5": "",
-        //     "active": "",
-        //     "default": ""
-        // }
     },
     "idle_inhibitor": {
         "format": "{icon}",
@@ -59,7 +50,7 @@
     },
     "clock": {
         "timezone": "Europe/Zurich",
-        "format": "{:%H:%M   %d/%m/%Y}",
+        "format": "{:%H:%M   %d/%m/%Y \uf133}",
         "tooltip-format": "<tt><big>{calendar}</big></tt>",
         "calendar": {
             "mode"          : "month",
