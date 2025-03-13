@@ -1,60 +1,68 @@
-@import "mocha.css"; 
-
 /* ========================================================================== */
 /*                                   GENERAL                                  */
 /* ========================================================================== */
 
 * {
 	border: none;
-	border-radius: 8px;
+	border-radius: 4px;
 	font-family: "JetbrainsMono Nerd Font" ;
 	font-size: 16px;
 	font-weight: bold;
-	min-height: 10px;
+	min-height: 25px;
 }
 
 window#waybar {
 	background: transparent;
 }
 
-/* window#waybar.hidden {
-	opacity: 0.2;
-} */
-
 /* ========================================================================== */
 /*                              WORKSPACES STUFF                              */
 /* ========================================================================== */
 
+#workspaces {
+	transition: none;
+	background: #161320;
+}
+
 #workspaces button {
-	padding-left: 10pt;
-	padding-right: 10pt;
-	color: #ebdbb2;
-	background: #504945;
+	transition: none;
+	padding-left: 20px;
+	padding-right: 20px;
+	color: #B5E8E0;
+	background: transparent;
+	border-radius: 2px;
 }
 
-#workspaces button.visible {
-	color: #ebdbb2;
-	background: #b16286;
-}
-
-#workspaces button.active {
-	color: #ebdbb2;
-	background: #8ec07c;
+#workspaces button.occupied {
+	transition: none;
+	color: #161320;
+	background: #F28FAD;
 }
 
 #workspaces button.focused {
-	color: #282828;
-	background: #8ec07c;
+	color: #161320;
+	background: #ABE9B3;
 }
 
-#workspaces button.urgent {
-	color: #282828;
-	background: #fabd2f;
+#workspaces button.visible {
+	color: #161320;
+	background: #b4befe;
+}
+
+#workspaces button.active {
+	color: #161320;
+	background: #ABE9B3;
+	/* border-top: 2px solid #ABE9B3;
+	border-bottom: 2px solid #ABE9B3; */
 }
 
 #workspaces button:hover {
-	background: #282828;
-	color: #ebdbb2;
+	transition: none;
+	color: #E8A2AF;
+}
+
+#workspaces button.focused:hover {
+	color: #E8A2AF;
 }
 
 /* ========================================================================== */
