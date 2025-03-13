@@ -15,16 +15,15 @@
     "modules-right": [
         "tray",
         "custom/media",
-        "mpd", // music player daemon
         // "idle_inhibitor",
         "cpu",
         "memory",
-        "temperature", // TODO: fix
+        "temperature", // FIXME: doesnt work
         "pulseaudio",
         "network",
         "backlight",
         "battery",
-        "clock",
+        "clock", // TODO: add icon
         "custom/power"
     ],
     "custom/launcher":{
@@ -47,32 +46,6 @@
             "default": ""
         }
     },
-    "mpd": {
-        "format": "{stateIcon} {consumeIcon}{randomIcon}{repeatIcon}{singleIcon}{artist} - {album} - {title} ({elapsedTime:%M:%S}/{totalTime:%M:%S}) ⸨{songPosition}|{queueLength}⸩ {volume}% ",
-        "format-disconnected": "Disconnected ",
-        "format-stopped": "{consumeIcon}{randomIcon}{repeatIcon}{singleIcon}Stopped ",
-        "unknown-tag": "N/A",
-        "interval": 5,
-        "consume-icons": {
-            "on": " "
-        },
-        "random-icons": {
-            "off": "<span color=\"#f53c3c\"></span> ",
-            "on": " "
-        },
-        "repeat-icons": {
-            "on": " "
-        },
-        "single-icons": {
-            "on": "1 "
-        },
-        "state-icons": {
-            "paused": "",
-            "playing": ""
-        },
-        "tooltip-format": "MPD (connected)",
-        "tooltip-format-disconnected": "MPD (disconnected)"
-    },
     "idle_inhibitor": {
         "format": "{icon}",
         "format-icons": {
@@ -87,7 +60,6 @@
     "clock": {
         "timezone": "Europe/Zurich",
         "format": "{:%H:%M   %d/%m/%Y}",
-        "format-alt": "{:%A, %B %d, %Y (%R)}  ",
         "tooltip-format": "<tt><big>{calendar}</big></tt>",
         "calendar": {
             "mode"          : "month",
@@ -151,7 +123,7 @@
         "format-disconnected": "Disconnected ⚠"
     },
     "pulseaudio": {
-        "scroll-step": 2,
+        "scroll-step": 5, // FIXME: doesnt work with mini keyboard. probably hyprland settings
         "format": "{icon} {volume}%",
 		"format-muted": "{icon} {volume}%",
         "format-source": "{volume}% ",
@@ -177,7 +149,7 @@
         },
         "escape": true,
         "on-click": "playerctl play-pause",
-        "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null"
+        "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null" // DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
         // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "custom/power": {
@@ -186,10 +158,10 @@
 		"menu": "on-click",
 		"menu-file": "$HOME/.config/waybar/power_menu.xml",
 		"menu-actions": {
-			"shutdown": "shutdown",
+			"shutdown": "shutdown -h now",
 			"reboot": "reboot",
 			"suspend": "systemctl suspend",
-			"hibernate": "systemctl hibernate"
+			"logout": "hyprctl dispatch exit"
 		}
     }
 }
