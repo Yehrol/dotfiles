@@ -119,7 +119,7 @@
         "format-disconnected": "Disconnected ⚠"
     },
     "pulseaudio": {
-        "scroll-step": 5, // FIXME: doesnt work with mini keyboard. probably hyprland settings
+        "scroll-step": 2,
         "format": "{icon} {volume}%",
 		"format-muted": "{icon} {volume}%",
         "format-source": "{volume}% ",
