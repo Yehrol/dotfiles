@@ -1,0 +1,23 @@
+(
+    device: (
+        // Normal, Clockwise, CounterClockwise, UpsideDown
+        orientation: Normal,
+        rows: 3,
+        cols: 4,
+        knobs: 2,
+    ),
+    layers: [
+        // layer 1
+        (
+            buttons: [
+                [(delay: 0, mapping: "win-ctrl-alt-1"), (delay: 0, mapping:"win-ctrl-alt-2"), (delay: 0, mapping: "win-ctrl-alt-3"), (delay: 0, mapping: "win-ctrl-alt-4")],
+                [(delay: 0, mapping: "win-ctrl-alt-5"), (delay: 0, mapping:"win-ctrl-alt-6"), (delay: 0, mapping: "win-ctrl-alt-7"), (delay: 0, mapping: "win-ctrl-alt-8")],
+                [(delay: 0, mapping: "prev"), (delay: 0, mapping:"play"), (delay: 0, mapping: "next"), (delay: 0, mapping: "win-ctrl-alt-9")],
+            ],
+            knobs: [
+                (ccw: (delay: 0, mapping: "ctrl-wheeldown"), press: (delay: 0, mapping: "ctrl-0"), cw: (delay: 0, mapping: "ctrl-wheelup")),
+                (ccw: (delay: 0, mapping: "volumedown"), press: (delay: 0, mapping: "mute"), cw: (delay: 0, mapping: "volumeup")),
+            ],
+        ),
+    ],
+)
