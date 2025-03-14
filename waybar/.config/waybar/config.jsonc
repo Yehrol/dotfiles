@@ -6,7 +6,7 @@
     "margin-left": 5,
     "margin-right": 5,
     "modules-left": [
-        // "custom/launcher",
+        "custom/launcher",
         "disk",
         "cpu",
         "memory",

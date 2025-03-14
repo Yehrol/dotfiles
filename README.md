@@ -14,9 +14,9 @@
 
 ## Kernel config
 
-- add this to GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub `amdgpu.ppfeaturemask=0xffffffff split_lock_detect=off`
-  - allow to control amd gpu fan and disable split lock detection
+- to control amd gpu fan : add `amdgpu.ppfeaturemask=0xffffffff` to GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub
+- to disable split lock detection : add `split_lock_detect=off` to GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub
 
 ## Hyprland specific
 
-- install xorg-xhost and hyprpolkitagent (at least for timeshit to work)
+- install xorg-xhost and hyprpolkitagent for process that need privilege (ex: timeshift)
