@@ -1,20 +1,32 @@
 # ============================================================================ #
 #                                     PATH                                     #
 # ============================================================================ #
+# Add bin and local bin to path
 # Used for oh-my-posh
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
+for dir in "$HOME/bin" "$HOME/.local/bin"; do
+	[ -d "$dir" ] && PATH="$dir:$PATH"
+done
 
 # ============================================================================ #
-#                                      FZF                                     #
+#                                    HISTORY                                   #
 # ============================================================================ #
-# TODO: check if and how it is installed
-source <(fzf --zsh)
-#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh # git installed
+HISTSIZE=5000
+HISTFILE=~/.zsh_history
+SAVEHIST=$HISTSIZE
+HISTDUP=erase
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+# ============================================================================ #
+#                                      ZSH                                     #
+# ============================================================================ #
+# Load completions
+autoload -Uz compinit && compinit
 
 # ============================================================================ #
 #                                     ZINIT                                    #
@@ -30,22 +42,19 @@ zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
 zinit light Aloxaf/fzf-tab
-
-# Load completions
-autoload -Uz compinit && compinit
-
 zinit cdreplay -q
 
 # ============================================================================ #
-#                                  OH MY POST                                  #
+#                                      FZF                                     #
 # ============================================================================ #
-eval "$(oh-my-posh init zsh --config $HOME/.config/oh-my-posh/omp.toml)"
+# TODO: check if and how it is installed
+source <(fzf --zsh)
+#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh # git installed
 
 # ============================================================================ #
-#                                  KEYBINDINGS                                 #
+#                                  OH MY POSH                                  #
 # ============================================================================ #
-bindkey '^p' history-search-backward
-bindkey '^n' history-search-forward
+eval "$(oh-my-posh init zsh --config $HOME/.config/oh-my-posh/omp.toml)"
 
 # ============================================================================ #
 #                              FIXING ZSH KEYCODE                              #
@@ -93,21 +102,6 @@ if (( ${+terminfo[smkx]} && ${+terminfo[rmkx]} )); then
 fi
 
 # ============================================================================ #
-#                                    HISTORY                                   #
-# ============================================================================ #
-HISTSIZE=5000
-HISTFILE=~/.zsh_history
-SAVEHIST=$HISTSIZE
-HISTDUP=erase
-setopt appendhistory
-setopt sharehistory
-setopt hist_ignore_space
-setopt hist_ignore_all_dups
-setopt hist_save_no_dups
-setopt hist_ignore_dups
-setopt hist_find_no_dups
-
-# ============================================================================ #
 #                              COMPLETION STYLING                              #
 # ============================================================================ #
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}' # ignore case
@@ -118,9 +112,7 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 # ============================================================================ #
 #                                    ALIASES                                   #
 # ============================================================================ #
-if [ -f ~/.aliases ]; then
-    . ~/.aliases
-fi
+[ -f ~/.aliases ] && source ~/.aliases
 
 # ============================================================================ #
 #                                      KDE                                     #
@@ -131,15 +123,15 @@ fi
 #                                      NVM                                     #
 # ============================================================================ #
 # TODO: check if installed
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# export NVM_DIR="$HOME/.nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # ============================================================================ #
 #                                    NEOVIM                                    #
 # ============================================================================ #
 # TODO: check if installed
-export PATH="$PATH:/opt/nvim-linux64/bin"
+# export PATH="$PATH:/opt/nvim-linux64/bin"
 
 # ============================================================================ #
 #                                     PYENV                                    #
@@ -153,7 +145,7 @@ export PATH="$PATH:/opt/nvim-linux64/bin"
 #                                     CONDA                                    #
 # ============================================================================ #
 # TODO: check if installed
-[ -f /opt/miniconda3/etc/profile.d/conda.sh ] && source /opt/miniconda3/etc/profile.d/conda.sh
+# [ -f /opt/miniconda3/etc/profile.d/conda.sh ] && source /opt/miniconda3/etc/profile.d/conda.sh
 
 # ============================================================================ #
 #                                    SDKMAN                                    #
