@@ -15,7 +15,7 @@ alias h='openhue set room Chambre -b'
 alias r='systemctl --user restart plasma-plasmashell'
 alias rr='plasmashell --replace && systemctl --user restart plasma-plasmashell'
 
-# Arch
+# Yay
 alias y='yay -S'
 alias yr='yay -R'
 alias ys='yay -Ss'
