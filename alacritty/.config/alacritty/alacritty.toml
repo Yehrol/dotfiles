@@ -10,5 +10,5 @@ general.import = [
 dimensions = { columns = 120, lines = 30 }
 
 [font]
-normal = { family = "JetBrains Mono" }
+normal = { family = "JetBrainsMono Nerd Font" }
 size = 14
