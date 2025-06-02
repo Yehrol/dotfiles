@@ -12,6 +12,10 @@
 
 # Other
 
+## Make
+
+set `MAKEFLAGS="--jobs=$(nproc)"` in /etc/makepkg.conf
+
 ## Kernel config
 
 - to control amd gpu fan : add `amdgpu.ppfeaturemask=0xffffffff` to GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub
