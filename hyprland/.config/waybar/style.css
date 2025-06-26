@@ -1,0 +1,223 @@
+@import 'mocha.css';
+
+/* ========================================================================== */
+/*                                   GENERAL                                  */
+/* ========================================================================== */
+
+* {
+	font-family: "JetbrainsMono Nerd Font";
+	font-size: 16px;
+	font-weight: bold;
+	min-height: 25px;
+	border: none;
+	border-radius: 4px;
+}
+
+window#waybar {
+	background-color: transparent;
+}
+
+/* ========================================================================== */
+/*                              WORKSPACES STUFF                              */
+/* ========================================================================== */
+
+#workspaces {
+	background: @base;
+	margin: 0;
+	margin-left: 3px;
+	padding: 0;
+	border-radius: 6px;
+	border-color: @green;
+	border-width: 1px;
+	border-style: solid;
+}
+
+#workspaces button {
+	color: @green;
+	padding: 0px 10px;
+	margin: 3px;
+	min-width: 20px;
+	border: none;
+}
+
+#workspaces button.empty {
+	color: @crust;
+	background: @base;
+}
+
+#workspaces button.occupied {
+	color: @base;
+	background: @red;
+}
+
+#workspaces button.focused {
+	color: @base;
+	background: @green;
+}
+
+#workspaces button.visible {
+	color: @base;
+	background: @lavender;
+}
+
+#workspaces button.active {
+	color: @base;
+	background: @green;
+}
+
+#workspaces button:hover {
+	color: @red;
+	transition: none;
+}
+
+#workspaces button.focused:hover {
+	color: @red;
+	transition: none;
+}
+
+/* ========================================================================== */
+/*                                OTHER MODULES                               */
+/* ========================================================================== */
+
+#cpu {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @flamingo;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @flamingo;
+}
+
+#memory {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @lavender;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @lavender;
+}
+
+#disk {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @peach;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @peach;
+}
+
+#tray {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @sky;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @sky;
+}
+
+#window {
+	padding-left: 10px;
+	padding-right: 10px;
+	background-color: @base;
+	color: @maroon;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @maroon;
+}
+
+#custom-media {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @peach;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @peach;
+}
+
+#network {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @cerise;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @cerise;
+}
+
+#pulseaudio {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @green;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @green;
+}
+
+#battery {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @green;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @green;
+}
+
+#battery.charging,
+#battery.plugged {
+	color: @green;
+	background-color: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @green;
+}
+
+#battery.critical:not(.charging) {
+	color: @green;
+	background-color: @base;
+	animation-name: blink;
+	animation-duration: 0.5s;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @green;
+}
+
+#backlight {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @peach;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @peach;
+}
+
+#clock {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @lavender;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @lavender;
+}
+
+#custom-power {
+	font-size: 20px;
+	padding-left: 10px;
+	padding-right: 3px;
+	color: @maroon;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @maroon;
+}

@@ -1,32 +1,43 @@
 // -*- mode: jsonc -*-
+// TODO: add an indicator that a workspace contains windows
 {
     "layer": "top",
     "spacing": 6,
     "margin-top": 5,
-    "margin-left": 5,
-    "margin-right": 5,
+    "margin-left": 10,
+    "margin-right": 10,
+    "margin-bottom": 5,
     "modules-left": [
-        "custom/launcher",
-        "disk",
+        // "custom/launcher",
+        // "disk",
         "cpu",
         "memory",
-        "tray"
-        // "hyprland/window"
+        "tray",
+        "hyprland/window"
     ],
     "modules-center": [
         "hyprland/workspaces"
     ],
     "modules-right": [
-        "custom/media",
+        "custom/media", // TODO: find a way to detect machine. enable only for desktop
         // "idle_inhibitor",
         // "temperature", // FIXME: doesnt work
+        // "bluetooth", // TODO: add
         "pulseaudio",
         "network",
-        "backlight",
+        // "backlight",
         "battery",
-        "clock", // TODO: add agenda icon
+        "clock",
         "custom/power"
     ],
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 35,
+        "rewrite": {
+            "": "Hyprland"
+        },
+        "separate-outputs": true
+    },
     "custom/launcher":{
         "format": " ",
         "on-click": "rofi -show drun",
@@ -37,6 +48,7 @@
         "disable-scroll": true,
         "warp-on-scroll": false,
         "format": "{name}",
+        // TODO: find a way to detect machine and change accordingly
         "persistent-workspaces": {
             "DP-1": [ 1, 2, 3, 4, 5, 5, 6 ],
             "HDMI-A-1": [ 7, 8 ],
@@ -56,11 +68,12 @@
     },
     "clock": {
         "timezone": "Europe/Zurich",
-        "format": "{:%H:%M   %d/%m/%Y \uf133}",
+        "format": "{:%H:%M • %d/%m/%Y}",
         "tooltip-format": "<tt><big>{calendar}</big></tt>",
         "calendar": {
             "mode"          : "month",
             "on-scroll"     : 1,
+            "mode-mon-col"  : 3,
             "format": {
                 "months":     "<span color='#ffead3'><b>{}</b></span>",
                 "days":       "<span color='#ecc6d9'><b>{}</b></span>",
@@ -77,10 +90,11 @@
     },
     "cpu": {
         "format": "{usage}% ",
-        "tooltip": false
+        "interval": 1
     },
     "memory": {
-        "format": "{}% "
+        "format": "{}% \uf538",
+        "interval": 1
     },
     "disk": {
         "format": "{free} \udb80\udeca",
@@ -117,16 +131,20 @@
     },
     "network": {
         // "interface": "wlp2*", // (Optional) To force the use of this interface
-		"tooltip": false,
+		// "tooltip": true,
         // "tooltip-format": "{ifname} via {gwaddr} ",
 		"format-wifi": "  {essid}",
 		"format-ethernet": "",
-        "format-disconnected": "Disconnected ⚠"
+        // "format-wifi": "  {signalStrength}%",
+        // "format-ethernet": "{ifname} ",
+        // "format-linked": "{ifname} (No IP) ",
+        "format-disconnected": " ⚠ ",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}"
     },
     "pulseaudio": {
         "scroll-step": 2,
         "format": "{icon} {volume}%",
-		"format-muted": "{icon} {volume}%",
+        "format-muted": "",
         "format-source": "{volume}% ",
         "format-source-muted": "",
         "format-icons": {
@@ -138,6 +156,11 @@
             "car": "",
             "default": ["", "", ""]
         },
+        // "on-click": "~/.config/hypr/scripts/volume --toggle",
+        // "on-click-right": "pavucontrol",
+        // "on-scroll-up": "~/.config/hypr/scripts/volume --inc",
+        // "on-scroll-down": "~/.config/hypr/scripts/volume --dec",
+        // "smooth-scrolling-threshold": 1
         "on-click": "pavucontrol"
     },
     "custom/media": {
@@ -150,19 +173,34 @@
         },
         "escape": true,
         "on-click": "playerctl play-pause",
-        "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null" // DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
-        // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+        "exec": "$HOME/dotfiles/hyprland/.config/waybar/mediaplayer.py 2> /dev/null" // DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
+        // "exec": "$HOME/hyprland/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "custom/power": {
         "format" : "⏻ ",
 		"tooltip": false,
 		"menu": "on-click",
-		"menu-file": "$HOME/.config/waybar/power_menu.xml",
+		"menu-file": "$HOME/dotfiles/hyprland/.config/waybar/power_menu.xml",
 		"menu-actions": {
 			"shutdown": "shutdown -h now",
 			"reboot": "reboot",
 			"suspend": "systemctl suspend",
 			"logout": "hyprctl dispatch exit"
 		}
+    },
+    "bluetooth": {
+        "format": "{icon}",
+        "format-icons": ["", "󰤾", "󰥀", "󰥄", "󰥈"],
+
+        "tooltip-format-off": "Bluetooth is off",
+        "tooltip-format-on": "Bluetooth is on",
+
+        "format-connected": "{icon} {num_connections}",
+        "format-connected-battery": "{icon} {device_battery_percentage}%",
+
+        "tooltip-format-connected": "{device_enumerate}",
+        "tooltip-format-enumerate-connected": "{device_alias}\t{device_battery_percentage}%",
+
+        "on-click": "blueman-manager"
     }
 }
