@@ -1,0 +1,40 @@
+# https://man.archlinux.org/man/mako.5.en
+
+# Supported values are background, bottom, top, and overlay. Using overlay will cause notifications to be displayed above fullscreen windows, though this may also occur at top depending on your compositor. 
+# layer=overlay
+
+# FIXME: laptop issue ?
+output=DP-1
+
+history=1
+max-history=100
+
+# font=0xProto Nerd Font Propo 14
+
+background-color=#2e3440
+text-color=#FFFFFF
+
+width=500
+height=150
+
+margin=15
+outer-margin=15
+padding=10
+
+border-size=2
+border-color=#512DA8
+border-radius=10
+
+icons=1
+max-icon-size=64
+icon-location=right
+
+default-timeout=6000
+ignore-timeout=0
+
+max-visible=3
+
+anchor=bottom-right
+
+[urgency=high]
+layer=overlay
