@@ -25,3 +25,6 @@ alias yayr='yay -S --repo'
 # Neovim
 alias vim='nvim'
 alias vi='nvim'
+
+# Libreoffice
+alias lc='libreoffice --calc'
