@@ -1,5 +1,4 @@
 // -*- mode: jsonc -*-
-// TODO: add an indicator that a workspace contains windows
 {
     "layer": "top",
     "spacing": 6,
@@ -8,8 +7,8 @@
     "margin-right": 10,
     "margin-bottom": 5,
     "modules-left": [
-        // "custom/launcher",
-        // "disk",
+        "custom/launcher",
+        "disk",
         "cpu",
         "memory",
         "tray",
@@ -19,7 +18,7 @@
         "hyprland/workspaces"
     ],
     "modules-right": [
-        "custom/media", // TODO: find a way to detect machine. enable only for desktop
+        "custom/media", // TODO: find a way to detect machine. enable only for desktop ?
         // "idle_inhibitor",
         // "temperature", // FIXME: doesnt work
         // "bluetooth", // TODO: add
@@ -32,7 +31,7 @@
     ],
     "hyprland/window": {
         "format": "{}",
-        "max-length": 35,
+        "max-length": 35, // TODO: check if enough or too much
         "rewrite": {
             "": "Hyprland"
         },
@@ -40,6 +39,7 @@
     },
     "custom/launcher":{
         "format": " ",
+        "tooltip": false,
         "on-click": "rofi -show drun",
         "on-click-right": "killall rofi"
     },
@@ -98,7 +98,8 @@
     },
     "disk": {
         "format": "{free} \udb80\udeca",
-        "unit": "GB"
+        "unit": "GB",
+        "interval": 30
     },
     "temperature": {
         // "thermal-zone": 2,
@@ -130,14 +131,14 @@
         "format-icons": ["", "", "", "", ""]
     },
     "network": {
-        // "interface": "wlp2*", // (Optional) To force the use of this interface
+        // "interface": "enp10s0", // (Optional) To force the use of this interface
 		// "tooltip": true,
         // "tooltip-format": "{ifname} via {gwaddr} ",
+        "format": "",
 		"format-wifi": "  {essid}",
-		"format-ethernet": "",
-        // "format-wifi": "  {signalStrength}%",
-        // "format-ethernet": "{ifname} ",
-        // "format-linked": "{ifname} (No IP) ",
+		// "format-ethernet": "ethernet",
+		// "format-linked": "linked",
+		// "format-disabled": "disabled",
         "format-disconnected": " ⚠ ",
         "format-alt": "{ifname}: {ipaddr}/{cidr}"
     },
@@ -156,11 +157,6 @@
             "car": "",
             "default": ["", "", ""]
         },
-        // "on-click": "~/.config/hypr/scripts/volume --toggle",
-        // "on-click-right": "pavucontrol",
-        // "on-scroll-up": "~/.config/hypr/scripts/volume --inc",
-        // "on-scroll-down": "~/.config/hypr/scripts/volume --dec",
-        // "smooth-scrolling-threshold": 1
         "on-click": "pavucontrol"
     },
     "custom/media": {
@@ -173,12 +169,13 @@
         },
         "escape": true,
         "on-click": "playerctl play-pause",
-        "exec": "$HOME/dotfiles/hyprland/.config/waybar/mediaplayer.py 2> /dev/null" // DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
+        "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py 2> /dev/null" // DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
         // "exec": "$HOME/hyprland/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "custom/power": {
         "format" : "⏻ ",
 		"tooltip": false,
+        // "on-click": "wlogout" # FIXME: style bugged
 		"menu": "on-click",
 		"menu-file": "$HOME/dotfiles/hyprland/.config/waybar/power_menu.xml",
 		"menu-actions": {
