@@ -3,7 +3,7 @@
 # Supported values are background, bottom, top, and overlay. Using overlay will cause notifications to be displayed above fullscreen windows, though this may also occur at top depending on your compositor. 
 # layer=overlay
 
-# FIXME: laptop issue ?
+# FIXME: potential laptop issue ?
 output=DP-1
 
 history=1
