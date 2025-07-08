@@ -79,6 +79,17 @@ window#waybar {
 /*                                OTHER MODULES                               */
 /* ========================================================================== */
 
+#custom-launcher {
+	padding-left: 10px;
+	padding-right: 5px;
+	/* font-size: 24px; */
+	background: @base;
+	color: @sapphire;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @sapphire;
+}
+
 #cpu {
 	padding-left: 10px;
 	padding-right: 10px;
