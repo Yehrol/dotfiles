@@ -1,0 +1,25 @@
+# https://github.com/dunst-project/dunst/blob/master/docs/dunst.5.pod
+[global]
+monitor = DP-1
+width = (500, 800) # width between 500 and 800
+height = (80, 120)
+origin = top-right
+font = JetbrainsMono Nerd Font 12
+corner_radius = 5
+
+frame_color = "#8aadf4"
+separator_color = frame
+highlight = "#8aadf4"
+
+[urgency_low]
+background = "#24273a"
+foreground = "#cad3f5"
+
+[urgency_normal]
+background = "#24273a"
+foreground = "#cad3f5"
+
+[urgency_critical]
+background = "#24273a"
+foreground = "#cad3f5"
+frame_color = "#f5a97f"
