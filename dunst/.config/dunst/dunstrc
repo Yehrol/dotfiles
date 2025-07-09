@@ -1,12 +1,15 @@
 # https://github.com/dunst-project/dunst/blob/master/docs/dunst.5.pod
 [global]
 monitor = DP-1
-width = (500, 800) # width between 500 and 800
-height = (80, 120)
+width = (500, 600)
+height = (80, 140)
 origin = top-right
 font = JetbrainsMono Nerd Font 12
-corner_radius = 5
+corner_radius = 8
+gap_size = 5
+layer = overlay
 
+# https://github.com/catppuccin/dunst Macchiato
 frame_color = "#8aadf4"
 separator_color = frame
 highlight = "#8aadf4"
