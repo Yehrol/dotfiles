@@ -130,6 +130,21 @@ window#waybar {
 	border-color: @sky;
 }
 
+/* #tray>.passive {
+	color: blue;
+	background: blue;
+}
+
+#tray>.active {
+	color: violet;
+	background: violet;
+}
+
+#tray>.needs-attention {
+	color: red;
+	background: red;
+} */
+
 #window {
 	padding-left: 10px;
 	padding-right: 10px;
@@ -148,6 +163,17 @@ window#waybar {
 	border-width: 1px;
 	border-style: solid;
 	border-color: @peach;
+}
+
+#custom-notification {
+	font-size: 20px;
+	padding-left: 10px;
+	padding-right: 14px;
+	color: @flamingo;
+	background: @base;
+	border-width: 1px;
+	border-style: solid;
+	border-color: @flamingo;
 }
 
 #network {
