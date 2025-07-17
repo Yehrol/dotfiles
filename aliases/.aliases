@@ -22,6 +22,9 @@ alias ys='yay -Ss'
 alias yaya='yay -S --aur'
 alias yayr='yay -S --repo'
 
+# Kitty
+alias s='kitten ssh'
+
 # Neovim
 alias vim='nvim'
 alias vi='nvim'
