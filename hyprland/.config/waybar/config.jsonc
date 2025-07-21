@@ -1,18 +1,15 @@
-// -*- mode: jsonc -*-
 {
     "layer": "top",
-    "spacing": 6,
-    "margin-top": 5,
-    "margin-left": 10,
-    "margin-right": 10,
-    "margin-bottom": 5,
     "modules-left": [
-        "custom/launcher",
+        // "custom/launcher", // FIXME: wont close unless escape
         "disk",
         "cpu",
         "memory",
-        "tray",
-        "hyprland/window"
+        "bluetooth",
+        "network",
+        "tray"
+        // "hyprland/window"
+        // "group/expand"
     ],
     "modules-center": [
         "hyprland/workspaces"
@@ -20,16 +17,25 @@
     "modules-right": [
         "custom/media", // TODO: find a way to detect machine. enable only for desktop ?
         // "idle_inhibitor",
-        // "temperature", // FIXME: doesnt work
-        // "bluetooth", // TODO: add
         "pulseaudio",
-        "network",
-        // "backlight",
-        "battery",
         "clock",
+        "battery",
         "custom/notification",
         "custom/power"
     ],
+    "custom/expand": {
+        "format": "\uf105",
+        "tooltip": false
+    },
+    // "group/expand": {
+    //     "orientation": "horizontal",
+    //     "drawer": {
+    //         "transition-duration": 600,
+    //         "transition-to-left": true,
+    //         "click-to-reveal": true
+    //     },
+    //     "modules": ["custom/expand","tray"]
+    // },
     "hyprland/window": {
         "format": "{}",
         "max-length": 35, // TODO: check if enough or too much
@@ -47,13 +53,28 @@
     "hyprland/workspaces": {
         // "active-only": true,
         "disable-scroll": true,
-        "warp-on-scroll": false,
-        "format": "{name}",
+        "format": "{icon}",
         // TODO: find a way to detect machine and change accordingly
         "persistent-workspaces": {
             "DP-1": [ 1, 2, 3, 4, 5, 5, 6 ],
             "HDMI-A-1": [ 7, 8 ],
             "DP-2": [ 9, 10 ]
+        },
+        // TODO: find a way to detect machine and change accordingly
+        "format-icons": {
+            "1": "\uf489",
+            "2": "\udb80\ude39",
+            "3": "\ue5fe",
+            "4": "\uf121",
+            "5": "\uebb5",
+            "6": "\uebb5",
+            
+            "7": "\udb80\ude39",
+            "8": "\uebb5",
+
+            "9": "\udb81\udcc7",
+            "10": "\udb80\ude39",
+            "default": "\uebb5"
         }
     },
     "idle_inhibitor": {
@@ -64,12 +85,14 @@
         }
     },
     "tray": {
-        "icon-size": 21,
+        "icon-size": 16,
         "spacing": 10
     },
     "clock": {
         "timezone": "Europe/Zurich",
-        "format": "{:%H:%M • %d/%m/%Y}",
+        // "format": "<span color='#BF00FF'>  </span>{:%H:%M} ",
+        "format": "\uf017  {:%H:%M  •  \uef37  %d/%m/%Y}",
+        // "format": "{:%H:%M • %d/%m/%Y}",
         "tooltip-format": "<tt><big>{calendar}</big></tt>",
         "calendar": {
             "mode"          : "month",
@@ -119,7 +142,6 @@
         "exec-if": "which swaync-client",
         "exec": "swaync-client -swb",
         "on-click": "swaync-client -t -sw",
-        "on-click-right": "swaync-client -d -sw",
         "escape": true
     },
     "temperature": {
@@ -154,14 +176,17 @@
     "network": {
         // "interface": "enp10s0", // (Optional) To force the use of this interface
 		// "tooltip": true,
-        // "tooltip-format": "{ifname} via {gwaddr} ",
-        "format": "",
+        "tooltip-format": "{ifname} via {gwaddr} ",
+        "format": "",
 		"format-wifi": "  {essid}",
+        // "format-ethernet":"",
+        // "format-disconnected": "",
 		// "format-ethernet": "ethernet",
 		// "format-linked": "linked",
 		// "format-disabled": "disabled",
-        "format-disconnected": " ⚠ ",
-        "format-alt": "{ifname}: {ipaddr}/{cidr}"
+        // "format-disconnected": " ⚠ ",
+        // "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "on-click": "kitty nmtui" // TODO: find something else
     },
     "pulseaudio": {
         "scroll-step": 2,
@@ -194,12 +219,13 @@
         // "exec": "$HOME/hyprland/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "custom/power": {
-        "format" : "⏻ ",
+        "format" : " ",
 		"tooltip": false,
         // "on-click": "wlogout" # FIXME: style bugged
 		"menu": "on-click",
 		"menu-file": "$HOME/dotfiles/hyprland/.config/waybar/power_menu.xml",
 		"menu-actions": {
+			"lock": "hyprlock",
 			"shutdown": "shutdown -h now",
 			"reboot": "reboot",
 			"suspend": "systemctl suspend",

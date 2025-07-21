@@ -1,4 +1,4 @@
-/* @import url('../../.cache/wal/colors-waybar.css');
+@import url('../../.cache/wal/colors-waybar.css');
 @define-color mpris-album-art-overlay alpha(@background, 0.55);
 @define-color mpris-button-hover alpha(@background, 0.50);
 @define-color text @color15;
@@ -377,4 +377,4 @@ trough slider:hover {
 	padding: 8px;
 	margin: 8px;
 	border-radius: 12px;
-} */
+}

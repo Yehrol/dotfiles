@@ -28,12 +28,12 @@
     "hide-on-action": true,
     "script-fail-notify": true,
     "widgets": [
-        // "mpris",
-        // "title",
-        // "notifications"
-        // "volume",
-        // "backlight",
-        // "buttons-grid"
+        "mpris",
+        "title",
+        "notifications",
+        "volume",
+        "backlight",
+        "buttons-grid"
     ],
     "widget-config": {
         "title": {

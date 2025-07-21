@@ -5,16 +5,19 @@
 /* ========================================================================== */
 
 * {
-	font-family: "JetbrainsMono Nerd Font";
-	font-size: 16px;
+	/* font-family: JetBrainsMonoNerdFont; */
+	font-size: 18px;
 	font-weight: bold;
-	min-height: 25px;
 	border: none;
-	border-radius: 4px;
+	min-height: 30px;
 }
 
 window#waybar {
 	background-color: transparent;
+}
+
+tooltip {
+	background: @crust;
 }
 
 /* ========================================================================== */
@@ -22,239 +25,229 @@ window#waybar {
 /* ========================================================================== */
 
 #workspaces {
-	background: @base;
-	margin: 0;
-	margin-left: 3px;
-	padding: 0;
-	border-radius: 6px;
-	border-color: @green;
-	border-width: 1px;
-	border-style: solid;
+	all: unset;
+	font-size: 50px;
+	padding: 0px 5px;
+	text-shadow: none;
+	color: transparent;
+	font-size: 50px;
 }
 
 #workspaces button {
-	color: @green;
-	padding: 0px 10px;
-	margin: 3px;
-	min-width: 20px;
-	border: none;
+	all: unset;
+	color: black;
+	margin: 0px 3px;
+	padding: 0px 4px 0px 0px;
+	text-shadow: none;
+	background: @sky;
+	border-radius: 50%;
+	min-width: 26px;
 }
 
 #workspaces button.empty {
-	color: @crust;
-	background: @base;
-}
-
-#workspaces button.occupied {
-	color: @base;
-	background: @red;
-}
-
-#workspaces button.focused {
-	color: @base;
-	background: @green;
+	color: white;
+	background: @surface1
 }
 
 #workspaces button.visible {
-	color: @base;
-	background: @lavender;
+	color: black;
+	background: @pink;
 }
 
 #workspaces button.active {
-	color: @base;
-	background: @green;
+	color: black;
+	border: none;
+	padding: 0px 2px;
+	border-radius: 10px;
+	background: @pink;
+	min-width: 60px;
 }
 
 #workspaces button:hover {
-	color: @red;
-	transition: none;
-}
-
-#workspaces button.focused:hover {
-	color: @red;
-	transition: none;
+	color: black;
+	background: @red;
 }
 
 /* ========================================================================== */
-/*                                OTHER MODULES                               */
+/*                                   LAYOUT                                   */
+/* ========================================================================== */
+
+/* ---------------------------------- LEFT ---------------------------------- */
+#disk,
+#pulseaudio,
+#bluetooth {
+	background-color: rgba(15, 27, 53, 0.8);
+	margin-top: 6px;
+	margin-left: 6px;
+	padding: 4px 2px;
+	border-radius: 10px 0 0 10px;
+	border-width: 0px;
+}
+
+/* --------------------------------- MIDDLE --------------------------------- */
+#cpu,
+#custom-notification,
+#clock {
+	background-color: rgba(15, 27, 53, 0.8);
+	margin-top: 6px;
+	padding: 4px 2px;
+	border-width: 0px;
+}
+
+/* ---------------------------------- RIGHT --------------------------------- */
+#memory,
+#network,
+#custom-power {
+	background-color: rgba(15, 27, 53, 0.8);
+	margin-top: 6px;
+	margin-right: 6px;
+	padding: 4px 2px;
+	border-radius: 0 10px 10px 0;
+	border-width: 0px;
+}
+
+/* ----------------------------- SINGLE ELEMENT ----------------------------- */
+#tray,
+#window,
+#custom-media,
+#workspaces {
+	background-color: rgba(15, 27, 53, 0.8);
+	margin-top: 6px;
+	margin-right: 6px;
+	margin-left: 6px;
+	margin-right: 6px;
+	padding: 4px 2px;
+	border-radius: 10px;
+	border-width: 0px;
+}
+
+/* ========================================================================== */
+/*                                  ELEMENTS                                  */
 /* ========================================================================== */
 
 #custom-launcher {
 	padding-left: 10px;
 	padding-right: 5px;
-	/* font-size: 24px; */
-	background: @base;
 	color: @sapphire;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @sapphire;
-}
-
-#cpu {
-	padding-left: 10px;
-	padding-right: 10px;
-	color: @flamingo;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @flamingo;
-}
-
-#memory {
-	padding-left: 10px;
-	padding-right: 10px;
-	color: @lavender;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @lavender;
 }
 
 #disk {
 	padding-left: 10px;
 	padding-right: 10px;
-	color: @peach;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @peach;
+	color: @lavender;
+}
+
+#cpu {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @sapphire;
+}
+
+#memory {
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @green;
+}
+
+#bluetooth {
+	font-size: 20px;
+	padding-left: 10px;
+	padding-right: 10px;
+	color: white;
+}
+
+#network {
+	font-size: 18px;
+	padding-left: 10px;
+	padding-right: 18px;
+	color: white;
 }
 
 #tray {
 	padding-left: 10px;
 	padding-right: 10px;
-	color: @sky;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @sky;
 }
-
-/* #tray>.passive {
-	color: blue;
-	background: blue;
-}
-
-#tray>.active {
-	color: violet;
-	background: violet;
-}
-
-#tray>.needs-attention {
-	color: red;
-	background: red;
-} */
 
 #window {
 	padding-left: 10px;
 	padding-right: 10px;
-	background-color: @base;
 	color: @maroon;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @maroon;
 }
 
 #custom-media {
 	padding-left: 10px;
 	padding-right: 10px;
-	color: @peach;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @peach;
-}
-
-#custom-notification {
-	font-size: 20px;
-	padding-left: 10px;
-	padding-right: 14px;
-	color: @flamingo;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @flamingo;
-}
-
-#network {
-	padding-left: 10px;
-	padding-right: 10px;
-	color: @cerise;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @cerise;
+	color: @sky;
 }
 
 #pulseaudio {
 	padding-left: 10px;
 	padding-right: 10px;
 	color: @green;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @green;
 }
 
 #battery {
 	padding-left: 10px;
 	padding-right: 10px;
 	color: @green;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @green;
 }
 
 #battery.charging,
 #battery.plugged {
-	color: @green;
-	background-color: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @green;
+	color: @peach;
 }
 
 #battery.critical:not(.charging) {
-	color: @green;
-	background-color: @base;
+	color: @red;
 	animation-name: blink;
 	animation-duration: 0.5s;
 	animation-timing-function: linear;
 	animation-iteration-count: infinite;
 	animation-direction: alternate;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @green;
 }
 
 #backlight {
 	padding-left: 10px;
 	padding-right: 10px;
 	color: @peach;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @peach;
 }
 
 #clock {
 	padding-left: 10px;
 	padding-right: 10px;
-	color: @lavender;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @lavender;
+	color: @yellow;
+}
+
+#custom-notification {
+	font-size: 20px;
+	padding-left: 10px;
+	padding-right: 10px;
+	color: @peach;
 }
 
 #custom-power {
 	font-size: 20px;
 	padding-left: 10px;
 	padding-right: 3px;
-	color: @maroon;
-	background: @base;
-	border-width: 1px;
-	border-style: solid;
-	border-color: @maroon;
+	color: @red;
+}
+
+/* ========================================================================== */
+/*                                    OTHER                                   */
+/* ========================================================================== */
+
+#custom-expand {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+#network.disconnected,
+#bluetooth.off,
+#bluetooth.disabled {
+	color: @red;
+}
+
+#network,
+#bluetooth.on {
+	color: @sky;
 }
