@@ -17,5 +17,19 @@ sudo pacman -S stow
 # FZF
 sudo pacman -S fzf
 
-# wezterm
-# maybe later
+# TODO: list things
+# kitty
+# hyprland
+# hypridle
+# hyprlock
+# hyprpaper
+# waybar
+# rofi
+# swaync
+# swayosd
+# wlogout
+# mpv
+# thunar
+# thunar_archive_plugin # TODO change
+# file-roller # TODO change
+# ...

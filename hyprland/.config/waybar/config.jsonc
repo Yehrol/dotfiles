@@ -7,8 +7,8 @@
         "memory",
         "bluetooth",
         "network",
-        "tray"
-        // "hyprland/window"
+        "tray",
+        "hyprland/window"
         // "group/expand"
     ],
     "modules-center": [
@@ -221,16 +221,16 @@
     "custom/power": {
         "format" : " ",
 		"tooltip": false,
-        // "on-click": "wlogout" # FIXME: style bugged
-		"menu": "on-click",
-		"menu-file": "$HOME/dotfiles/hyprland/.config/waybar/power_menu.xml",
-		"menu-actions": {
-			"lock": "hyprlock",
-			"shutdown": "shutdown -h now",
-			"reboot": "reboot",
-			"suspend": "systemctl suspend",
-			"logout": "hyprctl dispatch exit"
-		}
+        "on-click": "wlogout" // FIXME: style bugged
+		// "menu": "on-click",
+		// "menu-file": "$HOME/dotfiles/hyprland/.config/waybar/power_menu.xml",
+		// "menu-actions": {
+		// 	"lock": "hyprlock",
+		// 	"shutdown": "shutdown -h now",
+		// 	"reboot": "reboot",
+		// 	"suspend": "systemctl suspend",
+		// 	"logout": "hyprctl dispatch exit"
+		// }
     },
     "bluetooth": {
         "format": "{icon}",
