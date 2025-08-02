@@ -117,7 +117,7 @@
         "interval": 1
     },
     "memory": {
-        "format": "{}% \uf44e",
+        "format": "{}% ",
         "interval": 1
     },
     "disk": {
