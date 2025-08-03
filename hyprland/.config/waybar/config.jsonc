@@ -73,7 +73,8 @@
             "8": "\uebb5",
 
             "9": "\udb81\udcc7",
-            "10": "\udb80\ude39",
+            "10": "\uebb5",
+
             "default": "\uebb5"
         }
     },
@@ -117,7 +118,7 @@
         "interval": 1
     },
     "memory": {
-        "format": "{}% ",
+        "format": "{}%  ",
         "interval": 1
     },
     "disk": {

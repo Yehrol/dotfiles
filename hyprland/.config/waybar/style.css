@@ -5,11 +5,11 @@
 /* ========================================================================== */
 
 * {
-	/* font-family: JetBrainsMonoNerdFont; */
 	font-size: 18px;
 	font-weight: bold;
 	border: none;
 	min-height: 30px;
+	font-family: "JetBrainsMonoNerdFont", "Font Awesome Free 7";
 }
 
 window#waybar {
