@@ -51,12 +51,13 @@
         "on-click-right": "killall rofi"
     },
     "hyprland/workspaces": {
-        // "active-only": true,
-        "disable-scroll": true,
         "format": "{icon}",
+        "disable-scroll": true,
+        // "show-special": true, // FIXME: special workplace is only displayed in one group and never moves
+        "all-outputs": false,
         // TODO: find a way to detect machine and change accordingly
         "persistent-workspaces": {
-            "DP-1": [ 1, 2, 3, 4, 5, 5, 6 ],
+            "DP-1": [ 1, 2, 3, 4, 5, 6 ],
             "HDMI-A-1": [ 7, 8 ],
             "DP-2": [ 9, 10 ]
         },
@@ -92,7 +93,7 @@
     "clock": {
         "timezone": "Europe/Zurich",
         // "format": "<span color='#BF00FF'>  </span>{:%H:%M} ",
-        "format": "\uf017  {:%H:%M  •  \uef37  %d/%m/%Y}",
+        "format": "\uf017 {:%H:%M • \uef37 %d/%m/%Y}",
         // "format": "{:%H:%M • %d/%m/%Y}",
         "tooltip-format": "<tt><big>{calendar}</big></tt>",
         "calendar": {
@@ -180,7 +181,7 @@
 		// "tooltip": true,
         "tooltip-format": "{ifname} via {gwaddr} ",
         "format": "",
-		"format-wifi": "  {essid}",
+		"format-wifi": " {essid}",
         // "format-ethernet":"",
         // "format-disconnected": "",
 		// "format-ethernet": "ethernet",
@@ -188,7 +189,7 @@
 		// "format-disabled": "disabled",
         // "format-disconnected": " ⚠ ",
         // "format-alt": "{ifname}: {ipaddr}/{cidr}",
-        "on-click": "kitty nmtui" // TODO: find something else
+        "on-click": "" // TODO: find something
     },
     "pulseaudio": {
         "scroll-step": 2,
