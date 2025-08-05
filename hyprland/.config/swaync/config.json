@@ -1,6 +1,5 @@
 {
   "$schema": "/etc/xdg/swaync/configSchema.json",
-  "control-center-preferred-output":"DP-1",
   "notification-window-preferred-output":"DP-1",
   "ignore-gtk-theme": true,
   "positionX": "right",
