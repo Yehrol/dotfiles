@@ -81,7 +81,7 @@ tooltip {
 #disk,
 #pulseaudio,
 #bluetooth {
-	background-color: rgba(15, 27, 53, 0.8);
+	background-color: rgba(15, 27, 53, 1);
 	margin-top: 6px;
 	margin-left: 6px;
 	padding: 4px 2px;
@@ -93,7 +93,7 @@ tooltip {
 #cpu,
 #custom-notification,
 #clock {
-	background-color: rgba(15, 27, 53, 0.8);
+	background-color: rgba(15, 27, 53, 1);
 	margin-top: 6px;
 	padding: 4px 2px;
 	border-width: 0px;
@@ -103,7 +103,7 @@ tooltip {
 #memory,
 #network,
 #custom-power {
-	background-color: rgba(15, 27, 53, 0.8);
+	background-color: rgba(15, 27, 53, 1);
 	margin-top: 6px;
 	margin-right: 6px;
 	padding: 4px 2px;
@@ -116,7 +116,7 @@ tooltip {
 #window,
 #custom-media,
 #workspaces {
-	background-color: rgba(15, 27, 53, 0.8);
+	background-color: rgba(15, 27, 53, 1);
 	margin-top: 6px;
 	margin-right: 6px;
 	margin-left: 6px;
