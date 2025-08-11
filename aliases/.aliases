@@ -25,3 +25,6 @@ alias nv='nvim'
 
 # Libreoffice
 alias lc='libreoffice --calc'
+
+# Swappy
+alias sw='grim -g "$(slurp)" - | swappy -f -'
