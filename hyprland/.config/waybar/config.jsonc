@@ -5,11 +5,8 @@
         "disk",
         "cpu",
         "memory",
-        "bluetooth",
-        "network",
-        "tray",
+        "group/group-tray",
         "hyprland/window"
-        // "group/expand"
     ],
     "modules-center": [
         "hyprland/workspaces"
@@ -17,25 +14,30 @@
     "modules-right": [
         "custom/media", // TODO: find a way to detect machine. enable only for desktop ?
         // "idle_inhibitor",
+        "bluetooth",
+        "network",
         "pulseaudio",
         "clock",
         "battery",
         "custom/notification",
         "custom/power"
     ],
-    "custom/expand": {
+    "custom/group-tray": {
         "format": "\uf105",
         "tooltip": false
     },
-    // "group/expand": {
-    //     "orientation": "horizontal",
-    //     "drawer": {
-    //         "transition-duration": 600,
-    //         "transition-to-left": true,
-    //         "click-to-reveal": true
-    //     },
-    //     "modules": ["custom/expand","tray"]
-    // },
+    "group/group-tray": { // TODO find a way to make it visible by defaut ? (for desktop)
+        "orientation": "horizontal",
+        "drawer": {
+            "transition-duration": 600,
+            "transition-to-left": true,
+            "click-to-reveal": true
+        },
+        "modules": [
+            "custom/group-tray",
+            "tray"
+        ]
+    },
     "hyprland/window": {
         "format": "{}",
         "max-length": 35, // TODO: check if enough or too much

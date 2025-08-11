@@ -92,6 +92,7 @@ tooltip {
 /* --------------------------------- MIDDLE --------------------------------- */
 #cpu,
 #custom-notification,
+#memory,
 #clock {
 	background-color: rgba(15, 27, 53, 1);
 	margin-top: 6px;
@@ -100,8 +101,9 @@ tooltip {
 }
 
 /* ---------------------------------- RIGHT --------------------------------- */
-#memory,
 #network,
+#group-tray,
+#custom-tray,
 #custom-power {
 	background-color: rgba(15, 27, 53, 1);
 	margin-top: 6px;
@@ -112,7 +114,6 @@ tooltip {
 }
 
 /* ----------------------------- SINGLE ELEMENT ----------------------------- */
-#tray,
 #window,
 #custom-media,
 #workspaces {
@@ -182,7 +183,7 @@ tooltip {
 #custom-media {
 	padding-left: 10px;
 	padding-right: 10px;
-	color: @sky;
+	color: @lavender;
 }
 
 #pulseaudio {
@@ -241,8 +242,7 @@ tooltip {
 /*                                    OTHER                                   */
 /* ========================================================================== */
 
-#custom-expand {
-	padding-left: 10px;
+#custom-group-tray {
 	padding-right: 10px;
 }
 
