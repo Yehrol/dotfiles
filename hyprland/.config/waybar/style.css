@@ -37,7 +37,7 @@ tooltip {
 	all: unset;
 	color: black;
 	margin: 0px 3px;
-	padding: 0px 4px 0px 0px;
+	padding: 0px 2px 0px 2px;
 	text-shadow: none;
 	background: @sky;
 	border-radius: 50%;

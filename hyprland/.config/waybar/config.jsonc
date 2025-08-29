@@ -53,8 +53,9 @@
         "on-click-right": "killall rofi"
     },
     "hyprland/workspaces": {
-        "format": "{icon}",
-        "disable-scroll": true,
+        // "format": "{icon}",
+        "format": "{name}",
+        // "disable-scroll": true,
         // "show-special": true, // FIXME: special workplace is only displayed in one group and never moves
         "all-outputs": false,
         // TODO: find a way to detect machine and change accordingly
@@ -62,24 +63,24 @@
             "DP-1": [ 1, 2, 3, 4, 5, 6 ],
             "HDMI-A-1": [ 7, 8 ],
             "DP-2": [ 9, 10 ]
-        },
-        // TODO: find a way to detect machine and change accordingly
-        "format-icons": {
-            "1": "\uf489",
-            "2": "\udb80\ude39",
-            "3": "\ue5fe",
-            "4": "\uf121",
-            "5": "\uebb5",
-            "6": "\uebb5",
-            
-            "7": "\udb80\ude39",
-            "8": "\uebb5",
-
-            "9": "\udb81\udcc7",
-            "10": "\uebb5",
-
-            "default": "\uebb5"
         }
+        // TODO: find a way to detect machine and change accordingly
+        // "format-icons": {
+        //     "1": "\uf489",
+        //     "2": "\udb80\ude39",
+        //     "3": "\ue5fe",
+        //     "4": "\uf121",
+        //     "5": "\uebb5",
+        //     "6": "\uebb5",
+            
+        //     "7": "\udb80\ude39",
+        //     "8": "\uebb5",
+
+        //     "9": "\udb81\udcc7",
+        //     "10": "\uebb5",
+
+        //     "default": "\uebb5"
+        // }
     },
     "idle_inhibitor": {
         "format": "{icon}",
@@ -220,8 +221,8 @@
         },
         "escape": true,
         "on-click": "playerctl play-pause",
-        "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py 2> /dev/null" // TODO: DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
-        // "exec": "$HOME/hyprland/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+        // "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py 2> /dev/null" // TODO: DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
+        "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "custom/power": {
         "format" : " ",
