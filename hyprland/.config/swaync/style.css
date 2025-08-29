@@ -76,7 +76,7 @@ trough {
   color: #bac2de;
 }
 
-.notification > *:last-child > * {
+.notification>*:last-child>* {
   min-height: 3.4em;
 }
 
@@ -102,7 +102,8 @@ trough {
   box-shadow: inset 0 0 0 1px #45475a;
   margin: 4px;
   padding: 8px;
-  font-size: 0.2rem; /* controls the button size not text size*/
+  font-size: 0.2rem;
+  /* controls the button size not text size*/
 }
 
 .notification .notification-action {
@@ -156,7 +157,7 @@ trough {
   opacity: 0.8;
 }
 
-.control-center .widget-title > label {
+.control-center .widget-title>label {
   color: #cdd6f4;
   font-size: 1.3em;
 }
@@ -197,18 +198,18 @@ scrollbar trough {
   font-size: 1.1rem;
 }
 
-.widget-dnd > switch {
+.widget-dnd>switch {
   font-size: initial;
   border-radius: 8px;
   background: #313244;
   box-shadow: none;
 }
 
-.widget-dnd > switch:checked {
+.widget-dnd>switch:checked {
   background: #89b4fa;
 }
 
-.widget-dnd > switch slider {
+.widget-dnd>switch slider {
   background: #45475a;
   border-radius: 8px;
 }
@@ -250,7 +251,7 @@ scrollbar trough {
 }
 
 .widget-mpris button image {
-  -gtk-icon-size: 1.8rem;
+  -gtk-icon-size: 4rem;
 }
 
 .widget-mpris button:hover {
@@ -265,12 +266,12 @@ scrollbar trough {
   opacity: 0.5;
 }
 
-.widget-menubar > box > .menu-button-bar > button > label {
+.widget-menubar>box>.menu-button-bar>button>label {
   font-size: 3rem;
   padding: 0.5rem 2rem;
 }
 
-.widget-menubar > box > .menu-button-bar > :last-child {
+.widget-menubar>box>.menu-button-bar> :last-child {
   color: #f38ba8;
 }
 
@@ -280,7 +281,7 @@ scrollbar trough {
   background: #313244;
 }
 
-.control-center .widget-label > label {
+.control-center .widget-label>label {
   color: #cdd6f4;
   font-size: 2rem;
 }
@@ -289,7 +290,7 @@ scrollbar trough {
   padding-top: 1rem;
 }
 
-.widget-buttons-grid > flowbox > flowboxchild > button label {
+.widget-buttons-grid>flowbox>flowboxchild>button label {
   font-size: 2.5rem;
 }
 
