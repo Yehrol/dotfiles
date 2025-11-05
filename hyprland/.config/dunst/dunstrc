@@ -1,13 +1,15 @@
 # https://github.com/dunst-project/dunst/blob/master/docs/dunst.5.pod
 [global]
 monitor = DP-1
+layer = overlay
+font = JetbrainsMono Nerd Font 12
+idle_threshold = 0
 width = (500, 600)
 height = (80, 140)
 origin = top-right
-font = JetbrainsMono Nerd Font 12
 corner_radius = 8
 gap_size = 5
-layer = overlay
+timeout = 10
 
 # https://github.com/catppuccin/dunst Macchiato
 frame_color = "#8aadf4"
@@ -26,3 +28,10 @@ foreground = "#cad3f5"
 background = "#24273a"
 foreground = "#cad3f5"
 frame_color = "#f5a97f"
+
+# Specific app timeout
+[Discord]
+timeout = 0
+
+[Vesktop]
+timeout = 0
