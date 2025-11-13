@@ -37,3 +37,11 @@ localectl set-x11-keymap ch
 ## Hyprland specific
 
 - install xorg-xhost and hyprpolkitagent for process that need privilege (ex: timeshift)
+
+## UWSM
+
+```
+systemctl --user enable --now waybar.service
+systemctl --user enable --now hyprpolkitagent.service
+systemctl --user enable --now hyprpaper.service
+```
