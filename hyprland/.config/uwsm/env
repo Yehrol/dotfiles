@@ -1,0 +1,6 @@
+# Toolkit backend
+env = GDK_BACKEND,wayland,x11,*
+env = QT_QPA_PLATFORM,wayland;xcb
+env = SDL_VIDEODRIVER,wayland
+env = CLUTTER_BACKEND,wayland
+env = QT_QPA_PLATFORMTHEME, qt6ct
