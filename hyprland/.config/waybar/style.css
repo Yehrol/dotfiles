@@ -93,6 +93,7 @@ tooltip {
 #cpu,
 #custom-notification,
 #memory,
+#battery,
 #clock {
 	background-color: rgba(15, 27, 53, 1);
 	margin-top: 6px;
