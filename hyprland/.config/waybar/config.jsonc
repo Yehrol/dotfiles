@@ -220,7 +220,7 @@
             "default": "🎜"
         },
         "escape": true,
-        "on-click": "playerctl play-pause",
+        "on-click": "playerctl --player=spotify play-pause",
         // "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py 2> /dev/null" // TODO: DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
         "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
