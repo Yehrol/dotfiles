@@ -12,11 +12,29 @@
 
 # Install
 
-## SDDM keyboard layout
+## SDDM
+
+### keyboard layout
 
 ```
 localectl set-x11-keymap ch
 ```
+
+### theme
+
+- copy the dir `dotfiles/themes/sddm/abstractdark-sddm-theme` to `/usr/share/sddm/themes`
+- edit the file `/etc/sddm.conf` and set to:
+
+```
+[Theme]
+Current=abstractdark-sddm-theme
+```
+
+## Grub
+
+- copy the right dir in `dotfiles/themes/grub` to `/boot/grub/themes` and rename it to `yorha`
+- edit the file `/etc/default/grub` and set `GRUB_THEME="/boot/grub/themes/yorha/theme.txt"`
+- update grub `sudo grub-mkconfig -o /boot/grub/grub.cfg`
 
 ## Hyprland specific
 
@@ -28,6 +46,12 @@ localectl set-x11-keymap ch
 systemctl --user enable --now waybar.service
 systemctl --user enable --now hyprpolkitagent.service
 systemctl --user enable --now hyprpaper.service
+```
+
+## Packages
+
+```
+kwallet # check to change (gnome-keyring is used by forticlient)
 ```
 
 # Other
@@ -60,3 +84,4 @@ set `MAKEFLAGS="--jobs=$(nproc)"` in /etc/makepkg.conf
   - config
   - env
   - zshenv, zshrc
+- auto install/setup script
