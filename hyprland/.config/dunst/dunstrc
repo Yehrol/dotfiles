@@ -9,7 +9,7 @@ height = (80, 140)
 origin = top-right
 corner_radius = 8
 gap_size = 5
-timeout = 10
+timeout = 5
 
 # https://github.com/catppuccin/dunst Macchiato
 frame_color = "#8aadf4"
