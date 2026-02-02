@@ -234,10 +234,6 @@
                 "id": "calendar-month-card"
             },
             {
-                "enabled": true,
-                "id": "timer-card"
-            },
-            {
                 "enabled": false,
                 "id": "weather-card"
             }
@@ -268,12 +264,12 @@
                 "id": "brightness-card"
             },
             {
-                "enabled": false,
-                "id": "media-sysmon-card"
+                "enabled": true,
+                "id": "audio-card"
             },
             {
                 "enabled": false,
-                "id": "audio-card"
+                "id": "media-sysmon-card"
             },
             {
                 "enabled": false,
