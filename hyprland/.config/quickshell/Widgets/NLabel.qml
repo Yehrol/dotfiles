@@ -13,7 +13,10 @@ ColumnLayout {
   property bool showIndicator: false
   property string indicatorTooltip: ""
 
+  opacity: enabled ? 1.0 : 0.6
   spacing: Style.marginXXS
+  visible: root.label != "" || root.description != ""
+
   Layout.fillWidth: true
 
   RowLayout {
@@ -26,6 +29,7 @@ ColumnLayout {
       pointSize: Style.fontSizeL
       font.weight: Style.fontWeightSemiBold
       color: labelColor
+      wrapMode: Text.WordWrap
     }
 
     // Settings indicator
@@ -45,13 +49,12 @@ ColumnLayout {
   }
 
   NText {
+    Layout.fillWidth: true
     text: description
     pointSize: Style.fontSizeS
     color: descriptionColor
     wrapMode: Text.WordWrap
     visible: description !== ""
-    Layout.fillWidth: true
-    // allow HTML like <i>...</i> in labels/descriptions
     textFormat: Text.StyledText
   }
 }

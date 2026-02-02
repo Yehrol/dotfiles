@@ -12,6 +12,8 @@ ColumnLayout {
   property var widgetData: null
   property var widgetMetadata: null
 
+  signal settingsChanged(var settings)
+
   // Local state
   property bool valueHideWhenIdle: widgetData.hideWhenIdle !== undefined ? widgetData.hideWhenIdle : widgetMetadata.hideWhenIdle
   property string valueColorName: widgetData.colorName !== undefined ? widgetData.colorName : widgetMetadata.colorName
@@ -27,46 +29,53 @@ ColumnLayout {
   NTextInput {
     id: widthInput
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.audio-visualizer.width.label")
-    description: I18n.tr("bar.widget-settings.audio-visualizer.width.description")
+    label: I18n.tr("common.width")
+    description: I18n.tr("bar.audio-visualizer.width-description")
     text: widgetData.width || widgetMetadata.width
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
+    onEditingFinished: settingsChanged(saveSettings())
   }
 
   NComboBox {
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.audio-visualizer.color-name.label")
-    description: I18n.tr("bar.widget-settings.audio-visualizer.color-name.description")
+    label: I18n.tr("bar.audio-visualizer.color-name-label")
+    description: I18n.tr("bar.audio-visualizer.color-name-description")
     model: [
       {
         "key": "primary",
-        "name": I18n.tr("options.colors.primary")
+        "name": I18n.tr("colors.primary")
       },
       {
         "key": "secondary",
-        "name": I18n.tr("options.colors.secondary")
+        "name": I18n.tr("colors.secondary")
       },
       {
         "key": "tertiary",
-        "name": I18n.tr("options.colors.tertiary")
+        "name": I18n.tr("colors.tertiary")
       },
       {
         "key": "onSurface",
-        "name": I18n.tr("options.colors.onSurface")
+        "name": I18n.tr("colors.on-surface")
       },
       {
         "key": "error",
-        "name": I18n.tr("options.colors.error")
+        "name": I18n.tr("colors.error")
       }
     ]
     currentKey: root.valueColorName
-    onSelected: key => root.valueColorName = key
+    onSelected: key => {
+                  root.valueColorName = key;
+                  settingsChanged(saveSettings());
+                }
   }
 
   NToggle {
-    label: I18n.tr("bar.widget-settings.audio-visualizer.hide-when-idle.label")
-    description: I18n.tr("bar.widget-settings.audio-visualizer.hide-when-idle.description")
+    label: I18n.tr("bar.audio-visualizer.hide-when-idle-label")
+    description: I18n.tr("bar.audio-visualizer.hide-when-idle-description")
     checked: valueHideWhenIdle
-    onToggled: checked => valueHideWhenIdle = checked
+    onToggled: checked => {
+                 valueHideWhenIdle = checked;
+                 settingsChanged(saveSettings());
+               }
   }
 }

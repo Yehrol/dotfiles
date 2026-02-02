@@ -15,11 +15,40 @@ NBox {
   property var widgetModel: []
   property var availableWidgets: []
   property var availableSections: ["left", "center", "right"]
+  property var sectionLabels: ({}) // Map of sectionId -> display label
+  property var sectionIcons: ({}) // Map of sectionId -> icon name
   property int maxWidgets: -1 // -1 means unlimited
   property bool draggable: true // Enable/disable drag reordering
 
+  // Get display label for a section
+  function getSectionLabel(sectionId) {
+    if (sectionLabels && sectionLabels[sectionId]) {
+      return sectionLabels[sectionId];
+    }
+    return sectionId; // Fallback to section ID
+  }
+
+  // Get icon for a section
+  function getSectionIcon(sectionId) {
+    if (sectionIcons && sectionIcons[sectionId]) {
+      return sectionIcons[sectionId];
+    }
+    return "arrow-right"; // Default fallback icon
+  }
+
   property var widgetRegistry: null
-  property string settingsDialogComponent: "BarWidgetSettingsDialog.qml"
+  property string settingsDialogComponent: "invalid-settings-dialog"
+  property var screen: null // Screen reference for per-screen widget settings
+  property var _activeDialog: null
+
+  Component.onDestruction: {
+    if (_activeDialog && _activeDialog.close) {
+      var dialog = _activeDialog;
+      _activeDialog = null;
+      dialog.close();
+      dialog.destroy();
+    }
+  }
 
   readonly property int gridColumns: 3
   readonly property real miniButtonSize: Style.baseWidgetSize * 0.65
@@ -36,6 +65,7 @@ NBox {
   signal openPluginSettingsRequested(var pluginManifest)
 
   color: Color.mSurface
+  opacity: enabled ? 1.0 : 0.6
   Layout.fillWidth: true
 
   // Calculate width to fit gridColumns widgets with spacing
@@ -81,13 +111,8 @@ NBox {
     return [Color.mPrimary, Color.mOnPrimary];
   }
 
-  // Check if widget has settings (either core widget with allowUserSettings or plugin with settings entry point)
+  // Check if widget has settings (either core widget with metadata or plugin with settings entry point)
   function widgetHasSettings(widgetId) {
-    // Check if it's a core widget with user settings
-    if (root.widgetRegistry && root.widgetRegistry.widgetHasUserSettings(widgetId)) {
-      return true;
-    }
-
     // Check if it's a plugin with settings
     if (root.widgetRegistry && root.widgetRegistry.isPluginWidget(widgetId)) {
       var pluginId = widgetId.replace("plugin:", "");
@@ -95,7 +120,81 @@ NBox {
       return manifest?.entryPoints?.settings !== undefined;
     }
 
+    // Check if it's a core widget with user settings
+    if (root.widgetRegistry && root.widgetRegistry.widgetHasUserSettings(widgetId)) {
+      return true;
+    }
+
     return false;
+  }
+
+  // Open settings for a widget
+  function openWidgetSettings(index, widgetData) {
+    // Check if this is a plugin widget
+    var isPlugin = root.widgetRegistry && root.widgetRegistry.isPluginWidget(widgetData.id);
+
+    if (isPlugin) {
+      // Handle plugin settings - emit signal for parent to handle
+      var pluginId = widgetData.id.replace("plugin:", "");
+      var manifest = PluginRegistry.getPluginManifest(pluginId);
+
+      if (!manifest || !manifest.entryPoints?.settings) {
+        Logger.e("NSectionEditor", "Plugin settings not found for:", pluginId);
+        return;
+      }
+
+      // Emit signal to request opening plugin settings
+      root.openPluginSettingsRequested(manifest);
+    } else {
+      // Handle core widget settings
+      var component = Qt.createComponent(Qt.resolvedUrl(root.settingsDialogComponent));
+
+      function instantiateAndOpen() {
+        if (root._activeDialog) {
+          try {
+            root._activeDialog.close();
+            root._activeDialog.destroy();
+          } catch (e) {}
+          root._activeDialog = null;
+        }
+
+        var dialog = component.createObject(Overlay.overlay, {
+                                              "widgetIndex": index,
+                                              "widgetData": widgetData,
+                                              "widgetId": widgetData.id,
+                                              "sectionId": root.sectionId,
+                                              "screen": root.screen
+                                            });
+
+        if (dialog) {
+          root._activeDialog = dialog;
+          dialog.updateWidgetSettings.connect(root.updateWidgetSettings);
+          dialog.closed.connect(() => {
+                                  if (root._activeDialog === dialog) {
+                                    root._activeDialog = null;
+                                    dialog.destroy();
+                                  }
+                                });
+          dialog.open();
+        } else {
+          Logger.e("NSectionEditor", "Failed to create settings dialog instance");
+        }
+      }
+
+      if (component.status === Component.Ready) {
+        instantiateAndOpen();
+      } else if (component.status === Component.Error) {
+        Logger.e("NSectionEditor", component.errorString());
+      } else {
+        component.statusChanged.connect(function () {
+          if (component.status === Component.Ready) {
+            instantiateAndOpen();
+          } else if (component.status === Component.Error) {
+            Logger.e("NSectionEditor", component.errorString());
+          }
+        });
+      }
+    }
   }
 
   ColumnLayout {
@@ -164,8 +263,8 @@ NBox {
         model: availableWidgets ?? null
         label: ""
         description: ""
-        placeholder: I18n.tr("bar.widget-settings.section-editor.placeholder")
-        searchPlaceholder: I18n.tr("bar.widget-settings.section-editor.search-placeholder")
+        placeholder: I18n.tr("bar.section-editor.placeholder")
+        searchPlaceholder: I18n.tr("bar.section-editor.search-placeholder")
         onSelected: key => comboBox.currentKey = key
         popupHeight: 300 * Style.uiScaleRatio
         minimumWidth: 200 * Style.uiScaleRatio
@@ -250,7 +349,7 @@ NBox {
 
             width: root.calculateWidgetWidth(parent.width)
             height: root.widgetItemHeight
-            radius: Style.radiusL
+            radius: Style.iRadiusL
             color: root.getWidgetColor(modelData)[0]
             border.color: Color.mOutline
             border.width: Style.borderS
@@ -281,38 +380,45 @@ NBox {
               id: contextMenu
               parent: Overlay.overlay
               width: 240 * Style.uiScaleRatio
-              model: [
-                {
-                  "label": I18n.tr("tooltips.move-to-left-section"),
-                  "action": "left",
-                  "icon": "arrow-bar-to-left",
-                  "visible": root.availableSections.includes("left") && root.sectionId !== "left"
-                },
-                {
-                  "label": I18n.tr("tooltips.move-to-center-section"),
-                  "action": "center",
-                  "icon": "layout-columns",
-                  "visible": root.availableSections.includes("center") && root.sectionId !== "center"
-                },
-                {
-                  "label": I18n.tr("tooltips.move-to-right-section"),
-                  "action": "right",
-                  "icon": "arrow-bar-to-right",
-                  "visible": root.availableSections.includes("right") && root.sectionId !== "right"
-                },
-                {
-                  "label": I18n.tr("tooltips.remove-widget"),
-                  "action": "remove",
-                  "icon": "trash",
-                  "visible": true
+              model: {
+                var items = [];
+                // Add move options for each available section (except current)
+                for (var i = 0; i < root.availableSections.length; i++) {
+                  var section = root.availableSections[i];
+                  if (section !== root.sectionId) {
+                    var label = root.getSectionLabel(section);
+                    var displayLabel = '';
+                    if (I18n.hasTranslation("positions." + section)) {
+                      displayLabel = I18n.tr("positions." + section);
+                    } else {
+                      displayLabel = label.charAt(0).toUpperCase() + label.slice(1);
+                    }
+
+                    items.push({
+                                 "label": I18n.tr("tooltips.move-to-section", {
+                                                    "section": displayLabel
+                                                  }),
+                                 "action": section,
+                                 "icon": root.getSectionIcon(section),
+                                 "visible": true
+                               });
+                  }
                 }
-              ]
+                // Add remove option
+                items.push({
+                             "label": I18n.tr("tooltips.remove-widget"),
+                             "action": "remove",
+                             "icon": "trash",
+                             "visible": true
+                           });
+                return items;
+              }
 
               onTriggered: action => {
                              if (action === "remove") {
-                               root.removeWidget(root.sectionId, index);
+                               root.removeWidget(root.sectionId, widgetItem.index);
                              } else {
-                               root.moveWidget(root.sectionId, index, action);
+                               root.moveWidget(root.sectionId, widgetItem.index, action);
                              }
                            }
             }
@@ -385,10 +491,10 @@ NBox {
                 Layout.preferredHeight: parent.height
 
                 Loader {
-                  active: root.widgetHasSettings(modelData.id)
+                  active: root.widgetHasSettings(modelData.id) && root.enabled
                   sourceComponent: NIconButton {
                     icon: "settings"
-                    tooltipText: I18n.tr("tooltips.widget-settings")
+                    tooltipText: I18n.tr("actions.widget-settings")
                     baseSize: miniButtonSize
                     colorBorder: Qt.alpha(Color.mOutline, Style.opacityLight)
                     colorBg: Color.mOnSurface
@@ -396,52 +502,7 @@ NBox {
                     colorBgHover: Qt.alpha(Color.mOnPrimary, Style.opacityLight)
                     colorFgHover: Color.mOnPrimary
                     onClicked: {
-                      // Check if this is a plugin widget
-                      var isPlugin = root.widgetRegistry && root.widgetRegistry.isPluginWidget(modelData.id);
-
-                      if (isPlugin) {
-                        // Handle plugin settings - emit signal for parent to handle
-                        var pluginId = modelData.id.replace("plugin:", "");
-                        var manifest = PluginRegistry.getPluginManifest(pluginId);
-
-                        if (!manifest || !manifest.entryPoints?.settings) {
-                          Logger.e("NSectionEditor", "Plugin settings not found for:", pluginId);
-                          return;
-                        }
-
-                        // Emit signal to request opening plugin settings
-                        root.openPluginSettingsRequested(manifest);
-                      } else {
-                        // Handle core widget settings
-                        var component = Qt.createComponent(Qt.resolvedUrl(root.settingsDialogComponent));
-                        function instantiateAndOpen() {
-                          var dialog = component.createObject(Overlay.overlay, {
-                                                                "widgetIndex": index,
-                                                                "widgetData": modelData,
-                                                                "widgetId": modelData.id,
-                                                                "sectionId": root.sectionId
-                                                              });
-                          if (dialog) {
-                            dialog.updateWidgetSettings.connect(root.updateWidgetSettings);
-                            dialog.open();
-                          } else {
-                            Logger.e("NSectionEditor", "Failed to create settings dialog instance");
-                          }
-                        }
-                        if (component.status === Component.Ready) {
-                          instantiateAndOpen();
-                        } else if (component.status === Component.Error) {
-                          Logger.e("NSectionEditor", component.errorString());
-                        } else {
-                          component.statusChanged.connect(function () {
-                            if (component.status === Component.Ready) {
-                              instantiateAndOpen();
-                            } else if (component.status === Component.Error) {
-                              Logger.e("NSectionEditor", component.errorString());
-                            }
-                          });
-                        }
-                      }
+                      root.openWidgetSettings(index, modelData);
                     }
                   }
                 }
@@ -456,8 +517,8 @@ NBox {
         id: dragGhost
         width: 0
         height: Style.baseWidgetSize * 1.15
-        radius: Style.radiusL
-        color: Color.transparent
+        radius: Style.iRadiusL
+        color: "transparent"
         border.color: Color.mOutline
         border.width: Style.borderS
         opacity: 0.7
@@ -524,7 +585,8 @@ NBox {
         acceptedButtons: Qt.LeftButton
         preventStealing: true // Always prevent stealing to ensure we get all events
         propagateComposedEvents: true // Allow events to propagate when not handled
-        hoverEnabled: true // Always track mouse for drag operations
+        hoverEnabled: potentialDrag || dragStarted // Only track hover during drag operations
+        cursorShape: dragStarted ? Qt.ClosedHandCursor : Qt.ArrowCursor
 
         property point startPos: Qt.point(0, 0)
         property bool dragStarted: false

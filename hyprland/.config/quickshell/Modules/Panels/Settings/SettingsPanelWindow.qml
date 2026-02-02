@@ -11,8 +11,8 @@ FloatingWindow {
   id: root
 
   title: "Noctalia"
-  minimumSize: Qt.size(820 * Style.uiScaleRatio, 910 * Style.uiScaleRatio)
-  implicitWidth: Math.round(820 * Style.uiScaleRatio)
+  minimumSize: Qt.size(840 * Style.uiScaleRatio, 910 * Style.uiScaleRatio)
+  implicitWidth: Math.round(840 * Style.uiScaleRatio)
   implicitHeight: Math.round(910 * Style.uiScaleRatio)
   color: Color.mSurface
 
@@ -28,6 +28,12 @@ FloatingWindow {
     if (visible) {
       settingsContent.requestedTab = SettingsPanelService.requestedTab;
       settingsContent.initialize();
+      if (SettingsPanelService.requestedSubTab >= 0) {
+        const tab = SettingsPanelService.requestedTab;
+        const subTab = SettingsPanelService.requestedSubTab;
+        SettingsPanelService.requestedSubTab = -1;
+        Qt.callLater(() => settingsContent.navigateToTab(tab, subTab));
+      }
       SettingsPanelService.isWindowOpen = true;
     } else {
       SettingsPanelService.isWindowOpen = false;
@@ -63,7 +69,7 @@ FloatingWindow {
   // Main content
   Rectangle {
     anchors.fill: parent
-    color: Color.transparent
+    color: "transparent"
     radius: Style.radiusL
 
     SettingsContent {

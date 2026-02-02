@@ -12,17 +12,17 @@ NIconButton {
 
   property ShellScreen screen
 
-  baseSize: Style.capsuleHeight
+  enabled: Settings.data.wallpaper.enabled
+  baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
-  density: Settings.data.bar.density
   customRadius: Style.radiusL
   icon: "wallpaper-selector"
-  tooltipText: I18n.tr("tooltips.open-wallpaper-selector")
-  tooltipDirection: BarService.getTooltipDirection()
+  tooltipText: I18n.tr("tooltips.wallpaper-selector")
+  tooltipDirection: BarService.getTooltipDirection(screen?.name)
   colorBg: Style.capsuleColor
   colorFg: Color.mOnSurface
-  colorBorder: Color.transparent
-  colorBorderHover: Color.transparent
+  colorBorder: "transparent"
+  colorBorderHover: "transparent"
   border.color: Style.capsuleBorderColor
   border.width: Style.capsuleBorderWidth
 
@@ -31,17 +31,15 @@ NIconButton {
 
     model: [
       {
-        "label": I18n.tr("context-menu.random-wallpaper"),
+        "label": I18n.tr("actions.random-wallpaper"),
         "action": "random-wallpaper",
         "icon": "dice"
       },
     ]
 
     onTriggered: action => {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                   if (popupMenuWindow) {
-                     popupMenuWindow.close();
-                   }
+                   contextMenu.close();
+                   PanelService.closeContextMenu(screen);
 
                    if (action === "random-wallpaper") {
                      WallpaperService.setRandomWallpaper();
@@ -58,10 +56,6 @@ NIconButton {
     }
   }
   onRightClicked: {
-    var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-    if (popupMenuWindow) {
-      popupMenuWindow.showContextMenu(contextMenu);
-      contextMenu.openAtItem(root, screen);
-    }
+    PanelService.showContextMenu(contextMenu, root, screen);
   }
 }

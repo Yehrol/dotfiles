@@ -1,6 +1,7 @@
 {
   "settingsVersion": 0,
   "bar": {
+    "barType": "simple",
     "position": "top",
     "monitors": [],
     "density": "default",
@@ -10,20 +11,22 @@
     "backgroundOpacity": 0.93,
     "useSeparateOpacity": false,
     "floating": false,
-    "marginVertical": 0.25,
-    "marginHorizontal": 0.25,
+    "marginVertical": 4,
+    "marginHorizontal": 4,
+    "frameThickness": 8,
+    "frameRadius": 12,
     "outerCorners": true,
-    "exclusive": true,
+    "hideOnOverview": false,
+    "displayMode": "always_visible",
+    "autoHideDelay": 500,
+    "autoShowDelay": 150,
     "widgets": {
       "left": [
         {
-          "icon": "rocket",
-          "id": "CustomButton",
-          "leftClickExec": "qs -c noctalia-shell ipc call launcher toggle"
+          "id": "Launcher"
         },
         {
-          "id": "Clock",
-          "usePrimaryColor": false
+          "id": "Clock"
         },
         {
           "id": "SystemMonitor"
@@ -41,9 +44,6 @@
         }
       ],
       "right": [
-        {
-          "id": "ScreenRecorder"
-        },
         {
           "id": "Tray"
         },
@@ -63,7 +63,8 @@
           "id": "ControlCenter"
         }
       ]
-    }
+    },
+    "screenOverrides": []
   },
   "general": {
     "avatarImage": "",
@@ -86,7 +87,13 @@
     "shadowOffsetX": 2,
     "shadowOffsetY": 3,
     "language": "",
-    "allowPanelsOnScreenWithoutBar": true
+    "allowPanelsOnScreenWithoutBar": true,
+    "showChangelogOnStartup": true,
+    "telemetryEnabled": false,
+    "enableLockScreenCountdown": true,
+    "lockScreenCountdownDuration": 10000,
+    "autoStartAuth": false,
+    "allowPasswordWithFprintd": false
   },
   "ui": {
     "fontDefault": "",
@@ -99,7 +106,9 @@
     "settingsPanelMode": "attached",
     "wifiDetailsViewMode": "grid",
     "bluetoothDetailsViewMode": "grid",
-    "bluetoothHideUnnamedDevices": false
+    "networkPanelView": "wifi",
+    "bluetoothHideUnnamedDevices": false,
+    "boxBorderEnabled": false
   },
   "location": {
     "name": "Tokyo",
@@ -111,7 +120,9 @@
     "showCalendarEvents": true,
     "showCalendarWeather": true,
     "analogClockInCalendar": false,
-    "firstDayOfWeek": -1
+    "firstDayOfWeek": -1,
+    "hideWeatherTimezone": false,
+    "hideWeatherCityName": false
   },
   "calendar": {
     "cards": [
@@ -125,25 +136,9 @@
       },
       {
         "enabled": true,
-        "id": "timer-card"
-      },
-      {
-        "enabled": true,
         "id": "weather-card"
       }
     ]
-  },
-  "screenRecorder": {
-    "directory": "",
-    "frameRate": 60,
-    "audioCodec": "opus",
-    "videoCodec": "h264",
-    "quality": "very_high",
-    "colorRange": "limited",
-    "showCursor": true,
-    "copyToClipboard": false,
-    "audioSource": "default_output",
-    "videoSource": "portal"
   },
   "wallpaper": {
     "enabled": true,
@@ -151,11 +146,14 @@
     "directory": "",
     "monitorDirectories": [],
     "enableMultiMonitorDirectories": false,
-    "recursiveSearch": false,
+    "showHiddenFiles": false,
+    "viewMode": "single",
     "setWallpaperOnAllMonitors": true,
     "fillMode": "crop",
     "fillColor": "#000000",
-    "randomEnabled": false,
+    "useSolidColor": false,
+    "solidColor": "#1a1a2e",
+    "automationEnabled": false,
     "wallpaperChangeMode": "random",
     "randomIntervalSec": 300,
     "transitionDuration": 1500,
@@ -173,37 +171,48 @@
     "wallhavenApiKey": "",
     "wallhavenResolutionMode": "atleast",
     "wallhavenResolutionWidth": "",
-    "wallhavenResolutionHeight": ""
+    "wallhavenResolutionHeight": "",
+    "sortOrder": "name"
   },
   "appLauncher": {
     "enableClipboardHistory": false,
+    "autoPasteClipboard": false,
     "enableClipPreview": true,
+    "clipboardWrapText": true,
+    "clipboardWatchTextCommand": "wl-paste --type text --watch cliphist store",
+    "clipboardWatchImageCommand": "wl-paste --type image --watch cliphist store",
     "position": "center",
-    "pinnedExecs": [],
+    "pinnedApps": [],
     "useApp2Unit": false,
     "sortByMostUsed": true,
-    "terminalCommand": "xterm -e",
+    "terminalCommand": "alacritty -e",
     "customLaunchPrefixEnabled": false,
     "customLaunchPrefix": "",
     "viewMode": "list",
     "showCategories": true,
-    "iconMode": "tabler"
+    "iconMode": "tabler",
+    "showIconBackground": false,
+    "enableSettingsSearch": true,
+    "enableWindowsSearch": true,
+    "ignoreMouseInput": false,
+    "screenshotAnnotationTool": ""
   },
   "controlCenter": {
     "position": "close_to_bar_button",
+    "diskPath": "/",
     "shortcuts": {
       "left": [
         {
-          "id": "WiFi"
+          "id": "Network"
         },
         {
           "id": "Bluetooth"
         },
         {
-          "id": "ScreenRecorder"
+          "id": "WallpaperSelector"
         },
         {
-          "id": "WallpaperSelector"
+          "id": "NoctaliaPerformance"
         }
       ],
       "right": [
@@ -257,6 +266,8 @@
     "gpuCriticalThreshold": 90,
     "memWarningThreshold": 80,
     "memCriticalThreshold": 90,
+    "swapWarningThreshold": 80,
+    "swapCriticalThreshold": 90,
     "diskWarningThreshold": 80,
     "diskCriticalThreshold": 90,
     "cpuPollingInterval": 3000,
@@ -264,15 +275,17 @@
     "gpuPollingInterval": 3000,
     "enableDgpuMonitoring": false,
     "memPollingInterval": 3000,
-    "diskPollingInterval": 3000,
+    "diskPollingInterval": 30000,
     "networkPollingInterval": 3000,
+    "loadAvgPollingInterval": 3000,
     "useCustomColors": false,
     "warningColor": "",
     "criticalColor": "",
-    "diskPath": "/"
+    "externalMonitor": "resources || missioncenter || jdsystemmonitor || corestats || system-monitoring-center || gnome-system-monitor || plasma-systemmonitor || mate-system-monitor || ukui-system-monitor || deepin-system-monitor || pantheon-system-monitor"
   },
   "dock": {
     "enabled": true,
+    "position": "bottom",
     "displayMode": "auto_hide",
     "backgroundOpacity": 1,
     "floatingRatio": 1,
@@ -287,7 +300,12 @@
     "animationSpeed": 1
   },
   "network": {
-    "wifiEnabled": true
+    "wifiEnabled": true,
+    "bluetoothRssiPollingEnabled": false,
+    "bluetoothRssiPollIntervalMs": 10000,
+    "wifiDetailsViewMode": "grid",
+    "bluetoothDetailsViewMode": "grid",
+    "bluetoothHideUnnamedDevices": false
   },
   "sessionMenu": {
     "enableCountdown": true,
@@ -295,6 +313,7 @@
     "position": "center",
     "showHeader": true,
     "largeButtonsStyle": false,
+    "largeButtonsLayout": "grid",
     "showNumberLabels": true,
     "powerOptions": [
       {
@@ -347,7 +366,8 @@
       "normalSoundFile": "",
       "lowSoundFile": "",
       "excludedApps": "discord,firefox,chrome,chromium,edge"
-    }
+    },
+    "enableMediaToast": false
   },
   "osd": {
     "enabled": true,
@@ -358,19 +378,18 @@
     "enabledTypes": [
       0,
       1,
-      2,
-      4
+      2
     ],
     "monitors": []
   },
   "audio": {
     "volumeStep": 5,
     "volumeOverdrive": false,
-    "cavaFrameRate": 60,
+    "cavaFrameRate": 30,
     "visualizerType": "linear",
     "mprisBlacklist": [],
     "preferredPlayer": "",
-    "externalMixer": "pwvucontrol || pavucontrol"
+    "volumeFeedback": false
   },
   "brightness": {
     "brightnessStep": 5,
@@ -384,35 +403,12 @@
     "schedulingMode": "off",
     "manualSunrise": "06:30",
     "manualSunset": "18:30",
-    "matugenSchemeType": "scheme-fruit-salad",
-    "generateTemplatesForPredefined": true
+    "generationMethod": "tonal-spot",
+    "monitorForColors": ""
   },
   "templates": {
-    "gtk": false,
-    "qt": false,
-    "kcolorscheme": false,
-    "alacritty": false,
-    "kitty": false,
-    "ghostty": false,
-    "foot": false,
-    "wezterm": false,
-    "fuzzel": false,
-    "discord": false,
-    "pywalfox": false,
-    "vicinae": false,
-    "walker": false,
-    "code": false,
-    "spicetify": false,
-    "telegram": false,
-    "cava": false,
-    "yazi": false,
-    "emacs": false,
-    "niri": false,
-    "hyprland": false,
-    "mango": false,
-    "zed": false,
-    "helix": false,
-    "enableUserTemplates": false
+    "activeTemplates": [],
+    "enableUserTheming": false
   },
   "nightLight": {
     "enabled": false,
@@ -430,7 +426,9 @@
     "screenLock": "",
     "screenUnlock": "",
     "performanceModeEnabled": "",
-    "performanceModeDisabled": ""
+    "performanceModeDisabled": "",
+    "startup": "",
+    "session": ""
   },
   "desktopWidgets": {
     "enabled": false,

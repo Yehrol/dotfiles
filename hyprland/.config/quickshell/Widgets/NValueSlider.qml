@@ -20,8 +20,7 @@ ColumnLayout {
   property real customHeightRatio: -1
   property string label: ""
   property string description: ""
-  property bool isSettings: false
-  property var defaultValue: 0
+  property var defaultValue: undefined
 
   // Signals
   signal moved(real value)
@@ -30,23 +29,23 @@ ColumnLayout {
   spacing: Style.marginS
   Layout.fillWidth: true
 
-  readonly property bool isValueChanged: isSettings && (value !== defaultValue)
+  readonly property bool isValueChanged: defaultValue !== undefined && (value !== defaultValue)
   readonly property string indicatorTooltip: {
-    if (!isSettings)
+    if (defaultValue === undefined)
       return "";
     var defaultVal = defaultValue;
     if (typeof defaultVal === "number") {
       // If it's a decimal between 0 and 1, format as percentage
       if (defaultVal > 0 && defaultVal <= 1 && from >= 0 && from < 1) {
-        return I18n.tr("settings.indicator.default-value", {
+        return I18n.tr("panels.indicator.default-value", {
                          "value": Math.floor(defaultVal * 100) + "%"
                        });
       }
-      return I18n.tr("settings.indicator.default-value", {
+      return I18n.tr("panels.indicator.default-value", {
                        "value": String(defaultVal)
                      });
     }
-    return I18n.tr("settings.indicator.default-value", {
+    return I18n.tr("panels.indicator.default-value", {
                      "value": String(defaultVal)
                    });
   }
@@ -55,8 +54,9 @@ ColumnLayout {
     label: root.label
     description: root.description
     visible: root.label !== "" || root.description !== ""
-    showIndicator: root.isSettings && root.isValueChanged
+    showIndicator: root.isValueChanged
     indicatorTooltip: root.indicatorTooltip
+    opacity: root.enabled ? 1.0 : 0.6
     Layout.fillWidth: true
   }
 
@@ -83,6 +83,7 @@ ColumnLayout {
       text: root.text
       pointSize: root.textSize
       family: Settings.data.ui.fontFixed
+      opacity: root.enabled ? 1.0 : 0.6
       Layout.alignment: Qt.AlignVCenter
       Layout.preferredWidth: 45 * Style.uiScaleRatio
       horizontalAlignment: Text.AlignRight

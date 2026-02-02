@@ -27,14 +27,11 @@ Item {
     function toggle() {
       BarService.isVisible = !BarService.isVisible;
     }
-  }
-
-  IpcHandler {
-    target: "screenRecorder"
-    function toggle() {
-      if (ScreenRecorderService.isAvailable) {
-        ScreenRecorderService.toggleRecording();
-      }
+    function hide() {
+      BarService.isVisible = false;
+    }
+    function show() {
+      BarService.isVisible = true;
     }
   }
 
@@ -96,12 +93,26 @@ Item {
     function dismissAll() {
       NotificationService.dismissAllActive();
     }
+
+    function getHistory(): string {
+      return JSON.stringify(NotificationService.getHistorySnapshot(), null, 2);
+    }
+
+    function removeFromHistory(id: string): bool {
+      return NotificationService.removeFromHistory(id);
+    }
   }
 
   IpcHandler {
     target: "idleInhibitor"
     function toggle() {
       return IdleInhibitorService.manualToggle();
+    }
+    function enable() {
+      IdleInhibitorService.addManualInhibitor(null);
+    }
+    function disable() {
+      IdleInhibitorService.removeManualInhibitor();
     }
   }
 
@@ -110,36 +121,121 @@ Item {
     function toggle() {
       root.screenDetector.withCurrentScreen(screen => {
                                               var launcherPanel = PanelService.getPanel("launcherPanel", screen);
-                                              if (!launcherPanel?.isPanelOpen || (launcherPanel?.isPanelOpen && !launcherPanel?.activePlugin))
-                                              launcherPanel?.toggle();
-                                              launcherPanel?.setSearchText("");
+                                              if (!launcherPanel)
+                                              return;
+                                              var searchText = launcherPanel.searchText || "";
+                                              var isInAppMode = !searchText.startsWith(">");
+                                              if (!launcherPanel.isPanelOpen) {
+                                                // Closed -> open in app mode
+                                                launcherPanel.open();
+                                                launcherPanel.setSearchText("");
+                                              } else if (isInAppMode) {
+                                                // Already in app mode -> close
+                                                launcherPanel.close();
+                                              } else {
+                                                // In another mode -> switch to app mode
+                                                launcherPanel.setSearchText("");
+                                              }
                                             });
     }
     function clipboard() {
       root.screenDetector.withCurrentScreen(screen => {
                                               var launcherPanel = PanelService.getPanel("launcherPanel", screen);
-                                              if (!launcherPanel?.isPanelOpen) {
-                                                launcherPanel?.toggle();
+                                              if (!launcherPanel)
+                                              return;
+                                              var searchText = launcherPanel.searchText || "";
+                                              var isInClipMode = searchText.startsWith(">clip");
+                                              if (!launcherPanel.isPanelOpen) {
+                                                // Closed -> open in clipboard mode
+                                                launcherPanel.open();
+                                                launcherPanel.setSearchText(">clip ");
+                                              } else if (isInClipMode) {
+                                                // Already in clipboard mode -> close
+                                                launcherPanel.close();
+                                              } else {
+                                                // In another mode -> switch to clipboard mode
+                                                launcherPanel.setSearchText(">clip ");
                                               }
-                                              launcherPanel?.setSearchText(">clip ");
                                             });
     }
-    function calculator() {
+    function command() {
       root.screenDetector.withCurrentScreen(screen => {
                                               var launcherPanel = PanelService.getPanel("launcherPanel", screen);
-                                              if (!launcherPanel?.isPanelOpen) {
-                                                launcherPanel?.toggle();
+                                              if (!launcherPanel)
+                                              return;
+                                              var searchText = launcherPanel.searchText || "";
+                                              var isInClipMode = searchText.startsWith(">cmd");
+                                              if (!launcherPanel.isPanelOpen) {
+                                                // Closed -> open in clipboard mode
+                                                launcherPanel.open();
+                                                launcherPanel.setSearchText(">cmd ");
+                                              } else if (isInClipMode) {
+                                                // Already in clipboard mode -> close
+                                                launcherPanel.close();
+                                              } else {
+                                                // In another mode -> switch to clipboard mode
+                                                launcherPanel.setSearchText(">cmd ");
                                               }
-                                              launcherPanel?.setSearchText(">calc ");
                                             });
     }
     function emoji() {
       root.screenDetector.withCurrentScreen(screen => {
                                               var launcherPanel = PanelService.getPanel("launcherPanel", screen);
-                                              if (!launcherPanel?.isPanelOpen) {
-                                                launcherPanel?.toggle();
+                                              if (!launcherPanel)
+                                              return;
+                                              var searchText = launcherPanel.searchText || "";
+                                              var isInEmojiMode = searchText.startsWith(">emoji");
+                                              if (!launcherPanel.isPanelOpen) {
+                                                // Closed -> open in emoji mode
+                                                launcherPanel.open();
+                                                launcherPanel.setSearchText(">emoji ");
+                                              } else if (isInEmojiMode) {
+                                                // Already in emoji mode -> close
+                                                launcherPanel.close();
+                                              } else {
+                                                // In another mode -> switch to emoji mode
+                                                launcherPanel.setSearchText(">emoji ");
                                               }
-                                              launcherPanel?.setSearchText(">emoji ");
+                                            });
+    }
+    function windows() {
+      root.screenDetector.withCurrentScreen(screen => {
+                                              var launcherPanel = PanelService.getPanel("launcherPanel", screen);
+                                              if (!launcherPanel)
+                                              return;
+                                              var searchText = launcherPanel.searchText || "";
+                                              var isInWindowsMode = searchText.startsWith(">win");
+                                              if (!launcherPanel.isPanelOpen) {
+                                                // Closed -> open in windows mode
+                                                launcherPanel.open();
+                                                launcherPanel.setSearchText(">win ");
+                                              } else if (isInWindowsMode) {
+                                                // Already in windows mode -> close
+                                                launcherPanel.close();
+                                              } else {
+                                                // In another mode -> switch to windows mode
+                                                launcherPanel.setSearchText(">win ");
+                                              }
+                                            });
+    }
+    function settings() {
+      root.screenDetector.withCurrentScreen(screen => {
+                                              var launcherPanel = PanelService.getPanel("launcherPanel", screen);
+                                              if (!launcherPanel)
+                                              return;
+                                              var searchText = launcherPanel.searchText || "";
+                                              var isInSettingsMode = searchText.startsWith(">settings");
+                                              if (!launcherPanel.isPanelOpen) {
+                                                // Closed -> open in settings mode
+                                                launcherPanel.open();
+                                                launcherPanel.setSearchText(">settings ");
+                                              } else if (isInSettingsMode) {
+                                                // Already in settings mode -> close
+                                                launcherPanel.close();
+                                              } else {
+                                                // In another mode -> switch to settings mode
+                                                launcherPanel.setSearchText(">settings ");
+                                              }
                                             });
     }
   }
@@ -163,6 +259,20 @@ Item {
     }
     function decrease() {
       BrightnessService.decreaseBrightness();
+    }
+    function set(value: string) {
+      var val = parseFloat(value);
+      if (isNaN(val))
+        return;
+
+      // Normalize logic: heuristic handling of 0-100 vs 0-1
+      if (val > 1.0)
+        val = val / 100.0;
+
+      // Clamp
+      val = Math.max(0.0, Math.min(1.0, val));
+
+      BrightnessService.setBrightness(val);
     }
   }
 
@@ -188,11 +298,14 @@ Item {
       }
 
       if (Settings.data.nightLight.forced) {
-        Settings.data.nightLight.enabled = false;
         Settings.data.nightLight.forced = false;
       } else {
-        Settings.data.nightLight.enabled = true;
-        Settings.data.nightLight.forced = true;
+        if (Settings.data.nightLight.enabled) {
+          Settings.data.nightLight.enabled = false;
+        } else {
+          Settings.data.nightLight.forced = true;
+          Settings.data.nightLight.enabled = true;
+        }
       }
     }
   }
@@ -306,13 +419,13 @@ Item {
     }
 
     function toggleAutomation() {
-      Settings.data.wallpaper.randomEnabled = !Settings.data.wallpaper.randomEnabled;
+      Settings.data.wallpaper.automationEnabled = !Settings.data.wallpaper.automationEnabled;
     }
     function disableAutomation() {
-      Settings.data.wallpaper.randomEnabled = false;
+      Settings.data.wallpaper.automationEnabled = false;
     }
     function enableAutomation() {
-      Settings.data.wallpaper.randomEnabled = true;
+      Settings.data.wallpaper.automationEnabled = true;
     }
   }
 
@@ -349,10 +462,14 @@ Item {
     function disable() {
       NetworkService.setWifiEnabled(false);
     }
+  }
+
+  IpcHandler {
+    target: "network"
     function togglePanel() {
       root.screenDetector.withCurrentScreen(screen => {
-                                              var wifiPanel = PanelService.getPanel("wifiPanel", screen);
-                                              wifiPanel?.toggle(null, "WiFi");
+                                              var networkPanel = PanelService.getPanel("networkPanel", screen);
+                                              networkPanel?.toggle(null, "WiFi");
                                             });
     }
   }
@@ -392,6 +509,10 @@ Item {
       PowerProfileService.cycleProfile();
     }
 
+    function cycleReverse() {
+      PowerProfileService.cycleProfileReverse();
+    }
+
     function set(mode: string) {
       switch (mode) {
       case "performance":
@@ -420,19 +541,43 @@ Item {
   }
 
   IpcHandler {
-    target: "osd"
+    target: "toast"
 
-    function showText(text: string) {
-      OSDService.showCustomText(text, "");
-    }
+    function send(json: string) {
+      try {
+        var data = JSON.parse(json);
+        var title = data.title || "";
+        var body = data.body || "";
+        var icon = data.icon || "";
+        var type = data.type || "notice";
+        var duration = data.duration;
 
-    function showTextWithIcon(text: string, icon: string) {
-      OSDService.showCustomText(text, icon);
+        switch (type) {
+        case "warning":
+          ToastService.showWarning(title, body, duration ?? 4000);
+          break;
+        case "error":
+          ToastService.showError(title, body, duration ?? 6000);
+          break;
+        default:
+          ToastService.showNotice(title, body, icon, duration ?? 3000);
+        }
+      } catch (error) {
+        Logger.e("IPC", "Failed to parse toast JSON: " + error);
+      }
     }
   }
 
   IpcHandler {
     target: "media"
+
+    function toggle() {
+      root.screenDetector.withCurrentScreen(screen => {
+                                              var panel = PanelService.getPanel("mediaPlayerPanel", screen);
+                                              panel?.toggle(null, "MediaMini");
+                                            });
+    }
+
     function playPause() {
       MediaService.playPause();
     }
@@ -519,6 +664,82 @@ Item {
     }
     function set(name: string) {
       Settings.data.location.name = name;
+    }
+  }
+
+  IpcHandler {
+    target: "systemMonitor"
+    function toggle() {
+      root.screenDetector.withCurrentScreen(screen => {
+                                              var panel = PanelService.getPanel("systemStatsPanel", screen);
+                                              panel?.toggle(null, "SystemMonitor");
+                                            });
+    }
+  }
+
+  IpcHandler {
+    target: "plugin"
+    function openSettings(key: string) {
+      var manifest = PluginRegistry.getPluginManifest(key);
+      if (!manifest) {
+        Logger.w("IPC", "Plugin not found:", key);
+        return;
+      }
+      if (!manifest.entryPoints?.settings) {
+        Logger.w("IPC", "Plugin has no settings entry point:", key);
+        return;
+      }
+      root.screenDetector.withCurrentScreen(screen => {
+                                              BarService.openPluginSettings(screen, manifest);
+                                            });
+    }
+
+    function openPanel(key: string) {
+      var manifest = PluginRegistry.getPluginManifest(key);
+      if (!manifest) {
+        Logger.w("IPC", "Plugin not found:", key);
+        return;
+      }
+      if (!manifest.entryPoints?.panel) {
+        Logger.w("IPC", "Plugin has no panel entry point:", key);
+        return;
+      }
+      root.screenDetector.withCurrentScreen(screen => {
+                                              PluginService.openPluginPanel(key, screen, null);
+                                            });
+    }
+
+    function closePanel(key: string) {
+      var manifest = PluginRegistry.getPluginManifest(key);
+      if (!manifest) {
+        Logger.w("IPC", "Plugin not found:", key);
+        return;
+      }
+      if (!manifest.entryPoints?.panel) {
+        Logger.w("IPC", "Plugin has no panel entry point:", key);
+        return;
+      }
+      root.screenDetector.withCurrentScreen(screen => {
+                                              var api = PluginService.getPluginAPI(key);
+                                              if (api) {
+                                                api.closePanel(screen);
+                                              }
+                                            });
+    }
+
+    function togglePanel(key: string) {
+      var manifest = PluginRegistry.getPluginManifest(key);
+      if (!manifest) {
+        Logger.w("IPC", "Plugin not found:", key);
+        return;
+      }
+      if (!manifest.entryPoints?.panel) {
+        Logger.w("IPC", "Plugin has no panel entry point:", key);
+        return;
+      }
+      root.screenDetector.withCurrentScreen(screen => {
+                                              PluginService.togglePluginPanel(key, screen, null);
+                                            });
     }
   }
 }

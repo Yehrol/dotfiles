@@ -13,13 +13,11 @@ import qs.Widgets
 SmartPanel {
   id: root
 
-  // Calculate width based on settings
-  preferredWidth: Math.round((Settings.data.location.showWeekNumberInCalendar ? 440 : 420) * Style.uiScaleRatio)
-
   panelContent: Item {
+    id: panelContent
     anchors.fill: parent
 
-    // SmartPanel uses this to calculate panel height dynamically
+    readonly property real contentPreferredWidth: Math.round((Settings.data.location.showWeekNumberInCalendar ? 440 : 420) * Style.uiScaleRatio)
     readonly property real contentPreferredHeight: content.implicitHeight + (Style.marginL * 2)
 
     ColumnLayout {
@@ -42,8 +40,6 @@ SmartPanel {
               return calendarHeaderCard;
             case "calendar-month-card":
               return calendarMonthCard;
-            case "timer-card":
-              return timerCard;
             case "weather-card":
               return weatherCard;
             default:
@@ -65,13 +61,6 @@ SmartPanel {
   Component {
     id: calendarMonthCard
     CalendarMonthCard {
-      Layout.fillWidth: true
-    }
-  }
-
-  Component {
-    id: timerCard
-    TimerCard {
       Layout.fillWidth: true
     }
   }

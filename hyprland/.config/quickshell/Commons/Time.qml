@@ -11,6 +11,12 @@ Singleton {
   // Current date
   property var now: new Date()
 
+  // Unix timestamp of the last update
+  property real _lastUpdateTs: Date.now()
+
+  // Signal emitted when a significant time jump is detected (e.g. system resume)
+  signal resumed
+
   // Returns a Unix Timestamp (in seconds)
   readonly property int timestamp: {
     return Math.floor(root.now / 1000);
@@ -34,6 +40,15 @@ Singleton {
     triggeredOnStart: false
     onTriggered: {
       var newTime = new Date();
+      var currentTs = newTime.getTime();
+
+      // Detect time jump (e.g. system resume) - threshold: 5 seconds
+      if (currentTs - root._lastUpdateTs > 5000) {
+        Logger.i("Time", "Time jump detected (" + Math.round((currentTs - root._lastUpdateTs) / 1000) + "s) - likely system resume");
+        root.resumed();
+      }
+      root._lastUpdateTs = currentTs;
+
       root.now = newTime;
 
       // Update timer if running
@@ -127,20 +142,20 @@ Singleton {
     if (diff < 60000)
       return I18n.tr("notifications.time.now");
     if (diff < 120000)
-      return I18n.tr("notifications.time.diffM");
+      return I18n.tr("notifications.time.diff-m");
     if (diff < 3600000)
-      return I18n.tr("notifications.time.diffMM", {
+      return I18n.tr("notifications.time.diff-mm", {
                        "diff": Math.floor(diff / 60000)
                      });
     if (diff < 7200000)
-      return I18n.tr("notifications.time.diffH");
+      return I18n.tr("notifications.time.diff-h");
     if (diff < 86400000)
-      return I18n.tr("notifications.time.diffHH", {
+      return I18n.tr("notifications.time.diff-hh", {
                        "diff": Math.floor(diff / 3600000)
                      });
     if (diff < 172800000)
-      return I18n.tr("notifications.time.diffD");
-    return I18n.tr("notifications.time.diffDD", {
+      return I18n.tr("notifications.time.diff-d");
+    return I18n.tr("notifications.time.diff-dd", {
                      "diff": Math.floor(diff / 86400000)
                    });
   }

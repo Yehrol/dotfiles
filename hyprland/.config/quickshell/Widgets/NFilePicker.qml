@@ -4,7 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import "../Helpers/FuzzySort.js" as FuzzySort
 import qs.Commons
 import qs.Widgets
 
@@ -143,7 +142,7 @@ Popup {
     id: filePickerPanel
     anchors.fill: parent
     anchors.margins: Style.marginL
-    color: Color.transparent
+    color: "transparent"
 
     property string filterText: ""
     property var currentSelection: []
@@ -203,7 +202,7 @@ Popup {
 
         NIconButton {
           icon: "filepicker-refresh"
-          tooltipText: I18n.tr("tooltips.refresh")
+          tooltipText: I18n.tr("common.refresh")
           onClicked: {
             // Force a proper refresh by resetting the folder
             const currentFolder = folderModel.folder;
@@ -214,7 +213,7 @@ Popup {
         }
         NIconButton {
           icon: "filepicker-close"
-          tooltipText: I18n.tr("tooltips.close")
+          tooltipText: I18n.tr("common.close")
           onClicked: {
             root.cancelled();
             root.close();
@@ -268,7 +267,7 @@ Popup {
 
           NIconButton {
             icon: filePickerPanel.showSearchBar ? "filepicker-x" : "filepicker-search"
-            tooltipText: filePickerPanel.showSearchBar ? I18n.tr("tooltips.search-close") : I18n.tr("tooltips.search")
+            tooltipText: filePickerPanel.showSearchBar ? I18n.tr("tooltips.search-close") : I18n.tr("common.search")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               filePickerPanel.showSearchBar = !filePickerPanel.showSearchBar;
@@ -283,7 +282,7 @@ Popup {
           NTextInput {
             id: locationInput
             text: root.currentPath
-            placeholderText: "Enter path..."
+            placeholderText: I18n.tr("placeholders.enter-path")
             Layout.fillWidth: true
 
             visible: !filePickerPanel.showSearchBar
@@ -339,7 +338,7 @@ Popup {
           }
           NIconButton {
             icon: root.showHiddenFiles ? "filepicker-eye-off" : "filepicker-eye"
-            tooltipText: root.showHiddenFiles ? I18n.tr("tooltips.hidden-files-hide") : I18n.tr("tooltips.hidden-files-show")
+            tooltipText: root.showHiddenFiles ? I18n.tr("tooltips.hidden-files-hide") : I18n.tr("tooltips.hidden-files-hide")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               root.showHiddenFiles = !root.showHiddenFiles;
@@ -403,57 +402,20 @@ Popup {
           id: filteredModel
         }
 
-        // Common scroll bar component
-        Component {
-          id: scrollBarComponent
-          ScrollBar {
-            policy: ScrollBar.AsNeeded
-            contentItem: Rectangle {
-              implicitWidth: 6
-              implicitHeight: 100
-              radius: Style.iRadiusM
-              color: Qt.alpha(Color.mHover, 0.8)
-              opacity: parent.policy === ScrollBar.AlwaysOn || parent.active ? 1.0 : 0.0
-              Behavior on opacity {
-                NumberAnimation {
-                  duration: Style.animationFast
-                }
-              }
-              Behavior on color {
-                ColorAnimation {
-                  duration: Style.animationFast
-                }
-              }
-            }
-            background: Rectangle {
-              implicitWidth: 6
-              implicitHeight: 100
-              color: Color.transparent
-              opacity: parent.policy === ScrollBar.AlwaysOn || parent.active ? 0.3 : 0.0
-              radius: (Style.iRadiusM) / 2
-              Behavior on opacity {
-                NumberAnimation {
-                  duration: Style.animationFast
-                }
-              }
-            }
-          }
-        }
-
         // Grid view
-        GridView {
+        NGridView {
           id: gridView
           anchors.fill: parent
           anchors.margins: Style.marginM
           model: filteredModel
           visible: filePickerPanel.viewMode
-          clip: true
           reuseItems: true
+          gradientColor: Color.mSurface
 
-          property int columns: Math.max(1, Math.floor(width / (120)))
-          property int itemSize: Math.floor((width - leftMargin - rightMargin - (columns * Style.marginS)) / columns)
+          property int columns: Math.max(1, Math.floor(availableWidth / 120))
+          property int itemSize: Math.floor((availableWidth - leftMargin - rightMargin - (columns * Style.marginS)) / columns)
 
-          cellWidth: Math.floor((width - leftMargin - rightMargin) / columns)
+          cellWidth: Math.floor((availableWidth - leftMargin - rightMargin) / columns)
           cellHeight: Math.floor(itemSize * 0.8) + Style.marginXS + Style.fontSizeS + Style.marginM
 
           leftMargin: Style.marginS
@@ -461,25 +423,18 @@ Popup {
           topMargin: Style.marginS
           bottomMargin: Style.marginS
 
-          ScrollBar.vertical: scrollBarComponent.createObject(gridView, {
-                                                                "parent": gridView,
-                                                                "x": gridView.mirrored ? 0 : gridView.width - width,
-                                                                "y": 0,
-                                                                "height": gridView.height
-                                                              })
-
           delegate: Rectangle {
             id: gridItem
             width: gridView.itemSize
             height: gridView.cellHeight
-            color: Color.transparent
+            color: "transparent"
             radius: Style.iRadiusM
 
             property bool isSelected: filePickerPanel.currentSelection.includes(model.filePath)
 
             Rectangle {
               anchors.fill: parent
-              color: Color.transparent
+              color: "transparent"
               radius: parent.radius
               border.color: isSelected ? Color.mSecondary : Color.mSurface
               border.width: Style.borderL
@@ -492,9 +447,9 @@ Popup {
 
             Rectangle {
               anchors.fill: parent
-              color: (mouseArea.containsMouse && !isSelected) ? Color.mHover : Color.transparent
+              color: (mouseArea.containsMouse && !isSelected) ? Color.mHover : "transparent"
               radius: parent.radius
-              border.color: (mouseArea.containsMouse && !isSelected) ? Color.mHover : Color.transparent
+              border.color: (mouseArea.containsMouse && !isSelected) ? Color.mHover : "transparent"
               border.width: Style.borderS
               Behavior on color {
                 ColorAnimation {
@@ -517,7 +472,7 @@ Popup {
                 id: iconContainer
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.round(gridView.itemSize * 0.67)
-                color: Color.transparent
+                color: "transparent"
 
                 property bool isImage: {
                   if (model.fileIsDir)
@@ -661,6 +616,7 @@ Popup {
           anchors.margins: Style.marginS
           model: filteredModel
           visible: !filePickerPanel.viewMode
+          gradientColor: Color.mSurface
 
           delegate: Rectangle {
             id: listItem
@@ -671,7 +627,7 @@ Popup {
                 return Color.mSecondary;
               if (mouseArea.containsMouse)
                 return Color.mHover;
-              return Color.transparent;
+              return "transparent";
             }
             radius: Style.iRadiusS
             Behavior on color {
@@ -764,9 +720,9 @@ Popup {
               return "Searching for: \"" + filePickerPanel.searchText + "\" (" + filteredModel.count + " matches)";
             } else if (filePickerPanel.currentSelection.length > 0) {
               const selectedName = filePickerPanel.currentSelection[0].split('/').pop();
-              return "Selected: " + selectedName;
+              return I18n.tr("widgets.file-picker.selected") + " " + selectedName;
             } else {
-              return filteredModel.count + " items";
+              return filteredModel.count + " " + (filteredModel.count === 1 ? I18n.tr("widgets.file-picker.item") : I18n.tr("widgets.file-picker.items"));
             }
           }
           color: filePickerPanel.searchText.length > 0 ? Color.mPrimary : Color.mOnSurfaceVariant
@@ -775,7 +731,7 @@ Popup {
         }
 
         NButton {
-          text: I18n.tr("widgets.file-picker.cancel")
+          text: I18n.tr("common.cancel")
           outlined: true
           onClicked: {
             root.cancelled();

@@ -10,6 +10,8 @@ ColumnLayout {
   property var widgetData: null
   property var widgetMetadata: null
 
+  signal settingsChanged(var settings)
+
   property string valueDisplayMode: widgetData.displayMode !== undefined ? widgetData.displayMode : widgetMetadata.displayMode
 
   function saveSettings() {
@@ -19,24 +21,27 @@ ColumnLayout {
   }
 
   NComboBox {
-    label: I18n.tr("bar.widget-settings.battery.display-mode.label")
-    description: I18n.tr("bar.widget-settings.battery.display-mode.description")
-    minimumWidth: 134
+    label: I18n.tr("bar.volume.display-mode-label")
+    description: I18n.tr("bar.volume.display-mode-description")
+    minimumWidth: 200
     model: [
       {
         "key": "onhover",
-        "name": I18n.tr("options.display-mode.on-hover")
+        "name": I18n.tr("display-modes.on-hover")
       },
       {
         "key": "alwaysShow",
-        "name": I18n.tr("options.display-mode.always-show")
+        "name": I18n.tr("display-modes.always-show")
       },
       {
         "key": "alwaysHide",
-        "name": I18n.tr("options.display-mode.always-hide")
+        "name": I18n.tr("display-modes.always-hide")
       }
     ]
     currentKey: root.valueDisplayMode
-    onSelected: key => root.valueDisplayMode = key
+    onSelected: key => {
+                  root.valueDisplayMode = key;
+                  settingsChanged(saveSettings());
+                }
   }
 }

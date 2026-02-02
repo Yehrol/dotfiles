@@ -17,11 +17,11 @@ Popup {
 
   // Default commands mapping
   readonly property var defaultCommands: {
-    "lock": I18n.tr("settings.session-menu.entry-settings.default-command.lock"),
+    "lock": I18n.tr("panels.session-menu.entry-settings-default-command-lock"),
     "suspend": "systemctl suspend || loginctl suspend",
     "hibernate": "systemctl hibernate || loginctl hibernate",
     "reboot": "systemctl reboot || loginctl reboot",
-    "logout": I18n.tr("settings.session-menu.entry-settings.default-command.logout"),
+    "logout": I18n.tr("panels.session-menu.entry-settings-default-command-logout"),
     "shutdown": "systemctl poweroff || loginctl poweroff"
   }
 
@@ -66,7 +66,7 @@ Popup {
         Layout.fillWidth: true
 
         NText {
-          text: I18n.tr("settings.session-menu.entry-settings.title", {
+          text: I18n.tr("panels.session-menu.entry-settings-title", {
                           "entry": root.entryText
                         })
           pointSize: Style.fontSizeL
@@ -77,7 +77,7 @@ Popup {
 
         NIconButton {
           icon: "close"
-          tooltipText: I18n.tr("tooltips.close")
+          tooltipText: I18n.tr("common.close")
           onClicked: root.close()
         }
       }
@@ -93,9 +93,9 @@ Popup {
       NTextInput {
         id: commandInput
         Layout.fillWidth: true
-        label: I18n.tr("settings.session-menu.entry-settings.command.label")
-        description: I18n.tr("settings.session-menu.entry-settings.command.description")
-        placeholderText: I18n.tr("settings.session-menu.entry-settings.command.placeholder")
+        label: I18n.tr("common.command")
+        description: I18n.tr("panels.session-menu.entry-settings-command-description")
+        placeholderText: I18n.tr("panels.session-menu.entry-settings-command-placeholder")
         onEditingFinished: {
           // Auto-focus on Enter
           applyButton.forceActiveFocus();
@@ -114,15 +114,15 @@ Popup {
         spacing: Style.marginXS
 
         NLabel {
-          label: I18n.tr("settings.session-menu.entry-settings.default-info.label")
-          description: I18n.tr("settings.session-menu.entry-settings.default-info.description")
+          label: I18n.tr("panels.session-menu.entry-settings-default-info-label")
+          description: I18n.tr("panels.session-menu.entry-settings-default-info-description")
           Layout.fillWidth: true
         }
 
         // Default command display
         Rectangle {
           Layout.fillWidth: true
-          Layout.preferredHeight: defaultCommandText.implicitHeight + Style.marginM * 2
+          Layout.preferredHeight: defaultCommandText.implicitHeight + Style.marginXL
           radius: Style.radiusM
           color: Color.mSurfaceVariant
           border.color: Color.mOutline
@@ -134,7 +134,7 @@ Popup {
             spacing: Style.marginS
 
             NIcon {
-              icon: "info-circle"
+              icon: "info"
               color: Color.mOnSurfaceVariant
               pointSize: Style.fontSizeM
             }
@@ -163,19 +163,18 @@ Popup {
         }
 
         NButton {
-          id: cancelButton
-          text: I18n.tr("bar.widget-settings.dialog.cancel")
+          id: closeButton
+          text: I18n.tr("common.close")
           outlined: true
           onClicked: root.close()
         }
 
         NButton {
           id: applyButton
-          text: I18n.tr("bar.widget-settings.dialog.apply")
+          text: I18n.tr("common.apply")
           icon: "check"
           onClicked: {
             root.updateEntryCommand(root.entryIndex, commandInput.text);
-            root.close();
           }
         }
       }

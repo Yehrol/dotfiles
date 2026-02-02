@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.Commons
+import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 
@@ -57,6 +58,14 @@ Loader {
         }
       }
 
+      // Refresh icons when DesktopEntries becomes available
+      Connections {
+        target: DesktopEntries.applications
+        function onValuesChanged() {
+          root.iconRevision++;
+        }
+      }
+
       // Shared properties between peek and dock windows
       readonly property string displayMode: Settings.data.dock.displayMode
       readonly property bool autoHide: displayMode === "auto_hide"
@@ -68,11 +77,17 @@ Loader {
       readonly property int peekHeight: 1
       readonly property int iconSize: Math.round(12 + 24 * (Settings.data.dock.size ?? 1))
       readonly property int floatingMargin: Settings.data.dock.floatingRatio * Style.marginL
+      readonly property int maxWidth: modelData ? modelData.width * 0.8 : 1000
+      readonly property int maxHeight: modelData ? modelData.height * 0.8 : 1000
+
+      // Dock position properties
+      readonly property string dockPosition: Settings.data.dock.position
+      readonly property bool isVertical: dockPosition === "left" || dockPosition === "right"
 
       // Bar detection and positioning properties
       readonly property bool hasBar: modelData && modelData.name ? (Settings.data.bar.monitors.includes(modelData.name) || (Settings.data.bar.monitors.length === 0)) : false
-      readonly property bool barAtBottom: hasBar && Settings.data.bar.position === "bottom"
-      readonly property int barHeight: Style.barHeight
+      readonly property bool barAtSameEdge: hasBar && Settings.getBarPositionForScreen(modelData?.name) === dockPosition
+      readonly property int barHeight: Style.getBarHeightForScreen(modelData?.name)
 
       // Shared state between windows
       property bool dockHovered: false
@@ -90,6 +105,25 @@ Loader {
       // Combined model of running apps and pinned apps
       property var dockApps: []
 
+      // Track the session order of apps (transient reordering)
+      property var sessionAppOrder: []
+
+      // Drag and Drop state for visual feedback
+      property int dragSourceIndex: -1
+      property int dragTargetIndex: -1
+
+      // when dragging ended but the cursor is outside the dock area, restart the timer
+      onDragSourceIndexChanged: {
+        if (dragSourceIndex === -1) {
+          if (autoHide && !dockHovered && !anyAppHovered && !peekHovered && !menuHovered) {
+            hideTimer.restart();
+          }
+        }
+      }
+
+      // Revision counter to force icon re-evaluation
+      property int iconRevision: 0
+
       // Function to close any open context menu
       function closeAllContextMenus() {
         if (currentContextMenu && currentContextMenu.visible) {
@@ -97,11 +131,104 @@ Loader {
         }
       }
 
+      function getAppKey(appData) {
+        if (!appData)
+          return null;
+
+        // Use stable appId for pinned apps to maintain their slot regardless of running state
+        if (appData.type === "pinned" || appData.type === "pinned-running") {
+          return appData.appId;
+        }
+
+        // prefer toplevel object identity for unpinned running apps to distinguish instances
+        if (appData.toplevel)
+          return appData.toplevel;
+
+        // fallback to appId
+        return appData.appId;
+      }
+
+      function sortDockApps(apps) {
+        if (!sessionAppOrder || sessionAppOrder.length === 0) {
+          return apps;
+        }
+
+        const sorted = [];
+        const remaining = [...apps];
+
+        // Pick apps that are in the session order
+        for (let i = 0; i < sessionAppOrder.length; i++) {
+          const key = sessionAppOrder[i];
+
+          // Pick ALL matching apps (e.g. all instances of a pinned app)
+          while (true) {
+            const idx = remaining.findIndex(app => getAppKey(app) === key);
+            if (idx !== -1) {
+              sorted.push(remaining[idx]);
+              remaining.splice(idx, 1);
+            } else {
+              break;
+            }
+          }
+        }
+
+        // Append any new/remaining apps
+        remaining.forEach(app => sorted.push(app));
+
+        return sorted;
+      }
+
+      function reorderApps(fromIndex, toIndex) {
+        if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= dockApps.length || toIndex >= dockApps.length)
+          return;
+
+        const list = [...dockApps];
+        const item = list.splice(fromIndex, 1)[0];
+        list.splice(toIndex, 0, item);
+
+        dockApps = list;
+        sessionAppOrder = dockApps.map(getAppKey);
+        savePinnedOrder();
+      }
+
+      function savePinnedOrder() {
+        const currentPinned = Settings.data.dock.pinnedApps || [];
+        const newPinned = [];
+        const seen = new Set();
+
+        // Extract pinned apps in their current visual order
+        dockApps.forEach(app => {
+                           if (app.appId && !seen.has(app.appId)) {
+                             const isPinned = currentPinned.some(p => normalizeAppId(p) === normalizeAppId(app.appId));
+
+                             if (isPinned) {
+                               newPinned.push(app.appId);
+                               seen.add(app.appId);
+                             }
+                           }
+                         });
+
+        // Check if any pinned apps were missed (unlikely if dockApps is correct)
+        currentPinned.forEach(p => {
+                                if (!seen.has(p)) {
+                                  newPinned.push(p);
+                                  seen.add(p);
+                                }
+                              });
+
+        if (JSON.stringify(currentPinned) !== JSON.stringify(newPinned)) {
+          Settings.data.dock.pinnedApps = newPinned;
+        }
+      }
+
       // Helper function to normalize app IDs for case-insensitive matching
       function normalizeAppId(appId) {
         if (!appId || typeof appId !== 'string')
           return "";
-        return appId.toLowerCase().trim();
+        let id = appId.toLowerCase().trim();
+        if (id.endsWith(".desktop"))
+          id = id.substring(0, id.length - 8);
+        return id;
       }
 
       // Helper function to check if an app ID matches a pinned app (case-insensitive)
@@ -149,6 +276,9 @@ Loader {
 
         //push an app onto combined with the given appType
         function pushApp(appType, toplevel, appId, title) {
+          // Use canonical ID for pinned apps to ensure key stability
+          const canonicalId = isAppIdPinned(appId, pinnedApps) ? (pinnedApps.find(p => normalizeAppId(p) === normalizeAppId(appId)) || appId) : appId;
+
           // For running apps, track by toplevel object to allow multiple instances
           if (toplevel) {
             if (processedToplevels.has(toplevel)) {
@@ -160,30 +290,30 @@ Loader {
             combined.push({
                             "type": appType,
                             "toplevel": toplevel,
-                            "appId": appId,
+                            "appId": canonicalId,
                             "title": title
                           });
             processedToplevels.add(toplevel);
           } else {
             // For pinned apps that aren't running, track by appId to avoid duplicates
-            if (processedPinnedAppIds.has(appId)) {
+            if (processedPinnedAppIds.has(canonicalId)) {
               return; // Already processed this pinned app
             }
             combined.push({
                             "type": appType,
                             "toplevel": toplevel,
-                            "appId": appId,
+                            "appId": canonicalId,
                             "title": title
                           });
-            processedPinnedAppIds.add(appId);
+            processedPinnedAppIds.add(canonicalId);
           }
         }
 
         function pushRunning(first) {
           runningApps.forEach(toplevel => {
                                 if (toplevel) {
-                                  // Skip pinned apps if they were already processed (when pinnedStatic is true)
-                                  const isPinned = pinnedApps.includes(toplevel.appId);
+                                  // Use robust matching to check if pinned
+                                  const isPinned = isAppIdPinned(toplevel.appId, pinnedApps);
                                   if (!first && isPinned && processedToplevels.has(toplevel)) {
                                     return; // Already added by pushPinned()
                                   }
@@ -194,8 +324,8 @@ Loader {
 
         function pushPinned() {
           pinnedApps.forEach(pinnedAppId => {
-                               // Find all running instances of this pinned app
-                               const matchingToplevels = runningApps.filter(app => app && app.appId === pinnedAppId);
+                               // Find all running instances of this pinned app using robust matching
+                               const matchingToplevels = runningApps.filter(app => app && normalizeAppId(app.appId) === normalizeAppId(pinnedAppId));
 
                                if (matchingToplevels.length > 0) {
                                  // Add all running instances as pinned-running
@@ -220,7 +350,38 @@ Loader {
           pushPinned();
         }
 
-        dockApps = combined;
+        dockApps = sortDockApps(combined);
+
+        // Sync session order if needed
+        // Instead of resetting everything when length changes, we reconcile the keys
+        if (!sessionAppOrder || sessionAppOrder.length === 0) {
+          sessionAppOrder = dockApps.map(getAppKey);
+        } else {
+          const currentKeys = new Set(dockApps.map(getAppKey));
+          const existingKeys = new Set();
+          const newOrder = [];
+
+          // Keep existing keys that are still present
+          sessionAppOrder.forEach(key => {
+                                    if (currentKeys.has(key)) {
+                                      newOrder.push(key);
+                                      existingKeys.add(key);
+                                    }
+                                  });
+
+          // Add new keys at the end
+          dockApps.forEach(app => {
+                             const key = getAppKey(app);
+                             if (!existingKeys.has(key)) {
+                               newOrder.push(key);
+                               existingKeys.add(key);
+                             }
+                           });
+
+          if (JSON.stringify(newOrder) !== JSON.stringify(sessionAppOrder)) {
+            sessionAppOrder = newOrder;
+          }
+        }
       }
 
       // Timer to unload dock after hide animation completes
@@ -239,11 +400,17 @@ Loader {
         id: hideTimer
         interval: hideDelay
         onTriggered: {
+          // do not hide if dragging
+          if (root.dragSourceIndex !== -1) {
+            return;
+          }
+
           // Force menuHovered to false if no menu is current or visible
           if (!root.currentContextMenu || !root.currentContextMenu.visible) {
             menuHovered = false;
           }
           if (autoHide && !dockHovered && !anyAppHovered && !peekHovered && !menuHovered) {
+            closeAllContextMenus();
             hidden = true;
             unloadTimer.restart(); // Start unload timer when hiding
           } else if (autoHide && !dockHovered && !peekHovered) {
@@ -280,7 +447,7 @@ Loader {
         }
       }
 
-      // PEEK WINDOW - Always visible when auto-hide is enabled
+      // PEEK WINDOW
       Loader {
         active: (barIsReady || !hasBar) && modelData && (Settings.data.dock.monitors.length === 0 || Settings.data.dock.monitors.includes(modelData.name)) && autoHide
 
@@ -288,15 +455,25 @@ Loader {
           id: peekWindow
 
           screen: modelData
-          anchors.bottom: true
-          anchors.left: true
-          anchors.right: true
+          // Dynamic anchors based on dock position
+          anchors.top: dockPosition === "top" || isVertical
+          anchors.bottom: dockPosition === "bottom" || isVertical
+          anchors.left: dockPosition === "left" || !isVertical
+          anchors.right: dockPosition === "right" || !isVertical
           focusable: false
-          color: Color.transparent
+          color: "transparent"
+
+          // When bar is at same edge, position peek window past the bar so it receives mouse events
+          margins.top: dockPosition === "top" && barAtSameEdge ? (barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginVertical : 0)) : 0
+          margins.bottom: dockPosition === "bottom" && barAtSameEdge ? (barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginVertical : 0)) : 0
+          margins.left: dockPosition === "left" && barAtSameEdge ? (barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginHorizontal : 0)) : 0
+          margins.right: dockPosition === "right" && barAtSameEdge ? (barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginHorizontal : 0)) : 0
 
           WlrLayershell.namespace: "noctalia-dock-peek-" + (screen?.name || "unknown")
           WlrLayershell.exclusionMode: ExclusionMode.Ignore
-          implicitHeight: peekHeight
+          // Larger peek area when bar is at same edge, normal 1px otherwise
+          implicitHeight: barAtSameEdge && !isVertical ? 3 : peekHeight
+          implicitWidth: barAtSameEdge && isVertical ? 3 : peekHeight
 
           MouseArea {
             id: peekArea
@@ -321,7 +498,26 @@ Loader {
         }
       }
 
-      // DOCK WINDOW
+      // Force dock reload when position changes to fix anchor/layout issues
+      // Force dock reload when position/mode changes to fix anchor/layout issues
+      property bool _reloading: false
+      function handleReload() {
+        if (!autoHide && dockLoaded && !_reloading) {
+          _reloading = true;
+          // Brief unload/reload cycle to reset layout
+          Qt.callLater(() => {
+                         dockLoaded = false;
+                         Qt.callLater(() => {
+                                        dockLoaded = true;
+                                        _reloading = false;
+                                      });
+                       });
+        }
+      }
+
+      onDockPositionChanged: handleReload()
+      onExclusiveChanged: handleReload()
+
       Loader {
         id: dockWindowLoader
         active: Settings.data.dock.enabled && (barIsReady || !hasBar) && modelData && (Settings.data.dock.monitors.length === 0 || Settings.data.dock.monitors.includes(modelData.name)) && dockLoaded && ToplevelManager && (dockApps.length > 0)
@@ -332,36 +528,54 @@ Loader {
           screen: modelData
 
           focusable: false
-          color: Color.transparent
+          color: "transparent"
 
           WlrLayershell.namespace: "noctalia-dock-" + (screen?.name || "unknown")
           WlrLayershell.exclusionMode: exclusive ? ExclusionMode.Auto : ExclusionMode.Ignore
 
-          // Size to fit the dock container exactly
           implicitWidth: dockContainerWrapper.width
           implicitHeight: dockContainerWrapper.height
 
-          // Position above the bar if it's at bottom
-          anchors.bottom: true
+          // Position based on dock setting
+          anchors.top: dockPosition === "top"
+          anchors.bottom: dockPosition === "bottom"
+          anchors.left: dockPosition === "left"
+          anchors.right: dockPosition === "right"
 
-          margins.bottom: {
-            switch (Settings.data.bar.position) {
-            case "bottom":
-              return (Style.barHeight + Style.marginM) + (Settings.data.bar.floating ? Settings.data.bar.marginVertical * Style.marginXL + floatingMargin : floatingMargin);
-            default:
-              return floatingMargin;
-            }
-          }
+          // Offset past bar when at same edge (skip bar offset if dock is exclusive - exclusion zones stack)
+          margins.top: dockPosition === "top" ? (barAtSameEdge && !exclusive ? barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginVertical : 0) + floatingMargin : floatingMargin) : 0
+          margins.bottom: dockPosition === "bottom" ? (barAtSameEdge && !exclusive ? barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginVertical : 0) + floatingMargin : floatingMargin) : 0
+          margins.left: dockPosition === "left" ? (barAtSameEdge && !exclusive ? barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginHorizontal : 0) + floatingMargin : floatingMargin) : 0
+          margins.right: dockPosition === "right" ? (barAtSameEdge && !exclusive ? barHeight + (Settings.data.bar.floating ? Settings.data.bar.marginHorizontal : 0) + floatingMargin : floatingMargin) : 0
 
-          // Wrapper item for scale/opacity animations
+          // Container wrapper for animations
           Item {
             id: dockContainerWrapper
-            width: dockContainer.width
-            height: dockContainer.height
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
 
-            // Apply animations to this wrapper
+            // Helper properties for orthogonal bar detection
+            readonly property string screenBarPosition: Settings.getBarPositionForScreen(modelData?.name)
+            readonly property bool barOnLeft: hasBar && screenBarPosition === "left" && !Settings.data.bar.floating
+            readonly property bool barOnRight: hasBar && screenBarPosition === "right" && !Settings.data.bar.floating
+            readonly property bool barOnTop: hasBar && screenBarPosition === "top" && !Settings.data.bar.floating
+            readonly property bool barOnBottom: hasBar && screenBarPosition === "bottom" && !Settings.data.bar.floating
+
+            // Calculate padding needed to shift center to match exclusive mode
+            readonly property int extraTop: (isVertical && !exclusive && barOnTop) ? barHeight : 0
+            readonly property int extraBottom: (isVertical && !exclusive && barOnBottom) ? barHeight : 0
+            readonly property int extraLeft: (!isVertical && !exclusive && barOnLeft) ? barHeight : 0
+            readonly property int extraRight: (!isVertical && !exclusive && barOnRight) ? barHeight : 0
+
+            width: dockContainer.width + extraLeft + extraRight
+            height: dockContainer.height + extraTop + extraBottom
+
+            anchors.horizontalCenter: isVertical ? undefined : parent.horizontalCenter
+            anchors.verticalCenter: isVertical ? parent.verticalCenter : undefined
+
+            anchors.top: dockPosition === "top" ? parent.top : undefined
+            anchors.bottom: dockPosition === "bottom" ? parent.bottom : undefined
+            anchors.left: dockPosition === "left" ? parent.left : undefined
+            anchors.right: dockPosition === "right" ? parent.right : undefined
+
             opacity: hidden ? 0 : 1
             scale: hidden ? 0.85 : 1
 
@@ -382,16 +596,25 @@ Loader {
 
             Rectangle {
               id: dockContainer
-              width: dockLayout.implicitWidth + Style.marginM * 2
-              height: Math.round(iconSize * 1.5)
+              // For vertical dock, swap width and height logic
+              width: isVertical ? Math.round(iconSize * 1.5) : Math.min(dockLayout.implicitWidth + Style.marginXL, root.maxWidth)
+              height: isVertical ? Math.min(dockLayout.implicitHeight + Style.marginXL, root.maxHeight) : Math.round(iconSize * 1.5)
               color: Qt.alpha(Color.mSurface, Settings.data.dock.backgroundOpacity)
-              anchors.centerIn: parent
+
+              // Anchor based on padding to achieve centering shift
+              anchors.horizontalCenter: parent.extraLeft > 0 || parent.extraRight > 0 ? undefined : parent.horizontalCenter
+              anchors.right: parent.extraLeft > 0 ? parent.right : undefined
+              anchors.left: parent.extraRight > 0 ? parent.left : undefined
+
+              anchors.verticalCenter: parent.extraTop > 0 || parent.extraBottom > 0 ? undefined : parent.verticalCenter
+              anchors.bottom: parent.extraTop > 0 ? parent.bottom : undefined
+              anchors.top: parent.extraBottom > 0 ? parent.top : undefined
+
               radius: Style.radiusL
               border.width: Style.borderS
               border.color: Qt.alpha(Color.mOutline, Settings.data.dock.backgroundOpacity)
 
               // Enable layer caching to reduce GPU usage from continuous animations
-              // (pulse animations on active indicators run infinitely)
               layer.enabled: true
 
               MouseArea {
@@ -405,12 +628,13 @@ Loader {
                     showTimer.stop();
                     hideTimer.stop();
                     unloadTimer.stop(); // Cancel unload if hovering
+                    hidden = false; // Make sure dock is visible
                   }
                 }
 
                 onExited: {
                   dockHovered = false;
-                  if (autoHide && !anyAppHovered && !peekHovered && !menuHovered) {
+                  if (autoHide && !anyAppHovered && !peekHovered && !menuHovered && root.dragSourceIndex === -1) {
                     hideTimer.restart();
                   }
                 }
@@ -421,11 +645,50 @@ Loader {
                 }
               }
 
-              Item {
+              Flickable {
                 id: dock
-                width: dockLayout.implicitWidth
-                height: parent.height - (Style.marginM * 2)
+                // Use parent dimensions more directly to avoid clipping
+                width: isVertical ? parent.width - Style.marginS * 2 : Math.min(dockLayout.implicitWidth, parent.width - Style.marginXL)
+                height: !isVertical ? parent.height - Style.marginS * 2 : Math.min(dockLayout.implicitHeight, parent.height - Style.marginXL)
+                contentWidth: dockLayout.implicitWidth
+                contentHeight: dockLayout.implicitHeight
                 anchors.centerIn: parent
+                clip: true
+
+                flickableDirection: isVertical ? Flickable.VerticalFlick : Flickable.HorizontalFlick
+
+                // Keep interactive dependent on overflow
+                interactive: isVertical ? contentHeight > height : contentWidth > width
+
+                // Centering margins
+                leftMargin: contentWidth < width ? (width - contentWidth) / 2 : 0
+                rightMargin: leftMargin
+                topMargin: contentHeight < height ? (height - contentHeight) / 2 : 0
+                bottomMargin: topMargin
+
+                WheelHandler {
+                  acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                  onWheel: event => {
+                             var delta = (event.angleDelta.y !== 0) ? event.angleDelta.y : event.angleDelta.x;
+                             if (root.isVertical) {
+                               dock.contentY = Math.max(-dock.topMargin, Math.min(dock.contentHeight - dock.height + dock.bottomMargin, dock.contentY - delta));
+                             } else {
+                               // For horizontal dock, we want to scroll contentX with BOTH x and y wheels
+                               var hDelta = (event.angleDelta.x !== 0) ? event.angleDelta.x : event.angleDelta.y;
+                               dock.contentX = Math.max(-dock.leftMargin, Math.min(dock.contentWidth - dock.width + dock.rightMargin, dock.contentX - hDelta));
+                             }
+                             event.accepted = true;
+                           }
+                }
+
+                ScrollBar.horizontal: ScrollBar {
+                  visible: !isVertical && dock.interactive
+                  policy: ScrollBar.AsNeeded
+                }
+                ScrollBar.vertical: ScrollBar {
+                  visible: isVertical && dock.interactive
+                  policy: ScrollBar.AsNeeded
+                }
 
                 function getAppIcon(appData): string {
                   if (!appData || !appData.appId)
@@ -433,11 +696,17 @@ Loader {
                   return ThemeIcons.iconForAppId(appData.appId?.toLowerCase());
                 }
 
-                RowLayout {
+                // Use GridLayout for flexible horizontal/vertical arrangement
+                GridLayout {
                   id: dockLayout
-                  spacing: Style.marginM
-                  Layout.preferredHeight: parent.height
-                  anchors.centerIn: parent
+                  columns: isVertical ? 1 : -1
+                  rows: isVertical ? -1 : 1
+                  rowSpacing: Style.marginS
+                  columnSpacing: Style.marginS
+
+                  // Ensure the layout takes its full implicit size
+                  width: implicitWidth
+                  height: implicitHeight
 
                   Repeater {
                     model: dockApps
@@ -468,6 +737,32 @@ Loader {
                       }
                       property bool isRunning: modelData && (modelData.type === "running" || modelData.type === "pinned-running")
 
+                      // Store index for drag-and-drop
+                      property int modelIndex: index
+                      objectName: "dockAppButton"
+
+                      DropArea {
+                        anchors.fill: parent
+                        keys: ["dock-app"]
+                        onEntered: function (drag) {
+                          if (drag.source && drag.source.objectName === "dockAppButton") {
+                            root.dragTargetIndex = appButton.modelIndex;
+                          }
+                        }
+                        onExited: function () {
+                          if (root.dragTargetIndex === appButton.modelIndex) {
+                            root.dragTargetIndex = -1;
+                          }
+                        }
+                        onDropped: function (drop) {
+                          root.dragSourceIndex = -1;
+                          root.dragTargetIndex = -1;
+                          if (drop.source && drop.source.objectName === "dockAppButton" && drop.source !== appButton) {
+                            root.reorderApps(drop.source.modelIndex, appButton.modelIndex);
+                          }
+                        }
+                      }
+
                       // Listen for the toplevel being closed
                       Connections {
                         target: modelData?.toplevel
@@ -476,35 +771,38 @@ Loader {
                         }
                       }
 
-                      Image {
-                        id: appIcon
+                      // Draggable container for the icon
+                      Item {
+                        id: iconContainer
                         width: iconSize
                         height: iconSize
-                        anchors.centerIn: parent
-                        source: dock.getAppIcon(modelData)
-                        visible: source.toString() !== ""
-                        sourceSize.width: iconSize * 2
-                        sourceSize.height: iconSize * 2
-                        smooth: true
-                        mipmap: true
-                        antialiasing: true
-                        fillMode: Image.PreserveAspectFit
-                        cache: true
 
-                        // Dim pinned apps that aren't running
-                        opacity: appButton.isRunning ? 1.0 : Settings.data.dock.deadOpacity
+                        // When dragging, remove anchors so MouseArea can position it
+                        anchors.centerIn: dragging ? undefined : parent
 
-                        scale: appButton.hovered ? 1.15 : 1.0
-
-                        // Apply dock-specific colorization shader only to non-focused apps
-                        layer.enabled: !appButton.isActive && Settings.data.dock.colorizeIcons
-                        layer.effect: ShaderEffect {
-                          property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
-                          property real colorizeMode: 0.0 // Dock mode (grayscale)
-
-                          fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/appicon_colorize.frag.qsb")
+                        property bool dragging: appMouseArea.drag.active
+                        onDraggingChanged: {
+                          if (dragging) {
+                            root.dragSourceIndex = index;
+                          } else {
+                            // Reset if not handled by drop (e.g. dropped outside)
+                            Qt.callLater(() => {
+                                           if (!appMouseArea.drag.active && root.dragSourceIndex === index) {
+                                             root.dragSourceIndex = -1;
+                                             root.dragTargetIndex = -1;
+                                           }
+                                         });
+                          }
                         }
 
+                        Drag.active: dragging
+                        Drag.source: appButton
+                        Drag.hotSpot.x: width / 2
+                        Drag.hotSpot.y: height / 2
+                        Drag.keys: ["dock-app"]
+
+                        z: (root.dragSourceIndex === index) ? 1000 : ((dragging ? 1000 : 0))
+                        scale: dragging ? 1.1 : (appButton.hovered ? 1.15 : 1.0)
                         Behavior on scale {
                           NumberAnimation {
                             duration: Style.animationNormal
@@ -513,36 +811,92 @@ Loader {
                           }
                         }
 
-                        Behavior on opacity {
-                          NumberAnimation {
-                            duration: Style.animationFast
-                            easing.type: Easing.OutQuad
-                          }
-                        }
-                      }
+                        // Visual shifting logic
+                        readonly property bool isDragged: root.dragSourceIndex === index
+                        property real shiftOffset: 0
 
-                      // Fall back if no icon
-                      NIcon {
-                        anchors.centerIn: parent
-                        visible: !appIcon.visible
-                        icon: "question-mark"
-                        pointSize: iconSize * 0.7
-                        color: appButton.isActive ? Color.mPrimary : Color.mOnSurfaceVariant
-                        opacity: appButton.isRunning ? 1.0 : 0.6
-                        scale: appButton.hovered ? 1.15 : 1.0
-
-                        Behavior on scale {
-                          NumberAnimation {
-                            duration: Style.animationFast
-                            easing.type: Easing.OutBack
-                            easing.overshoot: 1.2
+                        Binding on shiftOffset {
+                          value: {
+                            if (root.dragSourceIndex !== -1 && root.dragTargetIndex !== -1 && !iconContainer.isDragged) {
+                              if (root.dragSourceIndex < root.dragTargetIndex) {
+                                // Dragging Forward: Items between source and target shift Backward
+                                if (index > root.dragSourceIndex && index <= root.dragTargetIndex) {
+                                  return -1 * (root.isVertical ? iconSize + Style.marginS : iconSize + Style.marginS);
+                                }
+                              } else if (root.dragSourceIndex > root.dragTargetIndex) {
+                                // Dragging Backward: Items between target and source shift Forward
+                                if (index >= root.dragTargetIndex && index < root.dragSourceIndex) {
+                                  return (root.isVertical ? iconSize + Style.marginS : iconSize + Style.marginS);
+                                }
+                              }
+                            }
+                            return 0;
                           }
                         }
 
-                        Behavior on opacity {
-                          NumberAnimation {
-                            duration: Style.animationFast
-                            easing.type: Easing.OutQuad
+                        transform: Translate {
+                          x: !root.isVertical ? iconContainer.shiftOffset : 0
+                          y: root.isVertical ? iconContainer.shiftOffset : 0
+
+                          Behavior on x {
+                            NumberAnimation {
+                              duration: Style.animationFast
+                              easing.type: Easing.OutQuad
+                            }
+                          }
+                          Behavior on y {
+                            NumberAnimation {
+                              duration: Style.animationFast
+                              easing.type: Easing.OutQuad
+                            }
+                          }
+                        }
+
+                        IconImage {
+                          id: appIcon
+                          anchors.fill: parent
+                          source: {
+                            root.iconRevision; // Force re-evaluation when revision changes
+                            return dock.getAppIcon(modelData);
+                          }
+                          visible: source.toString() !== ""
+                          smooth: true
+                          asynchronous: true
+
+                          // Dim pinned apps that aren't running
+                          opacity: appButton.isRunning ? 1.0 : Settings.data.dock.deadOpacity
+
+                          // Apply dock-specific colorization shader only to non-focused apps
+                          layer.enabled: !appButton.isActive && Settings.data.dock.colorizeIcons
+                          layer.effect: ShaderEffect {
+                            property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
+                            property real colorizeMode: 0.0 // Dock mode (grayscale)
+
+                            fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/appicon_colorize.frag.qsb")
+                          }
+
+                          Behavior on opacity {
+                            NumberAnimation {
+                              duration: Style.animationFast
+                              easing.type: Easing.OutQuad
+                            }
+                          }
+                        }
+
+                        // Fall back if no icon
+                        NIcon {
+                          anchors.centerIn: parent
+                          visible: !appIcon.visible
+                          icon: "question-mark"
+                          pointSize: iconSize * 0.7
+                          color: appButton.isActive ? Color.mPrimary : Color.mOnSurfaceVariant
+                          opacity: appButton.isRunning ? 1.0 : 0.6
+
+                          Behavior on opacity {
+                            NumberAnimation {
+                              duration: Style.animationFast
+                              easing.type: Easing.OutQuad
+                            }
                           }
                         }
                       }
@@ -550,6 +904,7 @@ Loader {
                       // Context menu popup
                       DockMenu {
                         id: contextMenu
+                        dockPosition: root.dockPosition // Pass dock position for menu placement
                         onHoveredChanged: {
                           // Only update menuHovered if this menu is current and visible
                           if (root.currentContextMenu === contextMenu && contextMenu.visible) {
@@ -574,12 +929,10 @@ Loader {
                         onVisibleChanged: {
                           if (visible) {
                             root.currentContextMenu = contextMenu;
-                            anyAppHovered = false;
                           } else if (root.currentContextMenu === contextMenu) {
                             root.currentContextMenu = null;
                             hideTimer.stop();
                             menuHovered = false;
-                            anyAppHovered = false;
                             // Restart hide timer after menu closes
                             if (autoHide && !dockHovered && !anyAppHovered && !peekHovered && !menuHovered) {
                               hideTimer.restart();
@@ -596,6 +949,25 @@ Loader {
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
+                        // Only allow left-click dragging via axis control
+                        drag.target: iconContainer
+                        drag.axis: (pressedButtons & Qt.LeftButton) ? (root.isVertical ? Drag.YAxis : Drag.XAxis) : Drag.None
+
+                        onPressed: {
+                          var p1 = appButton.mapFromItem(dockContainer, 0, 0);
+                          var p2 = appButton.mapFromItem(dockContainer, dockContainer.width, dockContainer.height);
+                          drag.minimumX = p1.x;
+                          drag.maximumX = p2.x - iconContainer.width;
+                          drag.minimumY = p1.y;
+                          drag.maximumY = p2.y - iconContainer.height;
+                        }
+
+                        onReleased: {
+                          if (iconContainer.Drag.active) {
+                            iconContainer.Drag.drop();
+                          }
+                        }
+
                         onEntered: {
                           anyAppHovered = true;
                           const appName = appButton.appTitle || appButton.appId || "Unknown";
@@ -607,6 +979,7 @@ Loader {
                             showTimer.stop();
                             hideTimer.stop();
                             unloadTimer.stop(); // Cancel unload if hovering app
+                            hidden = false; // Make sure dock is visible
                           }
                         }
 
@@ -617,7 +990,7 @@ Loader {
                           if (!root.currentContextMenu || !root.currentContextMenu.visible) {
                             menuHovered = false;
                           }
-                          if (autoHide && !dockHovered && !peekHovered && !menuHovered) {
+                          if (autoHide && !dockHovered && !peekHovered && !menuHovered && root.dragSourceIndex === -1) {
                             hideTimer.restart();
                           }
                         }
@@ -652,7 +1025,13 @@ Loader {
                               modelData.toplevel.activate();
                             } else if (modelData?.appId) {
                               // Pinned app not running - launch it
-                              const app = DesktopEntries.byId(modelData.appId);
+                              // Use ThemeIcons to robustly find the desktop entry
+                              const app = ThemeIcons.findAppEntry(modelData.appId);
+
+                              if (!app) {
+                                Logger.w("Dock", `Could not find desktop entry for pinned app: ${modelData.appId}`);
+                                return;
+                              }
 
                               if (Settings.data.appLauncher.customLaunchPrefixEnabled && Settings.data.appLauncher.customLaunchPrefix) {
                                 // Use custom launch prefix
@@ -666,7 +1045,7 @@ Loader {
                                   const command = prefix.concat(app.command);
                                   Quickshell.execDetached(command);
                                 }
-                              } else if (Settings.data.appLauncher.useApp2Unit && app.id) {
+                              } else if (Settings.data.appLauncher.useApp2Unit && ProgramCheckerService.app2unitAvailable && app.id) {
                                 Logger.d("Dock", `Using app2unit for: ${app.id}`);
                                 if (app.runInTerminal)
                                   Quickshell.execDetached(["app2unit", "--", app.id + ".desktop"]);
@@ -693,7 +1072,7 @@ Loader {
                         }
                       }
 
-                      // Active indicator
+                      // Active indicator - always below the icon
                       Rectangle {
                         visible: Settings.data.dock.inactiveIndicators ? isRunning : isActive
                         width: iconSize * 0.2

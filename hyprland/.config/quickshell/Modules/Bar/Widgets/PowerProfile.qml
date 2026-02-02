@@ -12,21 +12,21 @@ NIconButton {
 
   property ShellScreen screen
 
-  baseSize: Style.capsuleHeight
+  baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
-  density: Settings.data.bar.density
   customRadius: Style.radiusL
   visible: PowerProfileService.available
   icon: PowerProfileService.getIcon()
   tooltipText: I18n.tr("tooltips.power-profile", {
                          "profile": PowerProfileService.getName()
                        })
-  tooltipDirection: BarService.getTooltipDirection()
+  tooltipDirection: BarService.getTooltipDirection(screen?.name)
   colorBg: (PowerProfileService.profile === PowerProfile.Balanced) ? Style.capsuleColor : Color.mPrimary
   colorFg: (PowerProfileService.profile === PowerProfile.Balanced) ? Color.mOnSurface : Color.mOnPrimary
-  colorBorder: Color.transparent
-  colorBorderHover: Color.transparent
+  colorBorder: "transparent"
+  colorBorderHover: "transparent"
   border.color: Style.capsuleBorderColor
   border.width: Style.capsuleBorderWidth
   onClicked: PowerProfileService.cycleProfile()
+  onRightClicked: PowerProfileService.cycleProfileReverse()
 }

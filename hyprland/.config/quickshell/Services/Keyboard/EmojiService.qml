@@ -13,6 +13,7 @@ Singleton {
   property bool loaded: false
 
   // Usage tracking for popular emojis
+  // Format: { "emoji": { count: number, lastUsed: timestamp } }
   property var usageCounts: ({})
 
   // File path for persisting usage data
@@ -25,8 +26,7 @@ Singleton {
     }
 
     if (!query || query.trim() === "") {
-      // Return popular/recently used emojis, fallback to all emojis sorted by usage
-      return _getPopularEmojis(50);
+      return emojis;
     }
 
     const terms = query.toLowerCase().split(" ").filter(t => t);
@@ -49,16 +49,22 @@ Singleton {
 
   function _getPopularEmojis(limit) {
     var emojisWithUsage = emojis.map(function (emoji) {
+      const usageData = usageCounts[emoji.emoji];
       return {
         emoji: emoji,
-        usageCount: usageCounts[emoji.emoji] || 0
+        usageCount: usageData ? (usageData.count || 0) : 0,
+        lastUsed: usageData ? (usageData.lastUsed || 0) : 0
       };
     }).filter(function (item) {
       return item.usageCount > 0;
     });
 
-    // Sort by usage count (descending), then by name
+    // Sort by last used timestamp (descending - most recent first)
+    // Then by usage count if timestamps are equal
     emojisWithUsage.sort(function (a, b) {
+      if (b.lastUsed !== a.lastUsed) {
+        return b.lastUsed - a.lastUsed;
+      }
       if (b.usageCount !== a.usageCount) {
         return b.usageCount - a.usageCount;
       }
@@ -115,8 +121,14 @@ Singleton {
   // Record emoji usage
   function recordUsage(emojiChar) {
     if (emojiChar) {
-      const currentCount = usageCounts[emojiChar] || 0;
-      usageCounts[emojiChar] = currentCount + 1;
+      const currentData = usageCounts[emojiChar] || {
+        count: 0,
+        lastUsed: 0
+      };
+      usageCounts[emojiChar] = {
+        count: currentData.count + 1,
+        lastUsed: Date.now()
+      };
       _saveUsageData();
     }
   }

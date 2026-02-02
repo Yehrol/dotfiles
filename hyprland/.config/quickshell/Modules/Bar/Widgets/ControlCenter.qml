@@ -22,9 +22,11 @@ NIconButton {
   property int sectionWidgetsCount: 0
 
   property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId]
+  // Explicit screenName property ensures reactive binding when screen changes
+  readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
-    if (section && sectionWidgetIndex >= 0) {
-      var widgets = Settings.data.bar.widgets[section];
+    if (section && sectionWidgetIndex >= 0 && screenName) {
+      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -82,17 +84,16 @@ NIconButton {
   // If using distro logo, don't use theme icon.
   icon: (customIconPath === "" && !useDistroLogo) ? customIcon : ""
   tooltipText: I18n.tr("tooltips.open-control-center")
-  tooltipDirection: BarService.getTooltipDirection()
-  baseSize: Style.capsuleHeight
+  tooltipDirection: BarService.getTooltipDirection(screen?.name)
+  baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
-  density: Settings.data.bar.density
   customRadius: Style.radiusL
   colorBg: Style.capsuleColor
   colorFg: iconColor
   colorBgHover: useDistroLogo ? Color.mSurfaceVariant : Color.mHover
   colorFgHover: iconHoverColor
-  colorBorder: Color.transparent
-  colorBorderHover: useDistroLogo ? Color.mHover : Color.transparent
+  colorBorder: "transparent"
+  colorBorderHover: useDistroLogo ? Color.mHover : "transparent"
 
   border.color: Style.capsuleBorderColor
   border.width: Style.capsuleBorderWidth
@@ -102,27 +103,25 @@ NIconButton {
 
     model: [
       {
-        "label": I18n.tr("context-menu.open-launcher"),
+        "label": I18n.tr("actions.open-launcher"),
         "action": "open-launcher",
         "icon": "search"
       },
       {
-        "label": I18n.tr("context-menu.open-settings"),
+        "label": I18n.tr("actions.open-settings"),
         "action": "open-settings",
         "icon": "adjustments"
       },
       {
-        "label": I18n.tr("context-menu.widget-settings"),
+        "label": I18n.tr("actions.widget-settings"),
         "action": "widget-settings",
         "icon": "settings"
       },
     ]
 
     onTriggered: action => {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                   if (popupMenuWindow) {
-                     popupMenuWindow.close();
-                   }
+                   contextMenu.close();
+                   PanelService.closeContextMenu(screen);
 
                    if (action === "open-launcher") {
                      PanelService.getPanel("launcherPanel", screen)?.toggle();
@@ -146,11 +145,7 @@ NIconButton {
     }
   }
   onRightClicked: {
-    var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-    if (popupMenuWindow) {
-      popupMenuWindow.showContextMenu(contextMenu);
-      contextMenu.openAtItem(root, screen);
-    }
+    PanelService.showContextMenu(contextMenu, root, screen);
   }
   onMiddleClicked: PanelService.getPanel("launcherPanel", screen)?.toggle()
 

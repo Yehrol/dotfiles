@@ -16,13 +16,10 @@ SmartPanel {
   preferredHeight: Math.round(500 * Style.uiScaleRatio)
 
   panelContent: Rectangle {
-    color: Color.transparent
+    id: panelContent
+    color: "transparent"
 
-    // Calculate content height based on header + devices list (or minimum for empty states)
-    property real headerHeight: headerRow.implicitHeight + Style.marginM * 2
-    property real devicesHeight: devicesList.implicitHeight
-    property real calculatedHeight: (devicesHeight !== 0) ? (headerHeight + devicesHeight + Style.marginL * 2 + Style.marginM) : (280 * Style.uiScaleRatio)
-    property real contentPreferredHeight: (BluetoothService.adapter && BluetoothService.adapter.enabled) ? Math.min(root.preferredHeight, calculatedHeight) : Math.min(root.preferredHeight, 280 * Style.uiScaleRatio)
+    property real contentPreferredHeight: Math.min(root.preferredHeight, mainColumn.implicitHeight + Style.marginL * 2)
 
     ColumnLayout {
       id: mainColumn
@@ -33,7 +30,7 @@ SmartPanel {
       // Header
       NBox {
         Layout.fillWidth: true
-        Layout.preferredHeight: headerRow.implicitHeight + Style.marginM * 2
+        Layout.preferredHeight: headerRow.implicitHeight + Style.marginXL
 
         RowLayout {
           id: headerRow
@@ -42,13 +39,13 @@ SmartPanel {
           spacing: Style.marginM
 
           NIcon {
-            icon: "bluetooth"
+            icon: BluetoothService.enabled ? "bluetooth" : "bluetooth-off"
             pointSize: Style.fontSizeXXL
-            color: Color.mPrimary
+            color: BluetoothService.enabled ? Color.mPrimary : Color.mOnSurfaceVariant
           }
 
           NText {
-            text: I18n.tr("bluetooth.panel.title")
+            text: I18n.tr("common.bluetooth")
             pointSize: Style.fontSizeL
             font.weight: Style.fontWeightBold
             color: Color.mOnSurface
@@ -75,19 +72,15 @@ SmartPanel {
 
           NIconButton {
             enabled: BluetoothService.enabled
-            icon: BluetoothService.adapter && BluetoothService.adapter.discovering ? "stop" : "refresh"
+            icon: BluetoothService.scanningActive ? "stop" : "refresh"
             tooltipText: I18n.tr("tooltips.refresh-devices")
             baseSize: Style.baseWidgetSize * 0.8
-            onClicked: {
-              if (BluetoothService.adapter) {
-                BluetoothService.adapter.discovering = !BluetoothService.adapter.discovering;
-              }
-            }
+            onClicked: BluetoothService.toggleDiscovery()
           }
 
           NIconButton {
             icon: "close"
-            tooltipText: I18n.tr("tooltips.close")
+            tooltipText: I18n.tr("common.close")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               root.close();
@@ -96,95 +89,216 @@ SmartPanel {
         }
       }
 
-      // Adapter not available of disabled
-      NBox {
-        id: disabledBox
-        visible: !(BluetoothService.adapter && BluetoothService.adapter.enabled)
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-
-        // Center the content within this rectangle
-        ColumnLayout {
-          anchors.fill: parent
-          spacing: Style.marginM
-
-          Item {
-            Layout.fillHeight: true
-          }
-
-          NIcon {
-            icon: "bluetooth-off"
-            pointSize: 48
-            color: Color.mOnSurfaceVariant
-            Layout.alignment: Qt.AlignHCenter
-          }
-
-          NText {
-            text: I18n.tr("bluetooth.panel.disabled")
-            pointSize: Style.fontSizeL
-            color: Color.mOnSurfaceVariant
-            Layout.alignment: Qt.AlignHCenter
-          }
-
-          NText {
-            text: I18n.tr("bluetooth.panel.enable-message")
-            pointSize: Style.fontSizeS
-            color: Color.mOnSurfaceVariant
-            horizontalAlignment: Text.AlignHCenter
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-          }
-
-          Item {
-            Layout.fillHeight: true
-          }
-        }
-      }
-
       NScrollView {
-        visible: BluetoothService.adapter && BluetoothService.adapter.enabled
+        id: bluetoothScrollView
         Layout.fillWidth: true
         Layout.fillHeight: true
         horizontalPolicy: ScrollBar.AlwaysOff
         verticalPolicy: ScrollBar.AsNeeded
-        clip: true
-        contentWidth: availableWidth
+        reserveScrollbarSpace: false
+        gradientColor: Color.mSurface
 
         ColumnLayout {
           id: devicesList
-          width: parent.width
+          width: bluetoothScrollView.availableWidth
           spacing: Style.marginM
+
+          // Adapter not available of disabled
+          NBox {
+            id: disabledBox
+            visible: !(BluetoothService.adapter && BluetoothService.adapter.enabled)
+            Layout.fillWidth: true
+            Layout.preferredHeight: disabledColumn.implicitHeight + Style.marginXL
+
+            // Center the content within this rectangle
+            ColumnLayout {
+              id: disabledColumn
+              anchors.fill: parent
+              anchors.margins: Style.marginM
+              spacing: Style.marginL
+
+              Item {
+                Layout.fillHeight: true
+              }
+
+              NIcon {
+                icon: "bluetooth-off"
+                pointSize: 48
+                color: Color.mOnSurfaceVariant
+                Layout.alignment: Qt.AlignHCenter
+              }
+
+              NText {
+                text: I18n.tr("bluetooth.panel.disabled")
+                pointSize: Style.fontSizeL
+                color: Color.mOnSurfaceVariant
+                Layout.alignment: Qt.AlignHCenter
+              }
+
+              NText {
+                text: I18n.tr("bluetooth.panel.enable-message")
+                pointSize: Style.fontSizeS
+                color: Color.mOnSurfaceVariant
+                horizontalAlignment: Text.AlignHCenter
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+              }
+
+              Item {
+                Layout.fillHeight: true
+              }
+            }
+          }
+
+          // Fallback - No devices, scanning
+          NBox {
+            id: scanningBox
+            Layout.fillWidth: true
+            Layout.preferredHeight: scanningColumn.implicitHeight + Style.marginXL
+            visible: {
+              if (!(BluetoothService.adapter && BluetoothService.adapter.enabled && BluetoothService.adapter.devices) || !BluetoothService.scanningActive) {
+                return false;
+              }
+
+              var availableCount = BluetoothService.adapter.devices.values.filter(dev => {
+                                                                                    return dev && !dev.paired && !dev.pairing && !dev.blocked && (dev.signalStrength === undefined || dev.signalStrength > 0);
+                                                                                  }).length;
+              return (availableCount === 0);
+            }
+
+            ColumnLayout {
+              id: scanningColumn
+              anchors.fill: parent
+              anchors.margins: Style.marginM
+              spacing: Style.marginL
+
+              Item {
+                Layout.fillHeight: true
+              }
+
+              RowLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: Style.marginXS
+
+                NIcon {
+                  icon: "refresh"
+                  pointSize: Style.fontSizeXXL * 1.5
+                  color: Color.mPrimary
+
+                  RotationAnimation on rotation {
+                    running: true
+                    loops: Animation.Infinite
+                    from: 0
+                    to: 360
+                    duration: Style.animationSlow * 4
+                  }
+                }
+
+                NText {
+                  text: I18n.tr("bluetooth.panel.scanning")
+                  pointSize: Style.fontSizeL
+                  color: Color.mOnSurface
+                }
+              }
+
+              NText {
+                text: I18n.tr("bluetooth.panel.pairing-mode")
+                pointSize: Style.fontSizeM
+                color: Color.mOnSurfaceVariant
+                horizontalAlignment: Text.AlignHCenter
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+              }
+
+              Item {
+                Layout.fillHeight: true
+              }
+            }
+          }
+
+          // Empty state when no devices
+          NBox {
+            id: emptyBox
+            visible: {
+              if (!(BluetoothService.adapter && BluetoothService.adapter.enabled && BluetoothService.adapter.devices) || BluetoothService.scanningActive)
+                return false;
+
+              var availableCount = BluetoothService.adapter.devices.values.filter(dev => {
+                                                                                    return dev && !dev.blocked && (dev.signalStrength === undefined || dev.signalStrength > 0);
+                                                                                  }).length;
+              return (availableCount === 0);
+            }
+            Layout.fillWidth: true
+            Layout.preferredHeight: emptyColumn.implicitHeight + Style.marginXL
+
+            ColumnLayout {
+              id: emptyColumn
+              anchors.fill: parent
+              anchors.margins: Style.marginM
+              spacing: Style.marginL
+
+              Item {
+                Layout.fillHeight: true
+              }
+
+              NIcon {
+                icon: "bluetooth"
+                pointSize: 48
+                color: Color.mOnSurfaceVariant
+                Layout.alignment: Qt.AlignHCenter
+              }
+
+              NText {
+                text: I18n.tr("bluetooth.panel.no-devices")
+                pointSize: Style.fontSizeL
+                color: Color.mOnSurfaceVariant
+                Layout.alignment: Qt.AlignHCenter
+              }
+
+              NButton {
+                text: I18n.tr("tooltips.refresh-devices")
+                icon: "refresh"
+                Layout.alignment: Qt.AlignHCenter
+                onClicked: {
+                  BluetoothService.toggleDiscovery();
+                }
+              }
+
+              Item {
+                Layout.fillHeight: true
+              }
+            }
+          }
 
           // Connected devices
           BluetoothDevicesList {
             label: I18n.tr("bluetooth.panel.connected-devices")
             headerMode: "layout"
             property var items: {
-              if (!BluetoothService.adapter || !Bluetooth.devices)
+              if (!BluetoothService.adapter || !BluetoothService.adapter.devices)
                 return [];
-              var filtered = Bluetooth.devices.values.filter(dev => dev && !dev.blocked && dev.connected);
+              var filtered = BluetoothService.adapter.devices.values.filter(dev => dev && !dev.blocked && dev.connected);
               filtered = BluetoothService.dedupeDevices(filtered);
               return BluetoothService.sortDevices(filtered);
             }
             model: items
-            visible: items.length > 0
+            visible: items.length > 0 && BluetoothService.adapter && BluetoothService.adapter.enabled
             Layout.fillWidth: true
           }
 
           // Paired devices
           BluetoothDevicesList {
             label: I18n.tr("bluetooth.panel.paired-devices")
-            tooltipText: I18n.tr("tooltips.connect-disconnect-devices")
             headerMode: "layout"
             property var items: {
-              if (!BluetoothService.adapter || !Bluetooth.devices)
+              if (!BluetoothService.adapter || !BluetoothService.adapter.devices)
                 return [];
-              var filtered = Bluetooth.devices.values.filter(dev => dev && !dev.blocked && !dev.connected && (dev.paired || dev.trusted));
+              var filtered = BluetoothService.adapter.devices.values.filter(dev => dev && !dev.blocked && !dev.connected && (dev.paired || dev.trusted));
               filtered = BluetoothService.dedupeDevices(filtered);
               return BluetoothService.sortDevices(filtered);
             }
             model: items
-            visible: items.length > 0
+            visible: items.length > 0 && BluetoothService.adapter && BluetoothService.adapter.enabled
             Layout.fillWidth: true
           }
 
@@ -193,11 +307,11 @@ SmartPanel {
             label: I18n.tr("bluetooth.panel.available-devices")
             headerMode: "filter"
             property var items: {
-              if (!BluetoothService.adapter || !Bluetooth.devices)
+              if (!BluetoothService.adapter || !BluetoothService.adapter.devices)
                 return [];
-              var filtered = Bluetooth.devices.values.filter(dev => dev && !dev.blocked && !dev.paired && !dev.trusted);
+              var filtered = BluetoothService.adapter.devices.values.filter(dev => dev && !dev.blocked && !dev.paired && !dev.trusted);
               // Optionally hide devices without a meaningful name when the filter is enabled
-              if (Settings.data && Settings.data.ui && Settings.data.ui.bluetoothHideUnnamedDevices) {
+              if (Settings.data && Settings.data.ui && Settings.data.network.bluetoothHideUnnamedDevices) {
                 filtered = filtered.filter(function (dev) {
                   // Extract display name
                   var dn = "";
@@ -265,118 +379,97 @@ SmartPanel {
               return BluetoothService.sortDevices(filtered);
             }
             model: items
-            visible: items.length > 0
+            visible: items.length > 0 && BluetoothService.adapter && BluetoothService.adapter.enabled
             Layout.fillWidth: true
           }
+        }
+      }
+    }
 
-          // Empty state when no devices
-          NBox {
-            visible: {
-              if (!BluetoothService.adapter || BluetoothService.adapter.discovering || !Bluetooth.devices)
-                return false;
+    // PIN Authentication Overlay
+    Rectangle {
+      id: pinOverlay
+      anchors.fill: parent
+      color: Color.mSurface
+      visible: BluetoothService.pinRequired
 
-              var availableCount = Bluetooth.devices.values.filter(dev => {
-                                                                     return dev && !dev.paired && !dev.pairing && !dev.blocked && (dev.signalStrength === undefined || dev.signalStrength > 0);
-                                                                   }).length;
-              return (availableCount === 0);
-            }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+      // Trap all input
+      MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        onClicked: mouse => mouse.accepted = true
+        onWheel: wheel => wheel.accepted = true
+      }
 
-            ColumnLayout {
-              anchors.fill: parent
-              spacing: Style.marginL
+      ColumnLayout {
+        anchors.centerIn: parent
+        width: parent.width * 0.85
+        spacing: Style.marginL
 
-              Item {
-                Layout.fillHeight: true
-              }
+        NIcon {
+          icon: "lock"
+          pointSize: 48
+          color: Color.mPrimary
+          Layout.alignment: Qt.AlignHCenter
+        }
 
-              NIcon {
-                icon: "bluetooth"
-                pointSize: 64
-                color: Color.mOnSurfaceVariant
-                Layout.alignment: Qt.AlignHCenter
-              }
+        NText {
+          text: I18n.tr("common.authentication-required")
+          pointSize: Style.fontSizeXL
+          font.weight: Style.fontWeightBold
+          color: Color.mOnSurface
+          horizontalAlignment: Text.AlignHCenter
+        }
 
-              NText {
-                text: I18n.tr("bluetooth.panel.no-devices")
-                pointSize: Style.fontSizeL
-                color: Color.mOnSurfaceVariant
-                Layout.alignment: Qt.AlignHCenter
-              }
+        NText {
+          text: I18n.tr("bluetooth.panel.pin-instructions")
+          pointSize: Style.fontSizeM
+          color: Color.mOnSurfaceVariant
+          wrapMode: Text.WordWrap
+          horizontalAlignment: Text.AlignHCenter
+          Layout.fillWidth: true
+        }
 
-              NButton {
-                text: I18n.tr("bluetooth.panel.refresh-devices")
-                icon: "refresh"
-                Layout.alignment: Qt.AlignHCenter
-                onClicked: {
-                  if (BluetoothService.adapter) {
-                    BluetoothService.adapter.discovering = !BluetoothService.adapter.discovering;
-                  }
-                }
-              }
-
-              Item {
-                Layout.fillHeight: true
-              }
+        NTextInput {
+          id: pinInput
+          Layout.fillWidth: true
+          placeholderText: "123456"
+          inputIconName: "key"
+          // Clear text when overlay appears
+          onVisibleChanged: {
+            if (visible) {
+              text = "";
+              inputItem.forceActiveFocus();
             }
           }
-
-          // Fallback - No devices, scanning
-          NBox {
-            Layout.fillWidth: true
-            Layout.preferredHeight: columnScanning.implicitHeight + Style.marginM * 2
-            visible: {
-              if (!BluetoothService.adapter || !BluetoothService.adapter.discovering || !Bluetooth.devices) {
-                return false;
-              }
-
-              var availableCount = Bluetooth.devices.values.filter(dev => {
-                                                                     return dev && !dev.blocked && (dev.signalStrength === undefined || dev.signalStrength > 0);
-                                                                   }).length;
-              return (availableCount === 0);
+          // Submit on Enter
+          inputItem.onAccepted: {
+            if (text.length > 0) {
+              BluetoothService.submitPin(text);
+              text = "";
             }
+          }
+        }
 
-            ColumnLayout {
-              id: columnScanning
-              anchors.fill: parent
-              anchors.margins: Style.marginM
+        RowLayout {
+          Layout.alignment: Qt.AlignHCenter
+          spacing: Style.marginM
 
-              spacing: Style.marginM
+          NButton {
+            text: I18n.tr("common.cancel")
+            icon: "x"
+            onClicked: BluetoothService.cancelPairing()
+          }
 
-              RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Style.marginXS
-
-                NIcon {
-                  icon: "refresh"
-                  pointSize: Style.fontSizeXXL * 1.5
-                  color: Color.mPrimary
-
-                  RotationAnimation on rotation {
-                    running: true
-                    loops: Animation.Infinite
-                    from: 0
-                    to: 360
-                    duration: Style.animationSlow * 4
-                  }
-                }
-
-                NText {
-                  text: I18n.tr("bluetooth.panel.scanning")
-                  pointSize: Style.fontSizeL
-                  color: Color.mOnSurface
-                }
-              }
-
-              NText {
-                text: I18n.tr("bluetooth.panel.pairing-mode")
-                pointSize: Style.fontSizeM
-                color: Color.mOnSurfaceVariant
-                horizontalAlignment: Text.AlignHCenter
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-              }
+          NButton {
+            text: I18n.tr("common.confirm")
+            icon: "check"
+            backgroundColor: Color.mPrimary
+            textColor: Color.mOnPrimary
+            enabled: pinInput.text.length > 0
+            onClicked: {
+              BluetoothService.submitPin(pinInput.text);
+              pinInput.text = "";
             }
           }
         }

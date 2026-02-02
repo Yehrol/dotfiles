@@ -14,24 +14,23 @@ NIconButton {
 
   property ShellScreen screen
 
-  density: Settings.data.bar.density
-  baseSize: Style.capsuleHeight
+  baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
   customRadius: Style.radiusL
   colorBg: Settings.data.nightLight.forced ? Color.mPrimary : Style.capsuleColor
   colorFg: Settings.data.nightLight.forced ? Color.mOnPrimary : Color.mOnSurface
-  colorBorder: Color.transparent
-  colorBorderHover: Color.transparent
+  colorBorder: "transparent"
+  colorBorderHover: "transparent"
   border.color: Style.capsuleBorderColor
   border.width: Style.capsuleBorderWidth
 
   icon: Settings.data.nightLight.enabled ? (Settings.data.nightLight.forced ? "nightlight-forced" : "nightlight-on") : "nightlight-off"
-  tooltipText: Settings.data.nightLight.enabled ? (Settings.data.nightLight.forced ? I18n.tr("tooltips.night-light-forced") : I18n.tr("tooltips.night-light-enabled")) : I18n.tr("tooltips.night-light-disabled")
-  tooltipDirection: BarService.getTooltipDirection()
+  tooltipText: Settings.data.nightLight.enabled ? (Settings.data.nightLight.forced ? I18n.tr("common.night-light") : I18n.tr("common.night-light")) : I18n.tr("common.night-light")
+  tooltipDirection: BarService.getTooltipDirection(screen?.name)
   onClicked: {
     // Check if wlsunset is available before enabling night light
     if (!ProgramCheckerService.wlsunsetAvailable) {
-      ToastService.showWarning(I18n.tr("settings.display.night-light.section.label"), I18n.tr("toast.night-light.not-installed"));
+      ToastService.showWarning(I18n.tr("common.night-light"), I18n.tr("toast.night-light.not-installed"));
       return;
     }
 

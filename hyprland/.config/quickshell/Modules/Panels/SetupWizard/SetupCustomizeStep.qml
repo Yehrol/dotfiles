@@ -56,16 +56,15 @@ ColumnLayout {
     }
   }
 
-  ScrollView {
+  NScrollView {
+    id: customizeScrollView
     Layout.fillWidth: true
     Layout.fillHeight: true
-    clip: true
-    contentWidth: availableWidth
-    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+    horizontalPolicy: ScrollBar.AlwaysOff
+    verticalPolicy: ScrollBar.AsNeeded
 
     ColumnLayout {
-      width: parent.width
+      width: customizeScrollView.availableWidth
       spacing: Style.marginM
 
       // Bar Position section
@@ -96,14 +95,14 @@ ColumnLayout {
             spacing: 2
 
             NText {
-              text: I18n.tr("settings.bar.appearance.position.label")
+              text: I18n.tr("panels.bar.appearance-position-label")
               pointSize: Style.fontSizeL
               font.weight: Style.fontWeightBold
               color: Color.mOnSurface
             }
 
             NText {
-              text: I18n.tr("settings.bar.appearance.position.description")
+              text: I18n.tr("panels.bar.appearance-position-description")
               pointSize: Style.fontSizeS
               color: Color.mOnSurfaceVariant
             }
@@ -118,22 +117,22 @@ ColumnLayout {
             model: [
               {
                 "key": "top",
-                "name": I18n.tr("options.bar.position.top"),
+                "name": I18n.tr("positions.top"),
                 "icon": "arrow-up"
               },
               {
                 "key": "bottom",
-                "name": I18n.tr("options.bar.position.bottom"),
+                "name": I18n.tr("positions.bottom"),
                 "icon": "arrow-down"
               },
               {
                 "key": "left",
-                "name": I18n.tr("options.bar.position.left"),
+                "name": I18n.tr("positions.left"),
                 "icon": "arrow-left"
               },
               {
                 "key": "right",
-                "name": I18n.tr("options.bar.position.right"),
+                "name": I18n.tr("positions.right"),
                 "icon": "arrow-right"
               }
             ]
@@ -221,13 +220,13 @@ ColumnLayout {
           Layout.fillWidth: true
           spacing: 2
           NText {
-            text: I18n.tr("settings.bar.appearance.density.label")
+            text: I18n.tr("panels.bar.appearance-density-label")
             pointSize: Style.fontSizeL
             font.weight: Style.fontWeightBold
             color: Color.mOnSurface
           }
           NText {
-            text: I18n.tr("settings.bar.appearance.density.description")
+            text: I18n.tr("panels.bar.appearance-density-description")
             pointSize: Style.fontSizeS
             color: Color.mOnSurfaceVariant
             wrapMode: Text.WordWrap
@@ -241,19 +240,23 @@ ColumnLayout {
             model: [
               {
                 "key": "mini",
-                "name": I18n.tr("options.bar.density.mini")
+                "name": I18n.tr("options.bar.density-mini")
               },
               {
                 "key": "compact",
-                "name": I18n.tr("options.bar.density.compact")
+                "name": I18n.tr("options.bar.density-compact")
               },
               {
                 "key": "default",
-                "name": I18n.tr("options.bar.density.default")
+                "name": I18n.tr("options.bar.density-default")
               },
               {
                 "key": "comfortable",
-                "name": I18n.tr("options.bar.density.comfortable")
+                "name": I18n.tr("options.bar.density-comfortable")
+              },
+              {
+                "key": "spacious",
+                "name": I18n.tr("options.bar.density-spacious")
               }
             ]
             delegate: Rectangle {
@@ -342,13 +345,13 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: 2
             NText {
-              text: I18n.tr("settings.user-interface.scaling.label")
+              text: I18n.tr("panels.user-interface.scaling-label")
               pointSize: Style.fontSizeL
               font.weight: Style.fontWeightBold
               color: Color.mOnSurface
             }
             NText {
-              text: I18n.tr("settings.user-interface.scaling.description")
+              text: I18n.tr("panels.user-interface.scaling-description")
               pointSize: Style.fontSizeS
               color: Color.mOnSurfaceVariant
             }
@@ -379,43 +382,115 @@ ColumnLayout {
         Layout.bottomMargin: Style.marginS
       }
 
-      // Bar Floating toggle
-      RowLayout {
+      // Bar Type section
+      ColumnLayout {
         Layout.fillWidth: true
         spacing: Style.marginM
-        Rectangle {
-          width: 32
-          height: 32
-          radius: Style.radiusM
-          color: Color.mSurface
-          NIcon {
-            icon: "layout-2"
-            pointSize: Style.fontSizeL
-            color: Color.mPrimary
-            anchors.centerIn: parent
-          }
-        }
-        ColumnLayout {
+
+        RowLayout {
           Layout.fillWidth: true
-          spacing: 2
-          NText {
-            text: I18n.tr("settings.bar.appearance.floating.label")
-            pointSize: Style.fontSizeL
-            font.weight: Style.fontWeightBold
-            color: Color.mOnSurface
+          spacing: Style.marginS
+
+          Rectangle {
+            width: 28
+            height: 28
+            radius: Style.radiusM
+            color: Color.mSurface
+
+            NIcon {
+              icon: "layout-2"
+              pointSize: Style.fontSizeL
+              color: Color.mPrimary
+              anchors.centerIn: parent
+            }
           }
-          NText {
-            text: I18n.tr("settings.bar.appearance.floating.description")
-            pointSize: Style.fontSizeS
-            color: Color.mOnSurfaceVariant
-            wrapMode: Text.WordWrap
+
+          ColumnLayout {
             Layout.fillWidth: true
+            spacing: 2
+
+            NText {
+              text: I18n.tr("panels.bar.appearance-type-label") ?? "Bar Type"
+              pointSize: Style.fontSizeL
+              font.weight: Style.fontWeightBold
+              color: Color.mOnSurface
+            }
+
+            NText {
+              text: I18n.tr("panels.bar.appearance-type-description") ?? "Choose the style of the bar: Simple, Floating or Framed"
+              pointSize: Style.fontSizeS
+              color: Color.mOnSurfaceVariant
+            }
           }
         }
-        NToggle {
-          checked: Settings.data.bar.floating
-          onToggled: function (checked) {
-            Settings.data.bar.floating = checked;
+
+        RowLayout {
+          Layout.fillWidth: true
+          spacing: Style.marginS
+
+          Repeater {
+            model: [
+              {
+                "key": "simple",
+                "name": I18n.tr("options.bar.type-simple") ?? "Simple"
+              },
+              {
+                "key": "floating",
+                "name": I18n.tr("options.bar.type-floating") ?? "Floating"
+              },
+              {
+                "key": "framed",
+                "name": I18n.tr("options.bar.type-framed") ?? "Framed"
+              }
+            ]
+            delegate: Rectangle {
+              Layout.fillWidth: true
+              Layout.preferredHeight: 40
+              radius: Style.radiusM
+              border.width: Style.borderS
+
+              property bool isActive: Settings.data.bar.barType === modelData.key
+
+              color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mSurfaceVariant
+              border.color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mOutline
+              opacity: (hoverHandler.hovered || isActive) ? 1.0 : 0.8
+
+              NText {
+                text: modelData.name
+                pointSize: Style.fontSizeM
+                font.weight: (hoverHandler.hovered || parent.isActive) ? Style.fontWeightBold : Style.fontWeightMedium
+                color: (hoverHandler.hovered || parent.isActive) ? Color.mOnPrimary : Color.mOnSurface
+                anchors.centerIn: parent
+              }
+
+              HoverHandler {
+                id: hoverHandler
+              }
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                  Settings.data.bar.barType = modelData.key;
+                  Settings.data.bar.floating = (modelData.key === "floating");
+                }
+              }
+
+              Behavior on color {
+                ColorAnimation {
+                  duration: Style.animationFast
+                }
+              }
+              Behavior on border.color {
+                ColorAnimation {
+                  duration: Style.animationFast
+                }
+              }
+              Behavior on opacity {
+                NumberAnimation {
+                  duration: Style.animationFast
+                }
+              }
+            }
           }
         }
       }
@@ -460,13 +535,13 @@ ColumnLayout {
           Layout.fillWidth: true
           spacing: 2
           NText {
-            text: I18n.tr("settings.user-interface.dimmer-opacity.label")
+            text: I18n.tr("panels.user-interface.dimmer-opacity-label")
             pointSize: Style.fontSizeL
             font.weight: Style.fontWeightBold
             color: Color.mOnSurface
           }
           NText {
-            text: I18n.tr("settings.user-interface.dimmer-opacity.description")
+            text: I18n.tr("panels.user-interface.dimmer-opacity-description")
             pointSize: Style.fontSizeS
             color: Color.mOnSurfaceVariant
             wrapMode: Text.WordWrap
@@ -515,13 +590,13 @@ ColumnLayout {
           Layout.fillWidth: true
           spacing: 2
           NText {
-            text: I18n.tr("settings.user-interface.shadows.label")
+            text: I18n.tr("panels.user-interface.shadows-label")
             pointSize: Style.fontSizeL
             font.weight: Style.fontWeightBold
             color: Color.mOnSurface
           }
           NText {
-            text: I18n.tr("settings.user-interface.shadows.description")
+            text: I18n.tr("panels.user-interface.shadows-description")
             pointSize: Style.fontSizeS
             color: Color.mOnSurfaceVariant
             wrapMode: Text.WordWrap
@@ -530,9 +605,7 @@ ColumnLayout {
         }
         NToggle {
           checked: Settings.data.general.enableShadows
-          onToggled: function (checked) {
-            Settings.data.general.enableShadows = checked;
-          }
+          onToggled: checked => Settings.data.general.enableShadows = checked
         }
       }
 

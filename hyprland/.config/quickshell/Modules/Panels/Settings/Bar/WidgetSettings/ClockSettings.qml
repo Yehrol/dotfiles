@@ -14,6 +14,8 @@ ColumnLayout {
   property var widgetData: null
   property var widgetMetadata: null
 
+  signal settingsChanged(var settings)
+
   // Local state
   property bool valueUsePrimaryColor: widgetData.usePrimaryColor !== undefined ? widgetData.usePrimaryColor : widgetMetadata.usePrimaryColor
   property bool valueUseCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
@@ -68,33 +70,40 @@ ColumnLayout {
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.clock.use-primary-color.label")
-    description: I18n.tr("bar.widget-settings.clock.use-primary-color.description")
+    label: I18n.tr("bar.clock.use-primary-color-label")
+    description: I18n.tr("bar.clock.use-primary-color-description")
     checked: valueUsePrimaryColor
-    onToggled: checked => valueUsePrimaryColor = checked
+    onToggled: checked => {
+                 valueUsePrimaryColor = checked;
+                 settingsChanged(saveSettings());
+               }
   }
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.clock.use-custom-font.label")
-    description: I18n.tr("bar.widget-settings.clock.use-custom-font.description")
+    label: I18n.tr("bar.clock.use-custom-font-label")
+    description: I18n.tr("bar.clock.use-custom-font-description")
     checked: valueUseCustomFont
-    onToggled: checked => valueUseCustomFont = checked
+    onToggled: checked => {
+                 valueUseCustomFont = checked;
+                 settingsChanged(saveSettings());
+               }
   }
 
   NSearchableComboBox {
     Layout.fillWidth: true
     visible: valueUseCustomFont
-    label: I18n.tr("bar.widget-settings.clock.custom-font.label")
-    description: I18n.tr("bar.widget-settings.clock.custom-font.description")
+    label: I18n.tr("bar.clock.custom-font-label")
+    description: I18n.tr("bar.clock.custom-font-description")
     model: FontService.availableFonts
     currentKey: valueCustomFont
-    placeholder: I18n.tr("bar.widget-settings.clock.custom-font.placeholder")
-    searchPlaceholder: I18n.tr("bar.widget-settings.clock.custom-font.search-placeholder")
+    placeholder: I18n.tr("bar.clock.custom-font-placeholder")
+    searchPlaceholder: I18n.tr("bar.clock.custom-font-search-placeholder")
     popupHeight: 420
     minimumWidth: 300
     onSelected: function (key) {
       valueCustomFont = key;
+      settingsChanged(saveSettings());
     }
   }
 
@@ -103,8 +112,8 @@ ColumnLayout {
   }
 
   NHeader {
-    label: I18n.tr("bar.widget-settings.clock.clock-display.label")
-    description: I18n.tr("bar.widget-settings.clock.clock-display.description")
+    label: I18n.tr("bar.clock.clock-display-label")
+    description: I18n.tr("bar.clock.clock-display-description")
   }
 
   RowLayout {
@@ -124,11 +133,12 @@ ColumnLayout {
       NTextInput {
         id: inputHoriz
         Layout.fillWidth: true
-        label: I18n.tr("bar.widget-settings.clock.horizontal-bar.label")
-        description: I18n.tr("bar.widget-settings.clock.horizontal-bar.description")
+        label: I18n.tr("bar.clock.horizontal-bar-label")
+        description: I18n.tr("bar.clock.horizontal-bar-description")
         placeholderText: "HH:mm ddd, MMM dd"
         text: valueFormatHorizontal
         onTextChanged: valueFormatHorizontal = text
+        onEditingFinished: settingsChanged(saveSettings())
         Component.onCompleted: {
           if (inputItem) {
             inputItem.onActiveFocusChanged.connect(function () {
@@ -147,12 +157,13 @@ ColumnLayout {
       NTextInput {
         id: inputVert
         Layout.fillWidth: true
-        label: I18n.tr("bar.widget-settings.clock.vertical-bar.label")
-        description: I18n.tr("bar.widget-settings.clock.vertical-bar.description")
+        label: I18n.tr("bar.clock.vertical-bar-label")
+        description: I18n.tr("bar.clock.vertical-bar-description")
         // Tokens are Qt format tokens and must not be localized
         placeholderText: "HH mm dd MM"
         text: valueFormatVertical
         onTextChanged: valueFormatVertical = text
+        onEditingFinished: settingsChanged(saveSettings())
         Component.onCompleted: {
           if (inputItem) {
             inputItem.onActiveFocusChanged.connect(function () {
@@ -167,11 +178,12 @@ ColumnLayout {
       NTextInput {
         id: inputTooltip
         Layout.fillWidth: true
-        label: I18n.tr("bar.widget-settings.clock.tooltip-format.label")
-        description: I18n.tr("bar.widget-settings.clock.tooltip-format.description")
+        label: I18n.tr("bar.clock.tooltip-format-label")
+        description: I18n.tr("bar.clock.tooltip-format-description")
         placeholderText: "HH:mm, ddd MMM dd"
         text: valueTooltipFormat
         onTextChanged: valueTooltipFormat = text
+        onEditingFinished: settingsChanged(saveSettings())
         Component.onCompleted: {
           if (inputItem) {
             inputItem.onActiveFocusChanged.connect(function () {
@@ -191,7 +203,7 @@ ColumnLayout {
       Layout.fillWidth: false
 
       NLabel {
-        label: I18n.tr("bar.widget-settings.clock.preview")
+        label: I18n.tr("bar.clock.preview")
         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
       }
 
@@ -283,7 +295,7 @@ ColumnLayout {
 
   NDateTimeTokens {
     Layout.fillWidth: true
-    height: 200
+    Layout.preferredHeight: 300
 
     // Connect to token clicked signal if NDateTimeTokens provides it
     onTokenClicked: token => root.insertToken(token)

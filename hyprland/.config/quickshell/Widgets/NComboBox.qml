@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import qs.Commons
+import qs.Services.UI
 import qs.Widgets
 
 RowLayout {
@@ -12,27 +13,27 @@ RowLayout {
 
   property string label: ""
   property string description: ""
+  property string tooltip: ""
   property var model
   property string currentKey: ""
   property string placeholder: ""
-  property bool isSettings: false
-  property var defaultValue: ""
+  property var defaultValue: undefined
   property string settingsPath: ""
+  property real baseSize: 1.0
 
-  readonly property real preferredHeight: Math.round(Style.baseWidgetSize * 1.1)
+  readonly property real preferredHeight: Math.round(Style.baseWidgetSize * 1.1 * root.baseSize)
   readonly property var comboBox: combo
 
   signal selected(string key)
 
   spacing: Style.marginL
-  Layout.fillWidth: true
   opacity: enabled ? 1.0 : 0.6
 
   // Less strict comparison with != (instead of !==) so it can properly compare int vs string (ex for FPS: 30 and "30")
-  readonly property bool isValueChanged: isSettings && (currentKey != defaultValue)
+  readonly property bool isValueChanged: (defaultValue !== undefined) && (currentKey != defaultValue)
 
   readonly property string indicatorTooltip: {
-    if (!isSettings)
+    if (defaultValue === undefined)
       return "";
     var displayValue = "";
     if (defaultValue === "") {
@@ -43,7 +44,7 @@ RowLayout {
           for (var i = 0; i < root.model.length; i++) {
             var item = root.model[i];
             if (item && item.key === "") {
-              displayValue = item.name || I18n.tr("settings.indicator.system-default");
+              displayValue = item.name || I18n.tr("panels.indicator.system-default");
               found = true;
               break;
             }
@@ -52,7 +53,7 @@ RowLayout {
           for (var i = 0; i < root.itemCount(); i++) {
             var item = root.getItem(i);
             if (item && item.key === "") {
-              displayValue = item.name || I18n.tr("settings.indicator.system-default");
+              displayValue = item.name || I18n.tr("panels.indicator.system-default");
               found = true;
               break;
             }
@@ -61,7 +62,7 @@ RowLayout {
       }
       // If not found in model, show "System Default" instead of "(empty)"
       if (!found) {
-        displayValue = I18n.tr("settings.indicator.system-default");
+        displayValue = I18n.tr("panels.indicator.system-default");
       }
     } else {
       // Try to find the display name for the default key in the model
@@ -91,7 +92,7 @@ RowLayout {
         displayValue = String(defaultValue);
       }
     }
-    return I18n.tr("settings.indicator.default-value", {
+    return I18n.tr("panels.indicator.default-value", {
                      "value": displayValue
                    });
   }
@@ -128,7 +129,7 @@ RowLayout {
   NLabel {
     label: root.label
     description: root.description
-    showIndicator: root.isSettings && root.isValueChanged
+    showIndicator: root.isValueChanged
     indicatorTooltip: root.indicatorTooltip
   }
 
@@ -147,6 +148,48 @@ RowLayout {
         root.selected(item.key);
     }
 
+    Keys.onUpPressed: event => {
+                        if (combo.popup.visible) {
+                          if (listView.currentIndex > 0) {
+                            listView.currentIndex--;
+                            listView.positionViewAtIndex(listView.currentIndex, ListView.Contain);
+                          }
+                          event.accepted = true;
+                        } else {
+                          event.accepted = false;
+                        }
+                      }
+
+    Keys.onDownPressed: event => {
+                          if (combo.popup.visible) {
+                            if (listView.currentIndex < root.itemCount() - 1) {
+                              listView.currentIndex++;
+                              listView.positionViewAtIndex(listView.currentIndex, ListView.Contain);
+                            }
+                            event.accepted = true;
+                          } else {
+                            event.accepted = false;
+                          }
+                        }
+
+    Keys.onReturnPressed: event => {
+                            if (combo.popup.visible) {
+                              var item = root.getItem(listView.currentIndex);
+                              if (item && item.key !== undefined) {
+                                root.selected(item.key);
+                                combo.currentIndex = listView.currentIndex;
+                                combo.popup.close();
+                              }
+                              event.accepted = true;
+                            } else {
+                              event.accepted = false;
+                            }
+                          }
+
+    Keys.onEnterPressed: event => {
+                           combo.Keys.returnPressed(event);
+                         }
+
     background: Rectangle {
       implicitWidth: Math.round(Style.baseWidgetSize * 3.75 * Style.uiScaleRatio)
       implicitHeight: Math.round(root.preferredHeight * Style.uiScaleRatio)
@@ -158,6 +201,22 @@ RowLayout {
       Behavior on border.color {
         ColorAnimation {
           duration: Style.animationFast
+        }
+      }
+
+      MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
+        onEntered: {
+          if (root.tooltip != "") {
+            TooltipService.show(root, root.tooltip);
+          }
+        }
+        onExited: {
+          if (root.tooltip != "") {
+            TooltipService.hide();
+          }
         }
       }
     }
@@ -186,66 +245,32 @@ RowLayout {
     }
 
     popup: Popup {
-      y: combo.height
-      implicitWidth: combo.width - Style.marginM
-      implicitHeight: Math.min(Math.round(root.popupHeight * Style.uiScaleRatio), listView.contentHeight + Style.marginM * 2)
+      y: combo.height + Style.marginS
+      implicitWidth: combo.width
+      implicitHeight: Math.min(Math.round(root.popupHeight * Style.uiScaleRatio), listView.contentHeight + Style.marginXL)
       padding: Style.marginM
 
-      contentItem: ListView {
+      onOpened: {
+        listView.currentIndex = combo.currentIndex;
+        listView.positionViewAtIndex(combo.currentIndex, ListView.Beginning);
+      }
+
+      contentItem: NListView {
         id: listView
         property var comboBox: combo
-        clip: true
         model: combo.popup.visible ? root.model : null
-        boundsBehavior: Flickable.StopAtBounds
         highlightMoveDuration: 0
-
-        ScrollBar.vertical: ScrollBar {
-          policy: listView.contentHeight > listView.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
-
-          contentItem: Rectangle {
-            implicitWidth: 6
-            implicitHeight: 100
-            radius: Style.iRadiusM
-            color: parent.pressed ? Qt.alpha(Color.mHover, 0.9) : parent.hovered ? Qt.alpha(Color.mHover, 0.9) : Qt.alpha(Color.mHover, 0.8)
-            opacity: parent.active ? 1.0 : 0.0
-
-            Behavior on opacity {
-              NumberAnimation {
-                duration: Style.animationFast
-              }
-            }
-
-            Behavior on color {
-              ColorAnimation {
-                duration: Style.animationFast
-              }
-            }
-          }
-
-          background: Rectangle {
-            implicitWidth: 6
-            implicitHeight: 100
-            color: Color.transparent
-            opacity: parent.active ? 0.3 : 0.0
-            radius: Style.iRadiusM / 2
-
-            Behavior on opacity {
-              NumberAnimation {
-                duration: Style.animationFast
-              }
-            }
-          }
-        }
+        //showGradientMasks: false
 
         delegate: Rectangle {
           id: delegateRect
           required property int index
           property bool isHighlighted: listView.currentIndex === index
 
-          width: listView.width
+          width: listView.availableWidth
           height: delegateText.implicitHeight + Style.marginS * 2
           radius: Style.iRadiusS
-          color: isHighlighted ? Color.mHover : Color.transparent
+          color: isHighlighted ? Color.mHover : "transparent"
 
           Behavior on color {
             ColorAnimation {
@@ -278,8 +303,9 @@ RowLayout {
             anchors.fill: parent
             hoverEnabled: true
             onContainsMouseChanged: {
-              if (containsMouse)
+              if (containsMouse) {
                 listView.currentIndex = delegateRect.index;
+              }
             }
             onClicked: {
               var item = root.getItem(delegateRect.index);
@@ -304,6 +330,9 @@ RowLayout {
     Connections {
       target: root
       function onCurrentKeyChanged() {
+        combo.currentIndex = root.findIndexByKey(root.currentKey);
+      }
+      function onModelChanged() {
         combo.currentIndex = root.findIndexByKey(root.currentKey);
       }
     }

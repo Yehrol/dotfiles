@@ -14,8 +14,6 @@ Rectangle {
   property string icon: ""
   property string tooltipText: ""
   property string tooltipDirection: "auto"
-  property string density: ""
-  property bool enabled: true
   property bool allowClickWhenDisabled: false
   property bool hot: false
 
@@ -65,16 +63,10 @@ Rectangle {
   border.width: Style.borderS
 
   Behavior on color {
+    enabled: !Color.isTransitioning
     ColorAnimation {
-      duration: Style.animationNormal
-      easing.type: Easing.InOutQuad
-    }
-  }
-
-  Behavior on scale {
-    NumberAnimation {
       duration: Style.animationFast
-      easing.type: Easing.OutCubic
+      easing.type: Easing.InOutQuad
     }
   }
 
@@ -101,6 +93,7 @@ Rectangle {
     y: (root.height - height) / 2 + (height - contentHeight) / 2
 
     Behavior on color {
+      enabled: !Color.isTransitioning
       ColorAnimation {
         duration: Style.animationFast
         easing.type: Easing.InOutQuad
@@ -135,7 +128,6 @@ Rectangle {
     onPressed: function (mouse) {
       if (root.enabled) {
         root.pressed = true;
-        root.scale = 0.92;
       }
       if (tooltipText) {
         TooltipService.hide();

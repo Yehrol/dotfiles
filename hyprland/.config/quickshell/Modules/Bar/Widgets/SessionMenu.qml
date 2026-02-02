@@ -19,9 +19,11 @@ NIconButton {
   property int sectionWidgetsCount: 0
 
   property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId]
+  // Explicit screenName property ensures reactive binding when screen changes
+  readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
-    if (section && sectionWidgetIndex >= 0) {
-      var widgets = Settings.data.bar.widgets[section];
+    if (section && sectionWidgetIndex >= 0 && screenName) {
+      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -47,17 +49,16 @@ NIconButton {
     }
   }
 
-  density: Settings.data.bar.density
-  baseSize: Style.capsuleHeight
+  baseSize: Style.getCapsuleHeightForScreen(screenName)
   applyUiScale: false
   customRadius: Style.radiusL
   icon: "power"
   tooltipText: I18n.tr("tooltips.session-menu")
-  tooltipDirection: BarService.getTooltipDirection()
+  tooltipDirection: BarService.getTooltipDirection(screenName)
   colorBg: Style.capsuleColor
   colorFg: root.iconColor
-  colorBorder: Color.transparent
-  colorBorderHover: Color.transparent
+  colorBorder: "transparent"
+  colorBorderHover: "transparent"
   border.color: Style.capsuleBorderColor
   border.width: Style.capsuleBorderWidth
 
@@ -66,17 +67,15 @@ NIconButton {
 
     model: [
       {
-        "label": I18n.tr("context-menu.widget-settings"),
+        "label": I18n.tr("actions.widget-settings"),
         "action": "widget-settings",
         "icon": "settings"
       },
     ]
 
     onTriggered: action => {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                   if (popupMenuWindow) {
-                     popupMenuWindow.close();
-                   }
+                   contextMenu.close();
+                   PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
@@ -86,10 +85,6 @@ NIconButton {
 
   onClicked: PanelService.getPanel("sessionMenuPanel", screen)?.toggle()
   onRightClicked: {
-    var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-    if (popupMenuWindow) {
-      popupMenuWindow.showContextMenu(contextMenu);
-      contextMenu.openAtItem(root, screen);
-    }
+    PanelService.showContextMenu(contextMenu, root, screen);
   }
 }

@@ -12,6 +12,10 @@ import qs.Widgets
 
 Item {
   id: root
+  Layout.preferredHeight: isVerticalBar ? -1 : Style.getBarHeightForScreen(screenName)
+  Layout.preferredWidth: isVerticalBar ? Style.getBarHeightForScreen(screenName) : -1
+  Layout.fillHeight: false
+  Layout.fillWidth: false
 
   property ShellScreen screen
 
@@ -20,12 +24,13 @@ Item {
   property string section: ""
   property int sectionWidgetIndex: -1
   property int sectionWidgetsCount: 0
-  property real scaling: 1.0
 
   property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId] || {}
+  // Explicit screenName property ensures reactive binding when screen changes
+  readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
-    if (section && sectionWidgetIndex >= 0) {
-      var widgets = Settings.data.bar.widgets[section];
+    if (section && sectionWidgetIndex >= 0 && screenName) {
+      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length && widgets[sectionWidgetIndex]) {
         return widgets[sectionWidgetIndex];
       }
@@ -42,13 +47,22 @@ Item {
   readonly property real maxWidth: (widgetSettings.maxWidth !== undefined) ? widgetSettings.maxWidth : Math.max(widgetMetadata.maxWidth || 0, screen ? screen.width * 0.06 : 0)
   readonly property bool useFixedWidth: (widgetSettings.useFixedWidth !== undefined) ? widgetSettings.useFixedWidth : (widgetMetadata.useFixedWidth || false)
 
-  readonly property bool isVerticalBar: (Settings.data.bar.position === "left" || Settings.data.bar.position === "right")
+  readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
+  readonly property bool isVerticalBar: barPosition === "left" || barPosition === "right"
+  readonly property real barHeight: Style.getBarHeightForScreen(screenName)
+  readonly property real capsuleHeight: Style.getCapsuleHeightForScreen(screenName)
+  readonly property real barFontSize: Style.getBarFontSizeForScreen(screenName)
   readonly property bool hasFocusedWindow: CompositorService.getFocusedWindow() !== null
   readonly property string windowTitle: CompositorService.getFocusedWindowTitle() || "No active window"
   readonly property string fallbackIcon: "user-desktop"
 
-  implicitHeight: visible ? (isVerticalBar ? (((!hasFocusedWindow) && hideMode === "hidden") ? 0 : calculatedVerticalDimension()) : Style.capsuleHeight) : 0
-  implicitWidth: visible ? (isVerticalBar ? (((!hasFocusedWindow) && hideMode === "hidden") ? 0 : calculatedVerticalDimension()) : (((!hasFocusedWindow) && hideMode === "hidden") ? 0 : dynamicWidth)) : 0
+  readonly property int iconSize: Style.toOdd(capsuleHeight * 0.75)
+  readonly property int verticalSize: Style.toOdd(capsuleHeight * 0.85)
+
+  // For horizontal bars, height is always barHeight (no animation needed)
+  // For vertical bars, collapse to 0 when hidden
+  implicitHeight: isVerticalBar ? (((!hasFocusedWindow) && hideMode === "hidden") ? 0 : verticalSize) : barHeight
+  implicitWidth: isVerticalBar ? (((!hasFocusedWindow) && hideMode === "hidden") ? 0 : verticalSize) : (((!hasFocusedWindow) && hideMode === "hidden") ? 0 : dynamicWidth)
 
   // "visible": Always Visible, "hidden": Hide When Empty, "transparent": Transparent When Empty
   visible: (hideMode !== "hidden" || hasFocusedWindow) || opacity > 0
@@ -74,26 +88,22 @@ Item {
     }
   }
 
-  function calculatedVerticalDimension() {
-    return Math.round((Style.baseWidgetSize - 5) * scaling);
-  }
-
   function calculateContentWidth() {
     // Calculate the actual content width based on visible elements
     var contentWidth = 0;
-    var margins = Style.marginS * scaling * 2; // Left and right margins
+    var margins = Style.marginS * 2; // Left and right margins
 
     // Icon width (if visible)
     if (showIcon) {
-      contentWidth += 18 * scaling;
-      contentWidth += Style.marginS * scaling; // Spacing after icon
+      contentWidth += iconSize;
+      contentWidth += Style.marginS; // Spacing after icon
     }
 
     // Text width (use the measured width)
-    contentWidth += fullTitleMetrics.contentWidth;
+    contentWidth += titleContainer.measuredWidth;
 
     // Additional small margin for text
-    contentWidth += Style.marginXXS * 2;
+    contentWidth += Style.marginXS;
 
     // Add container margins
     contentWidth += margins;
@@ -158,32 +168,20 @@ Item {
     }
   }
 
-  // Hidden text element to measure full title width
-  NText {
-    id: fullTitleMetrics
-    visible: false
-    text: windowTitle
-    pointSize: Style.fontSizeS * scaling
-    applyUiScale: false
-    font.weight: Style.fontWeightMedium
-  }
-
   NPopupContextMenu {
     id: contextMenu
 
     model: [
       {
-        "label": I18n.tr("context-menu.widget-settings"),
+        "label": I18n.tr("actions.widget-settings"),
         "action": "widget-settings",
         "icon": "settings"
       },
     ]
 
     onTriggered: action => {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                   if (popupMenuWindow) {
-                     popupMenuWindow.close();
-                   }
+                   contextMenu.close();
+                   PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
@@ -194,9 +192,10 @@ Item {
   Rectangle {
     id: windowActiveRect
     visible: root.visible
-    anchors.verticalCenter: parent.verticalCenter
-    width: isVerticalBar ? ((!hasFocusedWindow) && hideMode === "hidden" ? 0 : calculatedVerticalDimension()) : ((!hasFocusedWindow) && (hideMode === "hidden") ? 0 : dynamicWidth)
-    height: isVerticalBar ? ((!hasFocusedWindow) && hideMode === "hidden" ? 0 : calculatedVerticalDimension()) : Style.capsuleHeight
+    x: isVerticalBar ? Style.pixelAlignCenter(parent.width, width) : 0
+    y: isVerticalBar ? 0 : Style.pixelAlignCenter(parent.height, height)
+    width: isVerticalBar ? ((!hasFocusedWindow) && hideMode === "hidden" ? 0 : verticalSize) : ((!hasFocusedWindow) && (hideMode === "hidden") ? 0 : dynamicWidth)
+    height: isVerticalBar ? ((!hasFocusedWindow) && hideMode === "hidden" ? 0 : verticalSize) : capsuleHeight
     radius: Style.radiusM
     color: Style.capsuleColor
     border.color: Style.capsuleBorderColor
@@ -213,21 +212,22 @@ Item {
     Item {
       id: mainContainer
       anchors.fill: parent
-      anchors.leftMargin: isVerticalBar ? 0 : Style.marginS * scaling
-      anchors.rightMargin: isVerticalBar ? 0 : Style.marginS * scaling
+      anchors.leftMargin: isVerticalBar ? 0 : Style.marginS
+      anchors.rightMargin: isVerticalBar ? 0 : Style.marginS
 
       // Horizontal layout for top/bottom bars
       RowLayout {
         id: rowLayout
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: Style.marginS * scaling
+        height: iconSize
+        y: Style.pixelAlignCenter(parent.height, height)
+        spacing: Style.marginS
         visible: !isVerticalBar
         z: 1
 
         // Window icon
         Item {
-          Layout.preferredWidth: 18 * scaling
-          Layout.preferredHeight: 18 * scaling
+          Layout.preferredWidth: iconSize
+          Layout.preferredHeight: iconSize
           Layout.alignment: Qt.AlignVCenter
           visible: showIcon
 
@@ -250,146 +250,31 @@ Item {
           }
         }
 
-        // Title container with scrolling
-        Item {
+        NScrollText {
           id: titleContainer
-          Layout.preferredWidth: {
+          text: windowTitle
+          Layout.alignment: Qt.AlignVCenter
+          maxWidth: {
             // Calculate available width based on other elements
-            var iconWidth = (showIcon && windowIcon.visible ? (18 + Style.marginS) : 0);
-            var totalMargins = Style.marginXXS * 2;
+            var iconWidth = (showIcon && windowIcon.visible ? (iconSize + Style.marginS) : 0);
+            var totalMargins = Style.marginXS;
             var availableWidth = mainContainer.width - iconWidth - totalMargins;
             return Math.max(20, availableWidth);
           }
-          Layout.maximumWidth: Layout.preferredWidth
-          Layout.alignment: Qt.AlignVCenter
-          Layout.preferredHeight: titleText.height
-
-          clip: true
-
-          property bool isScrolling: false
-          property bool isResetting: false
-          property real textWidth: fullTitleMetrics.contentWidth
-          property real containerWidth: width
-          property bool needsScrolling: textWidth > containerWidth
-
-          // Timer for "always" mode with delay
-          Timer {
-            id: scrollStartTimer
-            interval: 1000
-            repeat: false
-            onTriggered: {
-              if (scrollingMode === "always" && titleContainer.needsScrolling) {
-                titleContainer.isScrolling = true;
-                titleContainer.isResetting = false;
-              }
-            }
+          scrollMode: {
+            if (scrollingMode === "always")
+              return NScrollText.ScrollMode.Always;
+            if (scrollingMode === "hover")
+              return NScrollText.ScrollMode.Hover;
+            return NScrollText.ScrollMode.Never;
           }
-
-          // Update scrolling state based on mode
-          property var updateScrollingState: function () {
-            if (scrollingMode === "never") {
-              isScrolling = false;
-              isResetting = false;
-            } else if (scrollingMode === "always") {
-              if (needsScrolling) {
-                if (mouseArea.containsMouse) {
-                  isScrolling = false;
-                  isResetting = true;
-                } else {
-                  scrollStartTimer.restart();
-                }
-              } else {
-                scrollStartTimer.stop();
-                isScrolling = false;
-                isResetting = false;
-              }
-            } else if (scrollingMode === "hover") {
-              if (mouseArea.containsMouse && needsScrolling) {
-                isScrolling = true;
-                isResetting = false;
-              } else {
-                isScrolling = false;
-                if (needsScrolling) {
-                  isResetting = true;
-                }
-              }
-            }
-          }
-
-          onWidthChanged: updateScrollingState()
-          Component.onCompleted: updateScrollingState()
-
-          // React to hover changes
-          Connections {
-            target: mouseArea
-            function onContainsMouseChanged() {
-              titleContainer.updateScrollingState();
-            }
-          }
-
-          // Scrolling content with seamless loop
-          Item {
-            id: scrollContainer
-            height: parent.height
-            width: childrenRect.width
-
-            property real scrollX: 0
-            x: scrollX
-
-            RowLayout {
-              spacing: 50 // Gap between text copies
-
-              NText {
-                id: titleText
-                text: windowTitle
-                pointSize: Style.fontSizeS * scaling
-                applyUiScale: false
-                font.weight: Style.fontWeightMedium
-                verticalAlignment: Text.AlignVCenter
-                color: Color.mOnSurface
-                onTextChanged: {
-                  if (root.scrollingMode === "always") {
-                    titleContainer.isScrolling = false;
-                    titleContainer.isResetting = false;
-                    scrollContainer.scrollX = 0;
-                    scrollStartTimer.restart();
-                  }
-                }
-              }
-
-              // Second copy for seamless scrolling
-              NText {
-                text: windowTitle
-                font: titleText.font
-                pointSize: Style.fontSizeS * scaling
-                applyUiScale: false
-                verticalAlignment: Text.AlignVCenter
-                color: Color.mOnSurface
-                visible: titleContainer.needsScrolling && titleContainer.isScrolling
-              }
-            }
-
-            // Reset animation
-            NumberAnimation on scrollX {
-              running: titleContainer.isResetting
-              to: 0
-              duration: 300
-              easing.type: Easing.OutQuad
-              onFinished: {
-                titleContainer.isResetting = false;
-              }
-            }
-
-            // Seamless infinite scroll
-            NumberAnimation on scrollX {
-              id: infiniteScroll
-              running: titleContainer.isScrolling && !titleContainer.isResetting
-              from: 0
-              to: -(titleContainer.textWidth + 50)
-              duration: Math.max(4000, windowTitle.length * 100)
-              loops: Animation.Infinite
-              easing.type: Easing.Linear
-            }
+          forcedHover: mainMouseArea.containsMouse
+          NText {
+            text: windowTitle
+            pointSize: barFontSize
+            applyUiScale: false
+            font.weight: Style.fontWeightMedium
+            color: Color.mOnSurface
           }
         }
       }
@@ -397,17 +282,20 @@ Item {
       // Vertical layout for left/right bars - icon only
       Item {
         id: verticalLayout
-        anchors.centerIn: parent
-        width: parent.width - Style.marginM * 2
-        height: parent.height - Style.marginM * 2
+        width: parent.width - Style.marginXL
+        height: parent.height - Style.marginXL
+        x: Style.pixelAlignCenter(parent.width, width)
+        y: Style.pixelAlignCenter(parent.height, height)
         visible: isVerticalBar
         z: 1
 
         // Window icon
         Item {
-          width: Style.baseWidgetSize * 0.5 * scaling
+          id: verticalIconContainer
+          width: root.iconSize
           height: width
-          anchors.centerIn: parent
+          x: Style.pixelAlignCenter(parent.width, width)
+          y: Style.pixelAlignCenter(parent.height, height)
           visible: windowTitle !== ""
 
           IconImage {
@@ -430,32 +318,37 @@ Item {
         }
       }
 
-      // Mouse area for hover detection
-      MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onEntered: {
-          if ((windowTitle !== "") && isVerticalBar || (scrollingMode === "never")) {
-            TooltipService.show(root, windowTitle, BarService.getTooltipDirection());
-          }
-        }
-        onExited: {
-          TooltipService.hide();
-        }
-        onClicked: mouse => {
-                     if (mouse.button === Qt.RightButton) {
-                       var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                       if (popupMenuWindow) {
-                         popupMenuWindow.showContextMenu(contextMenu);
-                         contextMenu.openAtItem(root, screen);
-                       }
-                     }
-                   }
+      // Mouse area moved to root
+    }
+  }
+
+  // Mouse area for hover detection
+  MouseArea {
+    id: mainMouseArea
+    anchors.fill: parent
+
+    // Extend click area to screen edge if widget is at the start/end
+    anchors.leftMargin: (!isVerticalBar && section === "left" && sectionWidgetIndex === 0) ? -Style.marginS : 0
+    anchors.rightMargin: (!isVerticalBar && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginS : 0
+    anchors.topMargin: (isVerticalBar && section === "left" && sectionWidgetIndex === 0) ? -Style.marginM : 0
+    anchors.bottomMargin: (isVerticalBar && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginM : 0
+
+    hoverEnabled: true
+    cursorShape: Qt.PointingHandCursor
+    acceptedButtons: Qt.LeftButton | Qt.RightButton
+    onEntered: {
+      if ((windowTitle !== "") && isVerticalBar || (scrollingMode === "never")) {
+        TooltipService.show(root, windowTitle, BarService.getTooltipDirection(root.screen?.name));
       }
     }
+    onExited: {
+      TooltipService.hide();
+    }
+    onClicked: mouse => {
+                 if (mouse.button === Qt.RightButton) {
+                   PanelService.showContextMenu(contextMenu, root, screen);
+                 }
+               }
   }
 
   Connections {

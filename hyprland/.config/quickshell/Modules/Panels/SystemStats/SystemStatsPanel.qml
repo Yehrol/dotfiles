@@ -15,7 +15,7 @@ SmartPanel {
   preferredHeight: Math.round(420 * Style.uiScaleRatio)
 
   panelContent: Item {
-    id: content
+    id: panelContent
     property real contentPreferredHeight: mainColumn.implicitHeight + Style.marginL * 2
 
     // Get diskPath from bar's SystemMonitor widget if available, otherwise use "/"
@@ -36,7 +36,7 @@ SmartPanel {
       // HEADER
       NBox {
         Layout.fillWidth: true
-        implicitHeight: headerRow.implicitHeight + (Style.marginM * 2)
+        implicitHeight: headerRow.implicitHeight + (Style.marginXL)
 
         RowLayout {
           id: headerRow
@@ -60,7 +60,7 @@ SmartPanel {
 
           NIconButton {
             icon: "close"
-            tooltipText: I18n.tr("tooltips.close")
+            tooltipText: I18n.tr("common.close")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               root.close();
@@ -72,7 +72,7 @@ SmartPanel {
       // Stats Grid + Bottom section
       NBox {
         Layout.fillWidth: true
-        Layout.preferredHeight: statsContainer.implicitHeight + (Style.marginM * 2)
+        Layout.preferredHeight: statsContainer.implicitHeight + (Style.marginXL)
 
         ColumnLayout {
           id: statsContainer
@@ -89,200 +89,376 @@ SmartPanel {
             spacing: Style.marginS
 
             // CPU Usage
-            NCircleStat {
-              ratio: SystemStatService.cpuUsage / 100
-              icon: "cpu-usage"
-              suffix: "%"
-              fillColor: SystemStatService.cpuColor
-              tooltipText: I18n.tr("system-monitor.cpu-usage") + `: ${Math.round(SystemStatService.cpuUsage)}%`
+            Item {
               Layout.fillWidth: true
+              implicitHeight: cpuUsageGauge.implicitHeight
+
+              NCircleStat {
+                id: cpuUsageGauge
+                anchors.centerIn: parent
+                ratio: SystemStatService.cpuUsage / 100
+                icon: "cpu-usage"
+                suffix: "%"
+                fillColor: SystemStatService.cpuColor
+                tooltipText: I18n.tr("system-monitor.cpu-usage") + `: ${Math.round(SystemStatService.cpuUsage)}%`
+              }
+
+              Connections {
+                target: SystemStatService
+                function onCpuUsageChanged() {
+                  if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === cpuUsageGauge) {
+                    TooltipService.updateText(I18n.tr("system-monitor.cpu-usage") + `: ${Math.round(SystemStatService.cpuUsage)}%`);
+                  }
+                }
+              }
             }
 
             // CPU Temperature
-            NCircleStat {
-              ratio: SystemStatService.cpuTemp / 100
-              icon: "cpu-temperature"
-              suffix: "\u00B0"
-              fillColor: SystemStatService.tempColor
-              visible: SystemStatService.cpuTemp > 0
-              tooltipText: I18n.tr("system-monitor.cpu-temp") + `: ${Math.round(SystemStatService.cpuTemp)}°C`
+            Item {
               Layout.fillWidth: true
+              implicitHeight: cpuTempGauge.implicitHeight
+
+              NCircleStat {
+                id: cpuTempGauge
+                anchors.centerIn: parent
+                ratio: SystemStatService.cpuTemp / 100
+                icon: "cpu-temperature"
+                suffix: "\u00B0"
+                fillColor: SystemStatService.tempColor
+                tooltipText: I18n.tr("system-monitor.cpu-temp") + `: ${Math.round(SystemStatService.cpuTemp)}°C`
+              }
+
+              Connections {
+                target: SystemStatService
+                function onCpuTempChanged() {
+                  if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === cpuTempGauge) {
+                    TooltipService.updateText(I18n.tr("system-monitor.cpu-temp") + `: ${Math.round(SystemStatService.cpuTemp)}°C`);
+                  }
+                }
+              }
             }
 
             // GPU Temperature
-            NCircleStat {
-              ratio: SystemStatService.gpuTemp / 100
-              icon: "gpu-temperature"
-              suffix: "\u00B0"
-              fillColor: SystemStatService.gpuColor
-              visible: SystemStatService.gpuAvailable
-              tooltipText: I18n.tr("system-monitor.gpu-temp") + `: ${Math.round(SystemStatService.gpuTemp)}°C`
+            Item {
               Layout.fillWidth: true
+              implicitHeight: gpuTempGauge.implicitHeight
+              visible: SystemStatService.gpuAvailable
+
+              NCircleStat {
+                id: gpuTempGauge
+                anchors.centerIn: parent
+                ratio: SystemStatService.gpuTemp / 100
+                icon: "gpu-temperature"
+                suffix: "\u00B0"
+                fillColor: SystemStatService.gpuColor
+                tooltipText: I18n.tr("system-monitor.gpu-temp") + `: ${Math.round(SystemStatService.gpuTemp)}°C`
+              }
+
+              Connections {
+                target: SystemStatService
+                function onGpuTempChanged() {
+                  if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === gpuTempGauge) {
+                    TooltipService.updateText(I18n.tr("system-monitor.gpu-temp") + `: ${Math.round(SystemStatService.gpuTemp)}°C`);
+                  }
+                }
+              }
             }
 
             // Memory Usage
-            NCircleStat {
-              ratio: SystemStatService.memPercent / 100
-              icon: "memory"
-              suffix: "%"
-              fillColor: SystemStatService.memColor
-              tooltipText: I18n.tr("system-monitor.memory") + `: ${Math.round(SystemStatService.memPercent)}%`
+            Item {
               Layout.fillWidth: true
+              implicitHeight: memPercentGauge.implicitHeight
+
+              NCircleStat {
+                id: memPercentGauge
+                anchors.centerIn: parent
+                ratio: SystemStatService.memPercent / 100
+                icon: "memory"
+                suffix: "%"
+                fillColor: SystemStatService.memColor
+                tooltipText: I18n.tr("common.memory") + `: ${Math.round(SystemStatService.memPercent)}%`
+              }
+
+              Connections {
+                target: SystemStatService
+                function onMemPercentChanged() {
+                  if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === memPercentGauge) {
+                    TooltipService.updateText(I18n.tr("common.memory") + `: ${Math.round(SystemStatService.memPercent)}%`);
+                  }
+                }
+              }
+            }
+
+            // Swap Usage (only visible if swap is enabled)
+            Item {
+              Layout.fillWidth: true
+              implicitHeight: swapPercentGauge.implicitHeight
+              visible: SystemStatService.swapTotalGb > 0
+
+              NCircleStat {
+                id: swapPercentGauge
+                anchors.centerIn: parent
+                ratio: SystemStatService.swapPercent / 100
+                icon: "exchange"
+                suffix: "%"
+                fillColor: SystemStatService.swapColor
+                tooltipText: I18n.tr("bar.system-monitor.swap-usage-label") + `: ${Math.round(SystemStatService.swapPercent)}%`
+              }
+
+              Connections {
+                target: SystemStatService
+                function onSwapPercentChanged() {
+                  if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === swapPercentGauge) {
+                    TooltipService.updateText(I18n.tr("bar.system-monitor.swap-usage-label") + `: ${Math.round(SystemStatService.swapPercent)}%`);
+                  }
+                }
+              }
             }
 
             // Disk Usage
-            NCircleStat {
-              ratio: (SystemStatService.diskPercents[content.diskPath] ?? 0) / 100
-              icon: "storage"
-              suffix: "%"
-              fillColor: SystemStatService.getDiskColor(content.diskPath)
-              tooltipText: I18n.tr("system-monitor.disk") + `: ${SystemStatService.diskPercents[content.diskPath] || 0}%\n${content.diskPath}`
+            Item {
               Layout.fillWidth: true
+              implicitHeight: diskPercentsGauge.implicitHeight
+
+              NCircleStat {
+                id: diskPercentsGauge
+                anchors.centerIn: parent
+                ratio: (SystemStatService.diskPercents[panelContent.diskPath] ?? 0) / 100
+                icon: "storage"
+                suffix: "%"
+                fillColor: SystemStatService.getDiskColor(panelContent.diskPath)
+                tooltipText: I18n.tr("system-monitor.disk") + `: ${SystemStatService.diskPercents[panelContent.diskPath] || 0}%\n${panelContent.diskPath}`
+              }
+
+              Connections {
+                target: SystemStatService
+                function onDiskPercentsChanged() {
+                  if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === diskPercentsGauge) {
+                    TooltipService.updateText(I18n.tr("system-monitor.disk") + `: ${SystemStatService.diskPercents[panelContent.diskPath] || 0}%\n${panelContent.diskPath}`);
+                  }
+                }
+              }
             }
           }
 
           // Divider
           NDivider {
             Layout.fillWidth: true
+            Layout.topMargin: Style.marginS
+            Layout.bottomMargin: Style.marginXS
           }
 
-          // Bottom row: 2 NCircleStat (download/upload) + Detailed Stats
+          // Bottom row: 2 NCircleStat (download/upload) with speeds below + Detailed Stats
           RowLayout {
             id: bottomRow
             Layout.fillWidth: true
-            spacing: Style.marginM
+            spacing: Style.marginS
 
-            // Download gauge
-            NCircleStat {
-              ratio: SystemStatService.rxRatio
-              icon: "download-speed"
-              suffix: "%"
-              fillColor: Color.mPrimary
-              tooltipText: I18n.tr("system-monitor.download") + `: ${SystemStatService.formatSpeed(SystemStatService.rxSpeed)}`
-              Layout.preferredWidth: Math.round(80 * Style.uiScaleRatio)
+            // Number of visible gauges in top row
+            readonly property int topRowGaugeCount: {
+              let count = 4; // CPU, CPU Temp, Memory, Disk
+              if (SystemStatService.gpuAvailable)
+                count++;
+              if (SystemStatService.swapTotalGb > 0)
+                count++;
+              return count;
             }
 
-            // Upload gauge
-            NCircleStat {
-              ratio: SystemStatService.txRatio
-              icon: "upload-speed"
-              suffix: "%"
-              fillColor: Color.mPrimary
-              tooltipText: I18n.tr("system-monitor.upload") + `: ${SystemStatService.formatSpeed(SystemStatService.txSpeed)}`
-              Layout.preferredWidth: Math.round(80 * Style.uiScaleRatio)
-            }
-
-            // Detailed Stats column
-            ColumnLayout {
-              id: detailsColumn
+            // Download gauge with speed below (same width as top row items)
+            Item {
               Layout.fillWidth: true
-              spacing: Style.marginS
+              implicitHeight: downloadColumn.implicitHeight
 
-              // Download speed
-              RowLayout {
-                Layout.fillWidth: true
+              ColumnLayout {
+                id: downloadColumn
+                anchors.centerIn: parent
                 spacing: Style.marginS
 
-                NIcon {
+                NCircleStat {
+                  id: rxSpeedGauge
+                  ratio: SystemStatService.rxRatio
                   icon: "download-speed"
-                  pointSize: Style.fontSizeM
-                  color: Color.mOnSurfaceVariant
+                  suffix: "%"
+                  fillColor: Color.mPrimary
+                  tooltipText: I18n.tr("common.download") + `: ${SystemStatService.formatSpeed(SystemStatService.rxSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2")}` + "/s"
+                  Layout.alignment: Qt.AlignHCenter
                 }
 
                 NText {
-                  text: I18n.tr("system-monitor.download") + ":"
-                  pointSize: Style.fontSizeXS
+                  text: SystemStatService.formatSpeed(SystemStatService.rxSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2") + "/s"
+                  pointSize: Style.fontSizeXXS
                   color: Color.mOnSurfaceVariant
+                  Layout.alignment: Qt.AlignHCenter
                 }
 
-                NText {
-                  text: SystemStatService.formatSpeed(SystemStatService.rxSpeed)
-                  pointSize: Style.fontSizeXS
-                  color: Color.mOnSurface
-                  Layout.fillWidth: true
-                  horizontalAlignment: Text.AlignRight
-                }
-              }
-
-              // Upload speed
-              RowLayout {
-                Layout.fillWidth: true
-                spacing: Style.marginS
-
-                NIcon {
-                  icon: "upload-speed"
-                  pointSize: Style.fontSizeM
-                  color: Color.mOnSurfaceVariant
-                }
-
-                NText {
-                  text: I18n.tr("system-monitor.upload") + ":"
-                  pointSize: Style.fontSizeXS
-                  color: Color.mOnSurfaceVariant
-                }
-
-                NText {
-                  text: SystemStatService.formatSpeed(SystemStatService.txSpeed)
-                  pointSize: Style.fontSizeXS
-                  color: Color.mOnSurface
-                  Layout.fillWidth: true
-                  horizontalAlignment: Text.AlignRight
-                }
-              }
-
-              // Memory details
-              RowLayout {
-                Layout.fillWidth: true
-                spacing: Style.marginS
-
-                NIcon {
-                  icon: "memory"
-                  pointSize: Style.fontSizeM
-                  color: Color.mOnSurfaceVariant
-                }
-
-                NText {
-                  text: I18n.tr("system-monitor.memory") + ":"
-                  pointSize: Style.fontSizeXS
-                  color: Color.mOnSurfaceVariant
-                }
-
-                NText {
-                  text: SystemStatService.formatMemoryGb(SystemStatService.memGb)
-                  pointSize: Style.fontSizeXS
-                  color: Color.mOnSurface
-                  Layout.fillWidth: true
-                  horizontalAlignment: Text.AlignRight
-                }
-              }
-
-              // Disk details
-              RowLayout {
-                Layout.fillWidth: true
-                spacing: Style.marginS
-
-                NIcon {
-                  icon: "storage"
-                  pointSize: Style.fontSizeM
-                  color: Color.mOnSurfaceVariant
-                }
-
-                NText {
-                  text: I18n.tr("system-monitor.disk") + ":"
-                  pointSize: Style.fontSizeXS
-                  color: Color.mOnSurfaceVariant
-                }
-
-                NText {
-                  text: {
-                    const usedGb = SystemStatService.diskUsedGb[content.diskPath] || 0;
-                    const sizeGb = SystemStatService.diskSizeGb[content.diskPath] || 0;
-                    return `${usedGb.toFixed(1)}G / ${sizeGb.toFixed(1)}G`;
+                Connections {
+                  target: SystemStatService
+                  function onRxSpeedChanged() {
+                    if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === rxSpeedGauge) {
+                      TooltipService.updateText(I18n.tr("common.download") + `: ${SystemStatService.formatSpeed(SystemStatService.rxSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2")}` + "/s");
+                    }
                   }
-                  pointSize: Style.fontSizeXS
-                  color: Color.mOnSurface
+                }
+              }
+            }
+
+            // Upload gauge with speed below (same width as top row items)
+            Item {
+              Layout.fillWidth: true
+              implicitHeight: uploadColumn.implicitHeight
+
+              ColumnLayout {
+                id: uploadColumn
+                anchors.centerIn: parent
+                spacing: Style.marginS
+
+                NCircleStat {
+                  id: txSpeedGauge
+                  ratio: SystemStatService.txRatio
+                  icon: "upload-speed"
+                  suffix: "%"
+                  fillColor: Color.mPrimary
+                  tooltipText: I18n.tr("common.upload") + `: ${SystemStatService.formatSpeed(SystemStatService.txSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2")}` + "/s"
+                  Layout.alignment: Qt.AlignHCenter
+                }
+
+                NText {
+                  text: SystemStatService.formatSpeed(SystemStatService.txSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2") + "/s"
+                  pointSize: Style.fontSizeXXS
+                  color: Color.mOnSurfaceVariant
+                  Layout.alignment: Qt.AlignHCenter
+                }
+
+                Connections {
+                  target: SystemStatService
+                  function onTxSpeedChanged() {
+                    if (TooltipService.activeTooltip && TooltipService.activeTooltip.targetItem === txSpeedGauge) {
+                      TooltipService.updateText(I18n.tr("common.upload") + `: ${SystemStatService.formatSpeed(SystemStatService.txSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2")}` + "/s");
+                    }
+                  }
+                }
+              }
+            }
+
+            // Detailed Stats column (takes remaining space equivalent to topRowGaugeCount - 2 items)
+            Item {
+              Layout.fillWidth: true
+              Layout.fillHeight: true
+              Layout.preferredWidth: bottomRow.topRowGaugeCount - 2 // Match remaining top row slots
+
+              ColumnLayout {
+                id: detailsColumn
+                anchors.fill: parent
+                spacing: -Style.marginM
+
+                // Load average
+                RowLayout {
                   Layout.fillWidth: true
-                  horizontalAlignment: Text.AlignRight
+                  spacing: Style.marginS
+                  visible: SystemStatService.nproc > 0
+
+                  NIcon {
+                    icon: "cpu-usage"
+                    pointSize: Style.fontSizeM
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: I18n.tr("system-monitor.load-average") + ":"
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: `${SystemStatService.loadAvg1.toFixed(2)} · ${SystemStatService.loadAvg5.toFixed(2)} · ${SystemStatService.loadAvg15.toFixed(2)}`
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurface
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                  }
+                }
+
+                // Memory details
+                RowLayout {
+                  Layout.fillWidth: true
+                  spacing: Style.marginS
+
+                  NIcon {
+                    icon: "memory"
+                    pointSize: Style.fontSizeM
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: I18n.tr("common.memory") + ":"
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: SystemStatService.formatMemoryGb(SystemStatService.memGb).replace(/[^0-9.]/g, "") + " GB"
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurface
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                  }
+                }
+
+                // Swap details (only visible if swap is enabled)
+                RowLayout {
+                  Layout.fillWidth: true
+                  spacing: Style.marginS
+                  visible: SystemStatService.swapTotalGb > 0
+
+                  NIcon {
+                    icon: "exchange"
+                    pointSize: Style.fontSizeM
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: I18n.tr("bar.system-monitor.swap-usage-label") + ":"
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: `${SystemStatService.formatMemoryGb(SystemStatService.swapGb).replace(/[^0-9.]/g, "") + " GB"} / ${SystemStatService.formatMemoryGb(SystemStatService.swapTotalGb).replace(/[^0-9.]/g, "") + " GB"}`
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurface
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                  }
+                }
+
+                // Disk details
+                RowLayout {
+                  Layout.fillWidth: true
+                  spacing: Style.marginS
+
+                  NIcon {
+                    icon: "storage"
+                    pointSize: Style.fontSizeM
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: I18n.tr("system-monitor.disk") + ":"
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  NText {
+                    text: {
+                      const usedGb = SystemStatService.diskUsedGb[panelContent.diskPath] || 0;
+                      const sizeGb = SystemStatService.diskSizeGb[panelContent.diskPath] || 0;
+                      return `${usedGb.toFixed(1)} GB / ${sizeGb.toFixed(1)} GB`;
+                    }
+                    pointSize: Style.fontSizeXS
+                    color: Color.mOnSurface
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                  }
                 }
               }
             }

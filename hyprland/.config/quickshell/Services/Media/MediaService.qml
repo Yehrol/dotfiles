@@ -8,7 +8,25 @@ import qs.Commons
 Singleton {
   id: root
 
+  function formatTime(seconds) {
+    if (isNaN(seconds) || seconds < 0)
+      return "0:00";
+    var h = Math.floor(seconds / 3600);
+    var m = Math.floor((seconds % 3600) / 60);
+    var s = Math.floor(seconds % 60);
+    var pad = function (n) {
+      return (n < 10) ? ("0" + n) : n;
+    };
+
+    if (h > 0) {
+      return h + ":" + pad(m) + ":" + pad(s);
+    } else {
+      return m + ":" + pad(s);
+    }
+  }
+
   property var currentPlayer: null
+  property string playerIdentity: currentPlayer ? (currentPlayer.identity || "") : ""
   property real currentPosition: 0
   property bool isSeeking: false
   property int selectedPlayerIndex: 0
@@ -23,6 +41,8 @@ Singleton {
   property bool canGoNext: currentPlayer ? currentPlayer.canGoNext : false
   property bool canGoPrevious: currentPlayer ? currentPlayer.canGoPrevious : false
   property bool canSeek: currentPlayer ? currentPlayer.canSeek : false
+  property string positionString: formatTime(currentPosition)
+  property string lengthString: formatTime(trackLength)
   property real infiniteTrackLength: 922337203685
 
   Component.onCompleted: {
@@ -126,7 +146,7 @@ Singleton {
     let controllablePlayers = [];
     for (var i = 0; i < finalPlayers.length; i++) {
       let player = finalPlayers[i];
-      if (player && player.canControl) {
+      if (player && player.canPlay) {
         controllablePlayers.push(player);
       }
     }

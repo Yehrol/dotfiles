@@ -12,6 +12,8 @@ ColumnLayout {
   property var widgetData: null
   property var widgetMetadata: null
 
+  signal settingsChanged(var settings)
+
   // Local state
   property bool valueShowIcon: widgetData.showIcon !== undefined ? widgetData.showIcon : widgetMetadata.showIcon
   property string valueHideMode: "hidden" // Default to 'Hide When Empty'
@@ -39,62 +41,75 @@ ColumnLayout {
 
   NComboBox {
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.active-window.hide-mode.label")
-    description: I18n.tr("bar.widget-settings.active-window.hide-mode.description")
+    label: I18n.tr("bar.taskbar.hide-mode-label")
+    description: I18n.tr("bar.active-window.hide-mode-description")
     model: [
       {
         "key": "visible",
-        "name": I18n.tr("options.hide-modes.visible")
+        "name": I18n.tr("hide-modes.visible")
       },
       {
         "key": "hidden",
-        "name": I18n.tr("options.hide-modes.hidden")
+        "name": I18n.tr("hide-modes.hidden")
       },
       {
         "key": "transparent",
-        "name": I18n.tr("options.hide-modes.transparent")
+        "name": I18n.tr("hide-modes.transparent")
       }
     ]
     currentKey: root.valueHideMode
-    onSelected: key => root.valueHideMode = key
+    onSelected: key => {
+                  root.valueHideMode = key;
+                  settingsChanged(saveSettings());
+                }
   }
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.active-window.show-app-icon.label")
-    description: I18n.tr("bar.widget-settings.active-window.show-app-icon.description")
+    label: I18n.tr("bar.active-window.show-app-icon-label")
+    description: I18n.tr("bar.active-window.show-app-icon-description")
     checked: root.valueShowIcon
-    onToggled: checked => root.valueShowIcon = checked
+    onToggled: checked => {
+                 root.valueShowIcon = checked;
+                 settingsChanged(saveSettings());
+               }
   }
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.active-window.colorize-icons.label")
-    description: I18n.tr("bar.widget-settings.active-window.colorize-icons.description")
+    label: I18n.tr("bar.tray.colorize-icons-label")
+    description: I18n.tr("bar.active-window.colorize-icons-description")
     checked: root.valueColorizeIcons
-    onToggled: checked => root.valueColorizeIcons = checked
+    onToggled: checked => {
+                 root.valueColorizeIcons = checked;
+                 settingsChanged(saveSettings());
+               }
   }
 
   NTextInput {
     id: widthInput
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.active-window.max-width.label")
-    description: I18n.tr("bar.widget-settings.active-window.max-width.description")
+    label: I18n.tr("bar.taskbar.max-width-label")
+    description: I18n.tr("bar.media-mini.max-width-description")
     placeholderText: widgetMetadata.maxWidth
     text: valueMaxWidth
+    onEditingFinished: settingsChanged(saveSettings())
   }
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("bar.widget-settings.active-window.use-fixed-width.label")
-    description: I18n.tr("bar.widget-settings.active-window.use-fixed-width.description")
+    label: I18n.tr("bar.media-mini.use-fixed-width-label")
+    description: I18n.tr("bar.media-mini.use-fixed-width-description")
     checked: valueUseFixedWidth
-    onToggled: checked => valueUseFixedWidth = checked
+    onToggled: checked => {
+                 valueUseFixedWidth = checked;
+                 settingsChanged(saveSettings());
+               }
   }
 
   NComboBox {
-    label: I18n.tr("bar.widget-settings.active-window.scrolling-mode.label")
-    description: I18n.tr("bar.widget-settings.active-window.scrolling-mode.description")
+    label: I18n.tr("bar.media-mini.scrolling-mode-label")
+    description: I18n.tr("bar.active-window.scrolling-mode-description")
     model: [
       {
         "key": "always",
@@ -110,7 +125,10 @@ ColumnLayout {
       }
     ]
     currentKey: valueScrollingMode
-    onSelected: key => valueScrollingMode = key
+    onSelected: key => {
+                  valueScrollingMode = key;
+                  settingsChanged(saveSettings());
+                }
     minimumWidth: 200
   }
 }

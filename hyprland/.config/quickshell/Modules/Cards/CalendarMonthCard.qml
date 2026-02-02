@@ -12,7 +12,7 @@ import qs.Widgets
 NBox {
   id: root
   Layout.fillWidth: true
-  implicitHeight: calendarContent.implicitHeight + Style.marginM * 2
+  implicitHeight: calendarContent.implicitHeight + Style.marginXL
 
   // Internal state - independent from header
   readonly property var now: Time.now
@@ -260,7 +260,6 @@ NBox {
               anchors.centerIn: parent
               color: Qt.alpha(Color.mPrimary, 0.7)
               pointSize: Style.fontSizeXXS
-              font.weight: Style.fontWeightMedium
               text: modelData
             }
           }
@@ -343,7 +342,7 @@ NBox {
               height: Style.baseWidgetSize * 0.9
               anchors.centerIn: parent
               radius: Style.radiusM
-              color: modelData.today ? Color.mSecondary : Color.transparent
+              color: modelData.today ? Color.mSecondary : "transparent"
 
               NText {
                 anchors.centerIn: parent

@@ -11,21 +11,21 @@ Singleton {
   id: root
 
   // Program availability properties
-  property bool gpuScreenRecorderAvailable: false
-  property bool matugenAvailable: false
   property bool nmcliAvailable: false
   property bool wlsunsetAvailable: false
   property bool app2unitAvailable: false
   property bool gnomeCalendarAvailable: false
+  property bool pythonAvailable: false
+  property bool wtypeAvailable: false
 
   // Programs to check - maps property names to commands
   readonly property var programsToCheck: ({
-                                            "gpuScreenRecorderAvailable": ["sh", "-c", "command -v gpu-screen-recorder >/dev/null 2>&1 || (command -v flatpak >/dev/null 2>&1 && flatpak list --app | grep -q 'com.dec05eba.gpu_screen_recorder')"],
-                                            "matugenAvailable": ["sh", "-c", "command -v matugen"],
                                             "nmcliAvailable": ["sh", "-c", "command -v nmcli"],
                                             "wlsunsetAvailable": ["sh", "-c", "command -v wlsunset"],
                                             "app2unitAvailable": ["sh", "-c", "command -v app2unit"],
-                                            "gnomeCalendarAvailable": ["sh", "-c", "command -v gnome-calendar"]
+                                            "gnomeCalendarAvailable": ["sh", "-c", "command -v gnome-calendar"],
+                                            "wtypeAvailable": ["sh", "-c", "command -v wtype"],
+                                            "pythonAvailable": ["sh", "-c", "command -v python3"]
                                           })
 
   // Discord client auto-detection
@@ -34,8 +34,33 @@ Singleton {
   // Code client auto-detection
   property var availableCodeClients: []
 
+  // Emacs client auto-detection
+  property var availableEmacsClients: []
+
   // Signal emitted when all checks are complete
   signal checksCompleted
+
+  // disable app2unit in settings if it is not available
+  onChecksCompleted: {
+    if (!app2unitAvailable && Settings.data.appLauncher.useApp2Unit) {
+      Settings.data.appLauncher.useApp2Unit = false;
+    }
+    if (!wlsunsetAvailable && Settings.data.nightLight.enabled) {
+      Settings.data.nightLight.enabled = false;
+    }
+  }
+
+  onApp2unitAvailableChanged: {
+    if (!app2unitAvailable && Settings.data.appLauncher.useApp2Unit) {
+      Settings.data.appLauncher.useApp2Unit = false;
+    }
+  }
+
+  onWlsunsetAvailableChanged: {
+    if (!wlsunsetAvailable && Settings.data.nightLight.enabled) {
+      Settings.data.nightLight.enabled = false;
+    }
+  }
 
   // Function to detect Discord client by checking config directories
   function detectDiscordClient() {
@@ -50,12 +75,7 @@ Singleton {
       // Use the actual config path from the client, removing ~ prefix
       var checkPath = configPath.startsWith("~") ? configPath.substring(2) : configPath.substring(1);
 
-      // Check if this client requires themes folder to exist
-      if (client.requiresThemesFolder) {
-        scriptParts.push("if [ -d \"$HOME/" + checkPath + "/themes\" ]; then available_clients=\"$available_clients " + clientName + "\"; fi;");
-      } else {
-        scriptParts.push("if [ -d \"$HOME/" + checkPath + "\" ]; then available_clients=\"$available_clients " + clientName + "\"; fi;");
-      }
+      scriptParts.push("if [ -d \"$HOME/" + checkPath + "\" ]; then available_clients=\"$available_clients " + clientName + "\"; fi;");
     }
 
     scriptParts.push("echo \"$available_clients\"");
@@ -164,6 +184,66 @@ Singleton {
     stderr: StdioCollector {}
   }
 
+  // Function to detect Emacs client by checking config directories
+  function detectEmacsClient() {
+    // Build shell script to check each client
+    var scriptParts = ["available_clients=\"\";"];
+
+    for (var i = 0; i < TemplateRegistry.emacsClients.length; i++) {
+      var client = TemplateRegistry.emacsClients[i];
+      var clientName = client.name;
+      var configPath = client.path;
+
+      // Check if the config directory exists
+      scriptParts.push("if [ -d \"$HOME" + configPath.substring(1) + "\" ]; then available_clients=\"$available_clients " + clientName + "\"; fi;");
+    }
+
+    scriptParts.push("echo \"$available_clients\"");
+
+    // Use a Process to check directory existence for all clients
+    emacsDetector.command = ["sh", "-c", scriptParts.join(" ")];
+    emacsDetector.running = true;
+  }
+
+  // Process to detect Emacs client directories
+  Process {
+    id: emacsDetector
+    running: false
+
+    onExited: function (exitCode) {
+      availableEmacsClients = [];
+
+      if (exitCode === 0) {
+        var detectedClients = stdout.text.trim().split(/\s+/).filter(function (client) {
+          return client.length > 0;
+        });
+
+        if (detectedClients.length > 0) {
+          // Build list of available clients
+          for (var i = 0; i < detectedClients.length; i++) {
+            var clientName = detectedClients[i];
+            for (var j = 0; j < TemplateRegistry.emacsClients.length; j++) {
+              var client = TemplateRegistry.emacsClients[j];
+              if (client.name === clientName) {
+                availableEmacsClients.push(client);
+                break;
+              }
+            }
+          }
+
+          Logger.d("ProgramChecker", "Detected Emacs clients:", detectedClients.join(", "));
+        }
+      }
+
+      if (availableEmacsClients.length === 0) {
+        Logger.d("ProgramChecker", "No Emacs clients detected");
+      }
+    }
+
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+  }
+
   // Internal tracking
   property int completedChecks: 0
   property int totalChecks: Object.keys(programsToCheck).length
@@ -187,9 +267,10 @@ Singleton {
 
       // Check next program or emit completion signal
       if (root.completedChecks >= root.totalChecks) {
-        // Run Discord and Code client detection after all checks are complete
+        // Run Discord, Code and Emacs client detection after all checks are complete
         root.detectDiscordClient();
         root.detectCodeClient();
+        root.detectEmacsClient();
         root.checksCompleted();
       } else {
         root.checkNextProgram();

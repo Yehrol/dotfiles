@@ -54,7 +54,7 @@ Variants {
 
     sourceComponent: PanelWindow {
       id: window
-      color: Color.transparent
+      color: "transparent"
       screen: screenLoader.modelData
 
       WlrLayershell.layer: WlrLayer.Bottom
@@ -83,9 +83,7 @@ Variants {
         var metadata = DesktopWidgetRegistry.widgetMetadata[widgetId];
         if (metadata) {
           Object.keys(metadata).forEach(function (key) {
-            if (key !== "allowUserSettings") {
-              newWidget[key] = metadata[key];
-            }
+            newWidget[key] = metadata[key];
           });
         }
 
@@ -307,20 +305,21 @@ Variants {
           id: editModeControlsPanel
           visible: DesktopWidgetRegistry.editMode && Settings.data.desktopWidgets.enabled
 
-          readonly property string barPos: Settings.data.bar.position || "top"
+          readonly property string barPos: Settings.getBarPositionForScreen(window.screen?.name)
           readonly property bool barFloating: Settings.data.bar.floating || false
+          readonly property real barHeight: Style.getBarHeightForScreen(window.screen?.name)
 
           readonly property int barOffsetTop: {
             if (barPos !== "top")
               return Style.marginM;
-            const floatMarginV = barFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0;
-            return Style.barHeight + floatMarginV + Style.marginM;
+            const floatMarginV = barFloating ? Math.ceil(Settings.data.bar.marginVertical) : 0;
+            return barHeight + floatMarginV + Style.marginM;
           }
           readonly property int barOffsetRight: {
             if (barPos !== "right")
               return Style.marginM;
-            const floatMarginH = barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0;
-            return Style.barHeight + floatMarginH + Style.marginM;
+            const floatMarginH = barFloating ? Math.ceil(Settings.data.bar.marginHorizontal) : 0;
+            return barHeight + floatMarginH + Style.marginM;
           }
 
           // Internal state for drag tracking (session-only, resets on restart)
@@ -418,7 +417,7 @@ Variants {
               NIconButton {
                 id: addWidgetButton
                 icon: "layout-grid-add"
-                tooltipText: I18n.tr("settings.desktop-widgets.edit-mode.add-widget")
+                tooltipText: I18n.tr("tooltips.add-widget")
                 onClicked: {
                   var popupMenuWindow = PanelService.getPopupMenuWindow(window.screen);
                   if (popupMenuWindow) {
@@ -443,7 +442,7 @@ Variants {
 
               NIconButton {
                 icon: "grid-4x4"
-                tooltipText: I18n.tr("settings.desktop-widgets.edit-mode.grid-snap.label")
+                tooltipText: I18n.tr("panels.desktop-widgets.edit-mode-grid-snap-label")
                 colorBg: Settings.data.desktopWidgets.gridSnap ? Color.mPrimary : Color.mSurfaceVariant
                 colorFg: Settings.data.desktopWidgets.gridSnap ? Color.mOnPrimary : Color.mPrimary
                 onClicked: Settings.data.desktopWidgets.gridSnap = !Settings.data.desktopWidgets.gridSnap
@@ -451,7 +450,7 @@ Variants {
 
               NIconButton {
                 icon: "settings"
-                tooltipText: I18n.tr("settings.desktop-widgets.edit-mode.open-settings")
+                tooltipText: I18n.tr("actions.open-settings")
                 onClicked: {
                   if (Settings.data.ui.settingsPanelMode === "window") {
                     SettingsPanelService.toggleWindow(SettingsPanel.Tab.DesktopWidgets);
@@ -466,7 +465,7 @@ Variants {
               }
 
               NButton {
-                text: I18n.tr("settings.desktop-widgets.edit-mode.exit-button")
+                text: I18n.tr("panels.desktop-widgets.edit-mode-exit-button")
                 icon: "logout"
                 outlined: false
                 fontSize: Style.fontSizeS
@@ -478,7 +477,7 @@ Variants {
             NText {
               Layout.alignment: Qt.AlignRight
               Layout.maximumWidth: 300 * Style.uiScaleRatio
-              text: I18n.tr("settings.desktop-widgets.edit-mode.controls-explanation")
+              text: I18n.tr("panels.desktop-widgets.edit-mode-controls-explanation")
               pointSize: Style.fontSizeS
               color: Color.mOnSurfaceVariant
               horizontalAlignment: Text.AlignRight

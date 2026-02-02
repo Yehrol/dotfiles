@@ -14,15 +14,14 @@ Item {
   property string text: ""
   property string suffix: ""
   property string tooltipText: ""
-  property string density: ""
   property bool autoHide: false
   property bool forceOpen: false
   property bool forceClose: false
   property bool oppositeDirection: false
   property bool hovered: false
   property bool rotateText: false
-  property color customBackgroundColor: Color.transparent
-  property color customTextIconColor: Color.transparent
+  property color customBackgroundColor: "transparent"
+  property color customTextIconColor: "transparent"
 
   readonly property bool collapseToIcon: forceClose && !forceOpen
 
@@ -40,11 +39,12 @@ Item {
   property bool shouldAnimateHide: false
 
   // Sizing logic for vertical bars
-  readonly property int buttonSize: Style.capsuleHeight
+  readonly property int buttonSize: Style.getCapsuleHeightForScreen(screen?.name)
+  readonly property real barFontSize: Style.getBarFontSizeForScreen(screen?.name)
   readonly property int pillHeight: buttonSize
   readonly property int pillOverlap: Math.round(buttonSize * 0.5)
-  readonly property int maxPillWidth: rotateText ? Math.max(buttonSize, Math.round(textItem.implicitHeight + Style.marginM * 2)) : buttonSize
-  readonly property int maxPillHeight: rotateText ? Math.max(1, Math.round(textItem.implicitWidth + Style.marginM * 2 + Math.round(iconCircle.height / 4))) : Math.max(1, Math.round(textItem.implicitHeight + Style.marginM * 2))
+  readonly property int maxPillWidth: rotateText ? Math.max(buttonSize, Math.round(textItem.implicitHeight + Style.marginXL)) : buttonSize
+  readonly property int maxPillHeight: rotateText ? Math.max(1, Math.round(textItem.implicitWidth + Style.marginXL + Math.round(iconCircle.height / 4))) : Math.max(1, Math.round(textItem.implicitHeight + Style.marginXL))
 
   // Determine pill direction based on section position
   readonly property bool openDownward: oppositeDirection
@@ -58,27 +58,10 @@ Item {
   readonly property color bgColor: hovered ? Color.mHover : (customBackgroundColor.a > 0) ? customBackgroundColor : Style.capsuleColor
   readonly property color fgColor: hovered ? Color.mOnHover : (customTextIconColor.a > 0) ? customTextIconColor : Color.mOnSurface
 
-  readonly property real iconSize: {
-    switch (root.density) {
-    case "compact":
-      return Math.max(1, Math.round(pillHeight * 0.65));
-    default:
-      return Math.max(1, Math.round(pillHeight * 0.48));
-    }
-  }
+  readonly property real iconSize: Style.toOdd(pillHeight * 0.48)
 
-  readonly property real textSize: {
-    switch (root.density) {
-    case "compact":
-      return Math.max(1, Math.round(pillHeight * 0.38));
-    default:
-      return Math.max(1, Math.round(pillHeight * 0.33));
-    }
-  }
-
-  // For vertical bars: width is just icon size, height includes pill space
-  width: buttonSize
-  height: {
+  // Content height calculation (for implicit sizing and visual layout)
+  readonly property real contentHeight: {
     if (collapseToIcon) {
       return hasIcon ? buttonSize : 0;
     }
@@ -90,6 +73,15 @@ Item {
     // Fallback to buttonSize in idle state to remain clickable
     return buttonSize;
   }
+
+  // Fill parent width to extend horizontal click area
+  // Keep content-based height for visual layout
+  anchors.left: parent ? parent.left : undefined
+  anchors.right: parent ? parent.right : undefined
+  anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+  height: contentHeight
+  implicitWidth: buttonSize
+  implicitHeight: contentHeight
 
   Connections {
     target: root
@@ -104,7 +96,7 @@ Item {
   Rectangle {
     id: pillBackground
     width: buttonSize
-    height: root.height
+    height: root.contentHeight
     radius: Style.radiusM
     color: root.bgColor
     border.color: Style.capsuleBorderColor
@@ -114,6 +106,7 @@ Item {
     anchors.horizontalCenter: parent.horizontalCenter
 
     Behavior on color {
+      enabled: !Color.isTransitioning
       ColorAnimation {
         duration: Style.animationFast
         easing.type: Easing.InOutQuad
@@ -136,7 +129,7 @@ Item {
     }
 
     opacity: revealed ? Style.opacityFull : Style.opacityNone
-    color: Color.transparent // Make pill background transparent to avoid double opacity
+    color: "transparent" // Make pill background transparent to avoid double opacity
 
     // Radius logic for vertical expansion - rounded on the side that connects to icon
     topLeftRadius: openUpward ? Style.radiusM : 0
@@ -154,9 +147,8 @@ Item {
       rotation: rotateText ? -90 : 0
       text: root.text + root.suffix
       family: Settings.data.ui.fontFixed
-      pointSize: textSize
+      pointSize: root.barFontSize
       applyUiScale: false
-      font.weight: Style.fontWeightMedium
       horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
       color: root.fgColor
@@ -195,11 +187,11 @@ Item {
     width: buttonSize
     height: buttonSize
     radius: Math.min(Style.radiusL, width / 2)
-    color: Color.transparent // Make icon background transparent to avoid double opacity
+    color: "transparent" // Make icon background transparent to avoid double opacity
 
     // Icon positioning based on direction
     x: 0
-    y: openUpward ? (parent.height - height) : 0
+    y: openUpward ? (root.contentHeight - height) : 0
     anchors.horizontalCenter: parent.horizontalCenter
 
     NIcon {
@@ -315,7 +307,7 @@ Item {
     onEntered: {
       hovered = true;
       root.entered();
-      TooltipService.show(root, root.tooltipText, BarService.getTooltipDirection(), (forceOpen || forceClose) ? Style.tooltipDelay : Style.tooltipDelayLong);
+      TooltipService.show(root, root.tooltipText, BarService.getTooltipDirection(root.screen?.name), (forceOpen || forceClose) ? Style.tooltipDelay : Style.tooltipDelayLong);
       if (forceClose) {
         return;
       }

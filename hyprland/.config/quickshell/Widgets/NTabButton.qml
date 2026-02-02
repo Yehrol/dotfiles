@@ -11,6 +11,9 @@ Rectangle {
   property string text: ""
   property bool checked: false
   property int tabIndex: 0
+  property real pointSize: Style.fontSizeM
+  property bool isFirst: false
+  property bool isLast: false
 
   // Internal state
   property bool isHovered: false
@@ -19,14 +22,19 @@ Rectangle {
 
   // Sizing
   Layout.fillHeight: true
-  Layout.minimumWidth: 100
-  implicitWidth: tabText.implicitWidth + Style.marginXL * 2
+  implicitWidth: tabText.implicitWidth + Style.marginXL
 
-  // Styling
-  radius: Style.iRadiusM
-  color: root.checked ? Color.mPrimary : (root.isHovered ? Color.mHover : Color.mSurface)
+  topLeftRadius: isFirst ? Style.iRadiusM : Style.iRadiusXXXS
+  bottomLeftRadius: isFirst ? Style.iRadiusM : Style.iRadiusXXXS
+  topRightRadius: isLast ? Style.iRadiusM : Style.iRadiusXXXS
+  bottomRightRadius: isLast ? Style.iRadiusM : Style.iRadiusXXXS
+
+  color: root.isHovered ? Color.mHover : (root.checked ? Color.mPrimary : Color.mSurface)
+  border.color: Color.mOutline
+  border.width: Style.borderS
 
   Behavior on color {
+    enabled: !Color.isTransitioning
     ColorAnimation {
       duration: Style.animationFast
       easing.type: Easing.OutCubic
@@ -35,21 +43,22 @@ Rectangle {
 
   NText {
     id: tabText
+    y: Style.pixelAlignCenter(parent.height, height)
     anchors {
       left: parent.left
       right: parent.right
-      verticalCenter: parent.verticalCenter
       leftMargin: Style.marginS
       rightMargin: Style.marginS
     }
     text: root.text
-    pointSize: Style.fontSizeM
-    font.weight: root.checked ? Style.fontWeightSemiBold : Style.fontWeightRegular
-    color: root.checked ? Color.mOnPrimary : root.isHovered ? Color.mOnHover : Color.mOnSurface
+    pointSize: root.pointSize
+    font.weight: Style.fontWeightSemiBold
+    color: root.isHovered ? Color.mOnHover : (root.checked ? Color.mOnPrimary : Color.mOnSurface)
     horizontalAlignment: Text.AlignHCenter
     verticalAlignment: Text.AlignVCenter
 
     Behavior on color {
+      enabled: !Color.isTransitioning
       ColorAnimation {
         duration: Style.animationFast
         easing.type: Easing.OutCubic

@@ -21,9 +21,11 @@ Item {
   property int sectionWidgetsCount: 0
 
   property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId]
+  // Explicit screenName property ensures reactive binding when screen changes
+  readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
-    if (section && sectionWidgetIndex >= 0) {
-      var widgets = Settings.data.bar.widgets[section];
+    if (section && sectionWidgetIndex >= 0 && screenName) {
+      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -31,8 +33,10 @@ Item {
     return {};
   }
 
-  readonly property bool isBarVertical: Settings.data.bar.position === "left" || Settings.data.bar.position === "right"
+  readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
+  readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
   readonly property string displayMode: (widgetSettings.displayMode !== undefined) ? widgetSettings.displayMode : widgetMetadata.displayMode
+  readonly property string middleClickCommand: (widgetSettings.middleClickCommand !== undefined) ? widgetSettings.middleClickCommand : widgetMetadata.middleClickCommand
 
   // Used to avoid opening the pill on Quickshell startup
   property bool firstVolumeReceived: false
@@ -58,10 +62,6 @@ Item {
     }
   }
 
-  function openExternalMixer() {
-    Quickshell.execDetached(["sh", "-c", Settings.data.audio.externalMixer]);
-  }
-
   Timer {
     id: externalHideTimer
     running: false
@@ -76,33 +76,30 @@ Item {
 
     model: [
       {
-        "label": I18n.tr("context-menu.toggle-mute"),
+        "label": I18n.tr("actions.toggle-mute"),
         "action": "toggle-mute",
         "icon": AudioService.muted ? "volume-off" : "volume"
       },
       {
-        "label": I18n.tr("context-menu.open-mixer"),
-        "action": "open-mixer",
+        "label": I18n.tr("actions.run-custom-command"),
+        "action": "custom-command",
         "icon": "adjustments"
       },
       {
-        "label": I18n.tr("context-menu.widget-settings"),
+        "label": I18n.tr("actions.widget-settings"),
         "action": "widget-settings",
         "icon": "settings"
       },
     ]
 
     onTriggered: action => {
-                   // Close the popup menu window before handling the action
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                   if (popupMenuWindow) {
-                     popupMenuWindow.close();
-                   }
+                   contextMenu.close();
+                   PanelService.closeContextMenu(screen);
 
                    if (action === "toggle-mute") {
                      AudioService.setOutputMuted(!AudioService.muted);
-                   } else if (action === "open-mixer") {
-                     root.openExternalMixer();
+                   } else if (action === "custom-command") {
+                     Quickshell.execDetached(["sh", "-lc", middleClickCommand]);
                    } else if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
                    }
@@ -113,7 +110,6 @@ Item {
     id: pill
 
     screen: root.screen
-    density: Settings.data.bar.density
     oppositeDirection: BarService.getPillDirection(root)
     icon: AudioService.getOutputIcon()
     autoHide: false // Important to be false so we can hover as long as we want
@@ -150,13 +146,10 @@ Item {
       PanelService.getPanel("audioPanel", screen)?.toggle(this);
     }
     onRightClicked: {
-      // Get the shared popup menu window for this screen
-      var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-      if (popupMenuWindow) {
-        popupMenuWindow.showContextMenu(contextMenu);
-        contextMenu.openAtItem(pill, screen);
-      }
+      PanelService.showContextMenu(contextMenu, pill, screen);
     }
-    onMiddleClicked: root.openExternalMixer()
+    onMiddleClicked: {
+      Quickshell.execDetached(["sh", "-lc", middleClickCommand]);
+    }
   }
 }

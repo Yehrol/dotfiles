@@ -16,19 +16,27 @@ SmartPanel {
   panelAnchorHorizontalCenter: true
   panelAnchorVerticalCenter: true
 
-  readonly property string currentVersion: UpdateService.changelogCurrentVersion || UpdateService.currentVersion
-  readonly property string previousVersion: UpdateService.previousVersion
-  readonly property bool hasPreviousVersion: previousVersion && previousVersion.length > 0
-  readonly property var releaseHighlights: UpdateService.releaseHighlights || []
-  readonly property string subtitleText: hasPreviousVersion ? I18n.tr("changelog.panel.subtitle.updated", {
-                                                                        "previousVersion": previousVersion
-                                                                      }) : I18n.tr("changelog.panel.subtitle.fresh")
-
   panelContent: Rectangle {
+    id: panelContent
     color: Color.mSurfaceVariant
     radius: Style.radiusM
     border.color: Color.mOutline
     border.width: Style.borderS
+
+    readonly property string currentVersion: UpdateService.currentVersion
+    readonly property string previousVersion: UpdateService.previousVersion
+    readonly property bool hasPreviousVersion: previousVersion && previousVersion.length > 0
+    readonly property string releaseContent: UpdateService.releaseContent || ""
+
+    function colorizeHeaders(text) {
+      if (!text)
+        return "";
+      const color = Color.mPrimary;
+      return text.replace(/^# (.*)$/gm, `<br/><h1 style="color:${color}">$1</h1><br/>`).replace(/^## (.*)$/gm, `<br/><h2 style="color:${color}">$1</h2><br/>`);
+    }
+    readonly property string subtitleText: hasPreviousVersion ? I18n.tr("changelog.panel.subtitle-updated", {
+                                                                          "previousVersion": previousVersion
+                                                                        }) : I18n.tr("changelog.panel.subtitle-fresh")
 
     ColumnLayout {
       anchors.fill: parent
@@ -73,7 +81,7 @@ SmartPanel {
 
         NIconButton {
           icon: "close"
-          tooltipText: I18n.tr("tooltips.close")
+          tooltipText: I18n.tr("common.close")
           onClicked: root.close()
           Layout.alignment: Qt.AlignTop | Qt.AlignRight
           Layout.preferredHeight: Style.baseWidgetSize
@@ -95,7 +103,7 @@ SmartPanel {
           spacing: Style.marginS
 
           NText {
-            text: hasPreviousVersion ? previousVersion : I18n.tr("changelog.panel.version.new-user")
+            text: hasPreviousVersion ? previousVersion : I18n.tr("changelog.panel.version-new-user")
             font.weight: Style.fontWeightSemiBold
             color: Color.mPrimary
           }
@@ -118,6 +126,7 @@ SmartPanel {
       }
 
       NScrollView {
+        id: changelogScrollView
         Layout.fillWidth: true
         Layout.fillHeight: true
         horizontalPolicy: ScrollBar.AlwaysOff
@@ -125,7 +134,7 @@ SmartPanel {
         padding: 0
 
         ColumnLayout {
-          width: parent.width
+          width: changelogScrollView.availableWidth
           spacing: Style.marginM
 
           NText {
@@ -135,42 +144,18 @@ SmartPanel {
             wrapMode: Text.WordWrap
           }
 
-          ColumnLayout {
+          NText {
             Layout.fillWidth: true
-            spacing: Style.marginS
-
-            Repeater {
-              model: releaseHighlights
-              delegate: ColumnLayout {
-                width: parent.width
-                spacing: Style.marginXS
-
-                Repeater {
-                  model: modelData.entries
-                  delegate: NText {
-                    readonly property int headingLevel: root.headingLevel(modelData)
-                    text: {
-                      if (modelData.length === 0)
-                        return "\u00A0";
-                      if (headingLevel > 0)
-                        return modelData.replace(/^#+\s+/, "");
-                      return modelData;
-                    }
-                    wrapMode: Text.WordWrap
-                    elide: Text.ElideNone
-                    textFormat: Text.PlainText
-                    color: headingLevel > 0 ? Color.mPrimary : Color.mOnSurface
-                    font.weight: headingLevel > 0 ? Style.fontWeightBold : Style.fontWeightMedium
-                    pointSize: headingLevel === 1 ? Style.fontSizeXXL : headingLevel === 2 ? Style.fontSizeXL : Style.fontSizeM
-                    Layout.fillWidth: true
-                  }
-                }
-              }
-            }
+            visible: releaseContent.length > 0
+            text: panelContent.colorizeHeaders(releaseContent)
+            wrapMode: Text.WordWrap
+            elide: Text.ElideNone
+            textFormat: Text.MarkdownText
+            color: Color.mOnSurface
           }
 
           NText {
-            visible: releaseHighlights.length === 0
+            visible: releaseContent.length === 0
             text: I18n.tr("changelog.panel.empty")
             color: Color.mOnSurfaceVariant
             wrapMode: Text.WordWrap
@@ -185,7 +170,7 @@ SmartPanel {
         NButton {
           Layout.fillWidth: true
           icon: "brand-discord"
-          text: I18n.tr("changelog.panel.buttons.discord")
+          text: I18n.tr("changelog.panel.buttons-discord")
           outlined: true
           onClicked: UpdateService.openDiscord()
         }
@@ -194,7 +179,7 @@ SmartPanel {
           Layout.fillWidth: true
           visible: UpdateService.feedbackUrl !== ""
           icon: "forms"
-          text: I18n.tr("changelog.panel.buttons.feedback")
+          text: I18n.tr("changelog.panel.buttons-feedback")
           outlined: true
           onClicked: UpdateService.openFeedbackForm()
         }
@@ -202,41 +187,16 @@ SmartPanel {
         NButton {
           Layout.fillWidth: true
           icon: "check"
-          text: I18n.tr("changelog.panel.buttons.dismiss")
+          text: I18n.tr("changelog.panel.buttons-dismiss")
           onClicked: root.close()
         }
       }
     }
   }
 
-  function headingLevel(text) {
-    if (!text)
-      return 0;
-    const trimmed = text.trim();
-    if (trimmed.length === 0)
-      return 0;
-    const match = trimmed.match(/^(#+)\s+/);
-    if (!match)
-      return 0;
-    return Math.min(match[1].length, 2);
-  }
-
   onClosed: {
     if (UpdateService && UpdateService.changelogCurrentVersion) {
       UpdateService.markChangelogSeen(UpdateService.changelogCurrentVersion);
-    }
-  }
-
-  function formatReleaseDate(dateString) {
-    if (!dateString || dateString.length === 0)
-      return "";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime()))
-        return dateString;
-      return Qt.formatDate(date, Qt.DefaultLocaleLongDate);
-    } catch (error) {
-      return dateString;
     }
   }
 }

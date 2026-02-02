@@ -13,7 +13,7 @@ Singleton {
   readonly property var params: Settings.data.nightLight
   property var lastCommand: []
 
-  function apply() {
+  function apply(force = false) {
     // If using LocationService, wait for it to be ready
     if (!params.forced && params.autoSchedule && !LocationService.coordinatesReady) {
       return;
@@ -22,7 +22,7 @@ Singleton {
     var command = buildCommand();
 
     // Compare with previous command to avoid unnecessary restart
-    if (JSON.stringify(command) !== JSON.stringify(lastCommand)) {
+    if (force || JSON.stringify(command) !== JSON.stringify(lastCommand)) {
       lastCommand = command;
       runner.command = command;
 
@@ -65,12 +65,12 @@ Singleton {
       apply();
       // Toast: night light toggled
       const enabled = !!Settings.data.nightLight.enabled;
-      ToastService.showNotice(I18n.tr("settings.display.night-light.section.label"), enabled ? I18n.tr("toast.night-light.enabled") : I18n.tr("toast.night-light.disabled"), enabled ? "nightlight-on" : "nightlight-off");
+      ToastService.showNotice(I18n.tr("common.night-light"), enabled ? I18n.tr("common.enabled") : I18n.tr("common.disabled"), enabled ? "nightlight-on" : "nightlight-off");
     }
     function onForcedChanged() {
       apply();
       if (Settings.data.nightLight.enabled) {
-        ToastService.showNotice(I18n.tr("settings.display.night-light.section.label"), Settings.data.nightLight.forced ? I18n.tr("toast.night-light.forced") : I18n.tr("toast.night-light.normal"), Settings.data.nightLight.forced ? "nightlight-forced" : "nightlight-on");
+        ToastService.showNotice(I18n.tr("common.night-light"), Settings.data.nightLight.forced ? I18n.tr("toast.night-light.forced") : I18n.tr("toast.night-light.normal"), Settings.data.nightLight.forced ? "nightlight-forced" : "nightlight-on");
       }
     }
     function onNightTempChanged() {
@@ -85,8 +85,27 @@ Singleton {
     target: LocationService
     function onCoordinatesReadyChanged() {
       if (LocationService.coordinatesReady) {
-        apply();
+        root.apply();
       }
+    }
+  }
+
+  Timer {
+    id: resumeRetryTimer
+    interval: 2000
+    repeat: false
+    onTriggered: {
+      Logger.i("NightLight", "Resume retry - re-applying night light again");
+      root.apply(true);
+    }
+  }
+
+  Connections {
+    target: Time
+    function onResumed() {
+      Logger.i("NightLight", "System resumed - re-applying night light");
+      root.apply(true);
+      resumeRetryTimer.restart();
     }
   }
 

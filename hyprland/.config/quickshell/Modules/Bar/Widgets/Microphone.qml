@@ -22,9 +22,11 @@ Item {
   property int sectionWidgetsCount: 0
 
   property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId]
+  // Explicit screenName property ensures reactive binding when screen changes
+  readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
-    if (section && sectionWidgetIndex >= 0) {
-      var widgets = Settings.data.bar.widgets[section];
+    if (section && sectionWidgetIndex >= 0 && screenName) {
+      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -32,8 +34,10 @@ Item {
     return {};
   }
 
-  readonly property bool isBarVertical: Settings.data.bar.position === "left" || Settings.data.bar.position === "right"
+  readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
+  readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
   readonly property string displayMode: (widgetSettings.displayMode !== undefined) ? widgetSettings.displayMode : widgetMetadata.displayMode
+  readonly property string middleClickCommand: (widgetSettings.middleClickCommand !== undefined) ? widgetSettings.middleClickCommand : widgetMetadata.middleClickCommand
 
   // Used to avoid opening the pill on Quickshell startup
   property bool firstInputVolumeReceived: false
@@ -85,41 +89,35 @@ Item {
     }
   }
 
-  function openExternalMixer() {
-    Quickshell.execDetached(["sh", "-c", Settings.data.audio.externalMixer]);
-  }
-
   NPopupContextMenu {
     id: contextMenu
 
     model: [
       {
-        "label": I18n.tr("context-menu.toggle-mute"),
+        "label": I18n.tr("actions.toggle-mute"),
         "action": "toggle-mute",
         "icon": AudioService.inputMuted ? "microphone-off" : "microphone"
       },
       {
-        "label": I18n.tr("context-menu.open-mixer"),
-        "action": "open-mixer",
+        "label": I18n.tr("actions.run-custom-command"),
+        "action": "custom-command",
         "icon": "adjustments"
       },
       {
-        "label": I18n.tr("context-menu.widget-settings"),
+        "label": I18n.tr("actions.widget-settings"),
         "action": "widget-settings",
         "icon": "settings"
       },
     ]
 
     onTriggered: action => {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                   if (popupMenuWindow) {
-                     popupMenuWindow.close();
-                   }
+                   contextMenu.close();
+                   PanelService.closeContextMenu(screen);
 
                    if (action === "toggle-mute") {
                      AudioService.setInputMuted(!AudioService.inputMuted);
-                   } else if (action === "open-mixer") {
-                     root.openExternalMixer();
+                   } else if (action === "custom-command") {
+                     Quickshell.execDetached(["sh", "-lc", middleClickCommand]);
                    } else if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
                    }
@@ -132,7 +130,6 @@ Item {
     screen: root.screen
     oppositeDirection: BarService.getPillDirection(root)
     icon: AudioService.getInputIcon()
-    density: Settings.data.bar.density
     autoHide: false // Important to be false so we can hover as long as we want
     text: {
       const maxVolume = Settings.data.audio.volumeOverdrive ? 1.5 : 1.0;
@@ -167,12 +164,10 @@ Item {
       PanelService.getPanel("audioPanel", screen)?.toggle(this);
     }
     onRightClicked: {
-      var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-      if (popupMenuWindow) {
-        popupMenuWindow.showContextMenu(contextMenu);
-        contextMenu.openAtItem(pill, screen);
-      }
+      PanelService.showContextMenu(contextMenu, pill, screen);
     }
-    onMiddleClicked: root.openExternalMixer()
+    onMiddleClicked: {
+      Quickshell.execDetached(["sh", "-lc", middleClickCommand]);
+    }
   }
 }

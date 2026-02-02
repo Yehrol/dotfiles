@@ -10,47 +10,33 @@ Popup {
   id: root
 
   property ShellScreen screen
-  property Item anchorItem: null
 
-  width: Math.max(440, contentColumn.implicitWidth + (Style.marginL * 2))
-  height: contentColumn.implicitHeight + (Style.marginL * 2)
+  // Measure the ENV placeholder text at current font settings
+  TextMetrics {
+    id: envPlaceholderMetrics
+    text: I18n.tr("wallpaper.panel.apikey-managed-by-env")
+    font.pointSize: Style.fontSizeM
+  }
+
+  // Dynamic width: use measured ENV placeholder width + input padding, or fallback to 440
+  width: Math.max(440, Math.round(envPlaceholderMetrics.width + (Style.marginL * 4)), Math.round(contentColumn.implicitWidth + (Style.marginL * 2)))
+  height: Math.round(contentColumn.implicitHeight + (Style.marginL * 2))
   padding: Style.marginL
   modal: true
   dim: false
   closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-  parent: anchorItem ? anchorItem.parent : Overlay.overlay
-
-  x: {
-    if (anchorItem) {
-      var itemPos = anchorItem.mapToItem(parent, 0, 0);
-      return itemPos.x - width + anchorItem.width;
-    }
-    return 0;
-  }
-
-  y: {
-    if (anchorItem) {
-      var itemPos = anchorItem.mapToItem(parent, 0, 0);
-      return itemPos.y + anchorItem.height + Style.marginS;
-    }
-    return 0;
-  }
 
   function showAt(item) {
-    if (!item) {
-      return;
-    }
-    anchorItem = item;
     open();
-    Qt.callLater(() => {
-                   // Try to focus the first input if available
-                   if (resolutionWidthInput.inputItem) {
-                     resolutionWidthInput.inputItem.forceActiveFocus();
-                   }
-                 });
   }
 
   onOpened: {
+    // Center on screen after popup is opened and parent position is known
+    if (screen && parent) {
+      var parentPos = parent.mapToItem(null, 0, 0);
+      x = Math.round((screen.width - width) / 2 - parentPos.x);
+      y = Math.round((screen.height - height) / 2 - parentPos.y);
+    }
     Qt.callLater(() => {
                    if (resolutionWidthInput.inputItem) {
                      resolutionWidthInput.inputItem.forceActiveFocus();
@@ -119,7 +105,7 @@ Popup {
       }
 
       NText {
-        text: I18n.tr("wallpaper.panel.wallhaven-settings.title")
+        text: I18n.tr("wallpaper.panel.wallhaven-settings-title")
         pointSize: Style.fontSizeL
         font.weight: Style.fontWeightBold
         color: Color.mOnSurface
@@ -128,7 +114,7 @@ Popup {
 
       NIconButton {
         icon: "close"
-        tooltipText: I18n.tr("tooltips.close")
+        tooltipText: I18n.tr("common.close")
         baseSize: Style.baseWidgetSize * 0.8
         onClicked: root.hide()
       }
@@ -144,7 +130,7 @@ Popup {
       spacing: Style.marginS
 
       NText {
-        text: I18n.tr("wallpaper.panel.apikey.label")
+        text: I18n.tr("wallpaper.panel.apikey-label")
         color: Color.mOnSurface
         pointSize: Style.fontSizeM
       }
@@ -152,8 +138,9 @@ Popup {
       NTextInput {
         id: apiKeyInput
         Layout.fillWidth: true
-        placeholderText: I18n.tr("wallpaper.panel.apikey.placeholder")
-        text: Settings.data.wallpaper.wallhavenApiKey || ""
+        enabled: !WallhavenService.apiKeyManagedByEnv
+        placeholderText: WallhavenService.apiKeyManagedByEnv ? I18n.tr("wallpaper.panel.apikey-managed-by-env") : I18n.tr("wallpaper.panel.apikey-placeholder")
+        text: WallhavenService.apiKeyManagedByEnv ? "" : (Settings.data.wallpaper.wallhavenApiKey || "")
 
         // Fix for password echo mode
         Component.onCompleted: {
@@ -163,12 +150,14 @@ Popup {
         }
 
         onEditingFinished: {
-          Settings.data.wallpaper.wallhavenApiKey = text;
+          if (!WallhavenService.apiKeyManagedByEnv) {
+            Settings.data.wallpaper.wallhavenApiKey = text;
+          }
         }
       }
 
       NText {
-        text: I18n.tr("wallpaper.panel.apikey.help")
+        text: I18n.tr("wallpaper.panel.apikey-help")
         color: Color.mOnSurfaceVariant
         pointSize: Style.fontSizeS
         wrapMode: Text.WordWrap
@@ -186,7 +175,7 @@ Popup {
       spacing: Style.marginM
 
       NText {
-        text: I18n.tr("wallpaper.panel.sorting.label")
+        text: I18n.tr("wallpaper.panel.sorting-label")
         color: Color.mOnSurface
         pointSize: Style.fontSizeM
         Layout.preferredWidth: implicitWidth
@@ -199,27 +188,27 @@ Popup {
         model: [
           {
             "key": "date_added",
-            "name": I18n.tr("wallpaper.panel.sorting.date_added")
+            "name": I18n.tr("wallpaper.panel.sorting-date-added")
           },
           {
             "key": "relevance",
-            "name": I18n.tr("wallpaper.panel.sorting.relevance")
+            "name": I18n.tr("wallpaper.panel.sorting-relevance")
           },
           {
             "key": "random",
-            "name": I18n.tr("wallpaper.panel.sorting.random")
+            "name": I18n.tr("common.random")
           },
           {
             "key": "views",
-            "name": I18n.tr("wallpaper.panel.sorting.views")
+            "name": I18n.tr("wallpaper.panel.sorting-views")
           },
           {
             "key": "favorites",
-            "name": I18n.tr("wallpaper.panel.sorting.favorites")
+            "name": I18n.tr("wallpaper.panel.sorting-favorites")
           },
           {
             "key": "toplist",
-            "name": I18n.tr("wallpaper.panel.sorting.toplist")
+            "name": I18n.tr("wallpaper.panel.sorting-toplist")
           }
         ]
         currentKey: Settings.data.wallpaper.wallhavenSorting || "relevance"
@@ -240,7 +229,7 @@ Popup {
       visible: sortingComboBox.currentKey !== "random"
 
       NText {
-        text: I18n.tr("wallpaper.panel.order.label")
+        text: I18n.tr("wallpaper.panel.order-label")
         color: Color.mOnSurface
         pointSize: Style.fontSizeM
         Layout.preferredWidth: implicitWidth
@@ -253,11 +242,11 @@ Popup {
         model: [
           {
             "key": "desc",
-            "name": I18n.tr("wallpaper.panel.order.desc")
+            "name": I18n.tr("wallpaper.panel.order-desc")
           },
           {
             "key": "asc",
-            "name": I18n.tr("wallpaper.panel.order.asc")
+            "name": I18n.tr("wallpaper.panel.order-asc")
           }
         ]
         currentKey: Settings.data.wallpaper.wallhavenOrder || "desc"
@@ -277,7 +266,7 @@ Popup {
       spacing: Style.marginM
 
       NText {
-        text: I18n.tr("wallpaper.panel.purity.label")
+        text: I18n.tr("wallpaper.panel.purity-label")
         color: Color.mOnSurface
         pointSize: Style.fontSizeM
         Layout.preferredWidth: implicitWidth
@@ -317,8 +306,8 @@ Popup {
             nsfwToggle.checked = purityRow.getPurityValue(2);
           }
           function onWallhavenApiKeyChanged() {
-            // If API key is removed, disable NSFW
-            if (!Settings.data.wallpaper.wallhavenApiKey && nsfwToggle.checked) {
+            // If API key is removed (and no ENV key), disable NSFW
+            if (!WallhavenService.apiKey && nsfwToggle.checked) {
               nsfwToggle.toggled(false);
             }
           }
@@ -341,7 +330,7 @@ Popup {
             spacing: Style.marginS
 
             NText {
-              text: I18n.tr("wallpaper.panel.purity.sfw")
+              text: I18n.tr("wallpaper.panel.purity-sfw")
               color: Color.mOnSurface
               pointSize: Style.fontSizeM
             }
@@ -390,7 +379,7 @@ Popup {
             spacing: Style.marginS
 
             NText {
-              text: I18n.tr("wallpaper.panel.purity.sketchy")
+              text: I18n.tr("wallpaper.panel.purity-sketchy")
               color: Color.mOnSurface
               pointSize: Style.fontSizeM
             }
@@ -432,7 +421,7 @@ Popup {
         Item {
           Layout.preferredWidth: nsfwCheckboxRow.implicitWidth
           Layout.preferredHeight: nsfwCheckboxRow.implicitHeight
-          visible: Settings.data.wallpaper.wallhavenApiKey !== ""
+          visible: WallhavenService.apiKey !== ""
 
           RowLayout {
             id: nsfwCheckboxRow
@@ -440,7 +429,7 @@ Popup {
             spacing: Style.marginS
 
             NText {
-              text: I18n.tr("wallpaper.panel.purity.nsfw")
+              text: I18n.tr("wallpaper.panel.purity-nsfw")
               color: Color.mOnSurface
               pointSize: Style.fontSizeM
             }
@@ -514,7 +503,7 @@ Popup {
       spacing: Style.marginM
 
       NText {
-        text: I18n.tr("wallpaper.panel.ratios.label")
+        text: I18n.tr("wallpaper.panel.ratios-label")
         color: Color.mOnSurface
         pointSize: Style.fontSizeM
         Layout.preferredWidth: implicitWidth
@@ -527,7 +516,15 @@ Popup {
         model: [
           {
             "key": "",
-            "name": I18n.tr("wallpaper.panel.ratios.any")
+            "name": I18n.tr("wallpaper.panel.ratios-any")
+          },
+          {
+            "key": "landscape",
+            "name": I18n.tr("wallpaper.panel.ratios-all-wide")
+          },
+          {
+            "key": "portrait",
+            "name": I18n.tr("wallpaper.panel.ratios-all-portrait")
           },
           {
             "key": "16x9",
@@ -595,7 +592,7 @@ Popup {
       spacing: Style.marginM
 
       NText {
-        text: I18n.tr("wallpaper.panel.categories.label")
+        text: I18n.tr("wallpaper.panel.categories-label")
         color: Color.mOnSurface
         pointSize: Style.fontSizeM
         Layout.preferredWidth: implicitWidth
@@ -653,7 +650,7 @@ Popup {
             spacing: Style.marginS
 
             NText {
-              text: I18n.tr("wallpaper.panel.categories.general")
+              text: I18n.tr("common.general")
               color: Color.mOnSurface
               pointSize: Style.fontSizeM
             }
@@ -702,7 +699,7 @@ Popup {
             spacing: Style.marginS
 
             NText {
-              text: I18n.tr("wallpaper.panel.categories.anime")
+              text: I18n.tr("wallpaper.panel.categories-anime")
               color: Color.mOnSurface
               pointSize: Style.fontSizeM
             }
@@ -751,7 +748,7 @@ Popup {
             spacing: Style.marginS
 
             NText {
-              text: I18n.tr("wallpaper.panel.categories.people")
+              text: I18n.tr("wallpaper.panel.categories-people")
               color: Color.mOnSurface
               pointSize: Style.fontSizeM
             }
@@ -825,7 +822,7 @@ Popup {
       spacing: Style.marginS
 
       NText {
-        text: I18n.tr("wallpaper.panel.resolution.label")
+        text: I18n.tr("wallpaper.panel.resolution-label")
         color: Color.mOnSurface
         pointSize: Style.fontSizeM
       }
@@ -835,7 +832,7 @@ Popup {
         spacing: Style.marginM
 
         NText {
-          text: I18n.tr("wallpaper.panel.resolution.mode.label")
+          text: I18n.tr("wallpaper.panel.resolution-mode-label")
           color: Color.mOnSurface
           pointSize: Style.fontSizeM
           Layout.preferredWidth: implicitWidth
@@ -848,11 +845,11 @@ Popup {
           model: [
             {
               "key": "atleast",
-              "name": I18n.tr("wallpaper.panel.resolution.atleast")
+              "name": I18n.tr("wallpaper.panel.resolution-atleast")
             },
             {
               "key": "exact",
-              "name": I18n.tr("wallpaper.panel.resolution.exact")
+              "name": I18n.tr("wallpaper.panel.resolution-exact")
             }
           ]
           currentKey: Settings.data.wallpaper.wallhavenResolutionMode || "atleast"
@@ -880,7 +877,7 @@ Popup {
         NTextInput {
           id: resolutionWidthInput
           Layout.preferredWidth: 80
-          placeholderText: "Width"
+          placeholderText: I18n.tr("common.width")
           inputMethodHints: Qt.ImhDigitsOnly
           text: Settings.data.wallpaper.wallhavenResolutionWidth || ""
 
@@ -924,7 +921,7 @@ Popup {
         NTextInput {
           id: resolutionHeightInput
           Layout.preferredWidth: 80
-          placeholderText: "Height"
+          placeholderText: I18n.tr("common.height")
           inputMethodHints: Qt.ImhDigitsOnly
           text: Settings.data.wallpaper.wallhavenResolutionHeight || ""
 
@@ -967,7 +964,7 @@ Popup {
 
     NButton {
       Layout.fillWidth: true
-      text: I18n.tr("wallpaper.panel.wallhaven-settings.apply")
+      text: I18n.tr("common.apply")
       onClicked: {
         // Ensure all settings are synced to the service
         if (typeof WallhavenService !== "undefined" && Settings.data.wallpaper.useWallhaven) {

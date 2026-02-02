@@ -11,6 +11,8 @@ ColumnLayout {
   property var widgetData: null
   property var widgetMetadata: null
 
+  signal settingsChanged(var settings)
+
   property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
 
   function saveSettings() {
@@ -21,9 +23,12 @@ ColumnLayout {
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("settings.desktop-widgets.weather.show-background.label")
-    description: I18n.tr("settings.desktop-widgets.weather.show-background.description")
+    label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
+    description: I18n.tr("panels.desktop-widgets.weather-show-background-description")
     checked: valueShowBackground
-    onToggled: checked => valueShowBackground = checked
+    onToggled: checked => {
+                 valueShowBackground = checked;
+                 settingsChanged(saveSettings());
+               }
   }
 }

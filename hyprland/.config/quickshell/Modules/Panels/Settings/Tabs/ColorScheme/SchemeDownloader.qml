@@ -71,31 +71,9 @@ Popup {
     return defaults[colorKey] || Color.mOnSurfaceVariant;
   }
 
-  // Fetch scheme JSON to get colors for swatches
+  // Colors are now provided directly in the registry, no need to fetch individual files
   function fetchSchemeColors(scheme) {
-    // Skip if already cached
-    if (schemeColorsCache[scheme.name]) {
-      return;
-    }
-
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === XMLHttpRequest.DONE) {
-        if (xhr.status === 200) {
-          try {
-            var jsonData = JSON.parse(xhr.responseText);
-            schemeColorsCache[scheme.name] = jsonData;
-            cacheVersion++;
-          } catch (e) {
-            Logger.w("ColorSchemeDownload", "Failed to parse scheme JSON for", scheme.name, e);
-          }
-        }
-      }
-    };
-
-    // Try to get the JSON file from the scheme directory
-    xhr.open("GET", "https://raw.githubusercontent.com/noctalia-dev/noctalia-colorschemes/main/" + scheme.path + "/" + scheme.name + ".json");
-    xhr.send();
+    return;
   }
 
   background: Rectangle {
@@ -139,7 +117,18 @@ Popup {
 
       if (cachedSchemes.length > 0) {
         availableSchemes = cachedSchemes;
+        // Restore color cache from cached schemes
+        for (var i = 0; i < cachedSchemes.length; i++) {
+          var cachedScheme = cachedSchemes[i];
+          if (cachedScheme.dark || cachedScheme.light) {
+            schemeColorsCache[cachedScheme.name] = {
+              "dark": cachedScheme.dark || null,
+              "light": cachedScheme.light || null
+            };
+          }
+        }
         hasInitialData = true;
+        cacheVersion++;
         fetching = false;
       } else {
         // Cache is empty, only fetch if we haven't fetched recently
@@ -202,56 +191,72 @@ Popup {
     // availableSchemes = [];
     downloadError = "";
 
-    // Use GitHub API to list contents of the repo
+    // Fetch registry.json
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
       if (xhr.readyState === XMLHttpRequest.DONE) {
         fetching = false;
         if (xhr.status === 200) {
           try {
-            var response = JSON.parse(xhr.responseText);
-            if (Array.isArray(response)) {
-              // Filter to only directories (type === "dir")
+            var registry = JSON.parse(xhr.responseText);
+            if (registry && registry.themes && Array.isArray(registry.themes)) {
               var schemes = [];
-              for (var i = 0; i < response.length; i++) {
-                if (response[i].type === "dir") {
-                  schemes.push({
-                                 "name": response[i].name,
-                                 "path": response[i].path,
-                                 "url": response[i].url
-                               });
-                }
+              // Process themes
+              for (var i = 0; i < registry.themes.length; i++) {
+                var theme = registry.themes[i];
+                schemes.push({
+                               "name": theme.name,
+                               "path": theme.path,
+                               "dark": theme.dark || null,
+                               "light": theme.light || null
+                             });
+                schemeColorsCache[theme.name] = {
+                  "dark": theme.dark || null,
+                  "light": theme.light || null
+                };
               }
               availableSchemes = schemes;
               hasInitialData = true;
-              Logger.i("ColorSchemeDownload", "Fetched", schemes.length, "available schemes from API");
+              cacheVersion++;
+              Logger.d("ColorSchemeDownload", "Fetched", schemes.length, "available schemes from registry.json");
               // Save to cache
               saveSchemesToCache();
             } else {
-              downloadError = I18n.tr("settings.color-scheme.download.error.invalid-response");
+              downloadError = I18n.tr("panels.color-scheme.download-error-invalid-response");
               Logger.e("ColorSchemeDownload", downloadError);
             }
           } catch (e) {
-            downloadError = I18n.tr("settings.color-scheme.download.error.parse-failed", {
+            downloadError = I18n.tr("panels.color-scheme.download-error-parse-failed", {
                                       "error": e.toString()
                                     });
             Logger.e("ColorSchemeDownload", downloadError);
           }
         } else if (xhr.status === 403) {
           // Rate limit hit - try to use cache if available
-          downloadError = I18n.tr("settings.color-scheme.download.error.rate-limit");
+          downloadError = I18n.tr("panels.color-scheme.download-error-rate-limit");
           Logger.w("ColorSchemeDownload", downloadError);
           if (typeof ShellState !== 'undefined' && ShellState.isLoaded) {
             const cacheData = ShellState.getColorSchemesList();
             const cachedSchemes = cacheData.schemes || [];
             if (cachedSchemes.length > 0) {
               availableSchemes = cachedSchemes;
+              // Restore color cache from cached schemes
+              for (var j = 0; j < cachedSchemes.length; j++) {
+                var cachedScheme = cachedSchemes[j];
+                if (cachedScheme.dark || cachedScheme.light) {
+                  schemeColorsCache[cachedScheme.name] = {
+                    "dark": cachedScheme.dark || null,
+                    "light": cachedScheme.light || null
+                  };
+                }
+              }
               hasInitialData = true;
+              cacheVersion++;
               Logger.i("ColorSchemeDownload", "Using cached schemes due to rate limit");
             }
           }
         } else {
-          downloadError = I18n.tr("settings.color-scheme.download.error.api-error", {
+          downloadError = I18n.tr("panels.color-scheme.download-error-api-error", {
                                     "status": xhr.status
                                   });
           Logger.e("ColorSchemeDownload", downloadError);
@@ -259,7 +264,7 @@ Popup {
       }
     };
 
-    xhr.open("GET", "https://api.github.com/repos/noctalia-dev/noctalia-colorschemes/contents");
+    xhr.open("GET", "https://raw.githubusercontent.com/noctalia-dev/noctalia-colorschemes/main/registry.json");
     xhr.send();
   }
 
@@ -367,7 +372,7 @@ Popup {
               getSchemeFilesDirect(scheme);
             }
           } catch (e) {
-            downloadError = I18n.tr("settings.color-scheme.download.error.parse-failed", {
+            downloadError = I18n.tr("panels.color-scheme.download-error-parse-failed", {
                                       "error": e.toString()
                                     });
             downloading = false;
@@ -396,13 +401,13 @@ Popup {
               // Recursively get all files
               getAllFilesRecursive(scheme, response, []);
             } else {
-              downloadError = I18n.tr("settings.color-scheme.download.error.invalid-response");
+              downloadError = I18n.tr("panels.color-scheme.download-error-invalid-response");
               downloading = false;
               downloadingScheme = "";
               Logger.e("ColorSchemeDownload", downloadError);
             }
           } catch (e) {
-            downloadError = I18n.tr("settings.color-scheme.download.error.parse-failed", {
+            downloadError = I18n.tr("panels.color-scheme.download-error-parse-failed", {
                                       "error": e.toString()
                                     });
             downloading = false;
@@ -410,7 +415,7 @@ Popup {
             Logger.e("ColorSchemeDownload", downloadError);
           }
         } else {
-          downloadError = I18n.tr("settings.color-scheme.download.error.api-error", {
+          downloadError = I18n.tr("panels.color-scheme.download-error-api-error", {
                                     "status": xhr.status
                                   });
           downloading = false;
@@ -491,7 +496,7 @@ Popup {
 
   function downloadSchemeFiles(schemeName, files) {
     if (files.length === 0) {
-      downloadError = I18n.tr("settings.color-scheme.download.error.no-files");
+      downloadError = I18n.tr("panels.color-scheme.download-error-no-files");
       downloading = false;
       downloadingScheme = "";
       Logger.e("ColorSchemeDownload", downloadError);
@@ -547,9 +552,9 @@ Popup {
     downloadProcess.exited.connect(function (exitCode) {
       if (exitCode === 0) {
         Logger.i("ColorSchemeDownload", "Scheme downloaded successfully:", schemeName);
-        ToastService.showNotice(I18n.tr("settings.color-scheme.download.success.title"), I18n.tr("settings.color-scheme.download.success.description", {
-                                                                                                   "scheme": schemeName
-                                                                                                 }), "settings-color-scheme");
+        ToastService.showNotice(I18n.tr("panels.color-scheme.download-success-title"), I18n.tr("panels.color-scheme.download-success-description", {
+                                                                                                 "scheme": schemeName
+                                                                                               }), "settings-color-scheme");
         // Set pending scheme to apply after reload
         pendingApplyScheme = schemeName;
         // Reload color schemes
@@ -561,15 +566,36 @@ Popup {
         if (root.lastStderrOutput) {
           errorDetails += " - " + root.lastStderrOutput;
         }
-        downloadError = I18n.tr("settings.color-scheme.download.error.download-failed", {
+        downloadError = I18n.tr("panels.color-scheme.download-error-download-failed", {
                                   "code": exitCode
                                 }) + "\n" + errorDetails;
         Logger.e("ColorSchemeDownload", downloadError);
-        ToastService.showError(I18n.tr("settings.color-scheme.download.error.title"), I18n.tr("settings.color-scheme.download.error.description", {
-                                                                                                "scheme": schemeName
-                                                                                              }) + "\n" + errorDetails);
-        downloading = false;
-        downloadingScheme = "";
+        ToastService.showError(I18n.tr("panels.color-scheme.download-error-title"), I18n.tr("panels.color-scheme.download-error-description", {
+                                                                                              "scheme": schemeName
+                                                                                            }) + "\n" + errorDetails);
+        // Clean up the partially downloaded directory on failure
+        var cleanupScript = "rm -rf '" + targetDir + "'";
+        var cleanupProcess = Qt.createQmlObject(`
+                                                 import QtQuick
+                                                 import Quickshell.Io
+                                                 Process {
+                                                 id: cleanupProcess
+                                                 command: ["sh", "-c", ` + JSON.stringify(cleanupScript) + `]
+                                                 }
+                                                 `, root, "CleanupProcess_" + schemeName);
+
+        cleanupProcess.exited.connect(function (cleanupExitCode) {
+          if (cleanupExitCode === 0) {
+            Logger.d("ColorSchemeDownload", "Partially downloaded scheme directory cleaned up:", targetDir);
+          } else {
+            Logger.w("ColorSchemeDownload", "Failed to clean up partially downloaded scheme directory:", targetDir);
+          }
+          downloading = false;
+          downloadingScheme = "";
+          cleanupProcess.destroy();
+        });
+
+        cleanupProcess.running = true;
       }
       root.lastStderrOutput = "";
       downloadProcess.destroy();
@@ -628,9 +654,9 @@ Popup {
     deleteProcess.exited.connect(function (exitCode) {
       if (exitCode === 0) {
         Logger.i("ColorSchemeDownload", "Scheme deleted successfully:", schemeName);
-        ToastService.showNotice(I18n.tr("settings.color-scheme.delete.success.title"), I18n.tr("settings.color-scheme.delete.success.description", {
-                                                                                                 "scheme": schemeName
-                                                                                               }), "settings-color-scheme");
+        ToastService.showNotice(I18n.tr("panels.color-scheme.delete-success-title"), I18n.tr("panels.color-scheme.delete-success-description", {
+                                                                                               "scheme": schemeName
+                                                                                             }), "settings-color-scheme");
 
         // If the deleted scheme was the active one, reset to default BEFORE reloading
         if (needsReset) {
@@ -645,9 +671,9 @@ Popup {
         ColorSchemeService.loadColorSchemes();
       } else {
         Logger.e("ColorSchemeDownload", "Delete failed with exit code:", exitCode);
-        ToastService.showError(I18n.tr("settings.color-scheme.delete.error.title"), I18n.tr("settings.color-scheme.delete.error.description", {
-                                                                                              "scheme": schemeName
-                                                                                            }));
+        ToastService.showError(I18n.tr("panels.color-scheme.delete-error-title"), I18n.tr("panels.color-scheme.delete-error-description", {
+                                                                                            "scheme": schemeName
+                                                                                          }));
       }
       deleteProcess.destroy();
     });
@@ -691,12 +717,8 @@ Popup {
   function preFetchSchemeColors() {
     if (availableSchemes.length > 0 && visible) {
       Qt.callLater(function () {
-        for (var i = 0; i < availableSchemes.length; i++) {
-          var scheme = availableSchemes[i];
-          if (!schemeColorsCache[scheme.name]) {
-            fetchSchemeColors(scheme);
-          }
-        }
+        // Just trigger a cache version update to ensure UI refreshes
+        cacheVersion++;
       });
     }
   }
@@ -732,7 +754,7 @@ Popup {
       Layout.fillWidth: true
 
       NText {
-        text: I18n.tr("settings.color-scheme.download.title")
+        text: I18n.tr("panels.color-scheme.download-title")
         pointSize: Style.fontSizeL
         font.weight: Style.fontWeightBold
         color: Color.mPrimary
@@ -741,7 +763,7 @@ Popup {
 
       NIconButton {
         icon: "refresh"
-        tooltipText: I18n.tr("settings.color-scheme.download.refresh")
+        tooltipText: I18n.tr("common.refresh")
         enabled: !fetching && !downloading
         onClicked: {
           // Force refresh by clearing cache timestamp and fetching directly from API
@@ -758,7 +780,7 @@ Popup {
 
       NIconButton {
         icon: "close"
-        tooltipText: I18n.tr("tooltips.close")
+        tooltipText: I18n.tr("common.close")
         onClicked: root.close()
       }
     }
@@ -801,7 +823,7 @@ Popup {
       }
 
       NText {
-        text: I18n.tr("settings.color-scheme.download.fetching")
+        text: I18n.tr("panels.color-scheme.download-fetching")
         pointSize: Style.fontSizeM
         color: Color.mOnSurfaceVariant
       }
@@ -815,16 +837,10 @@ Popup {
       visible: hasInitialData && availableSchemes.length > 0
       verticalPolicy: ScrollBar.AsNeeded
       horizontalPolicy: ScrollBar.AlwaysOff
-
-      // Only show scrollbar when content actually overflows (size < 1.0 means content is larger than viewport)
-      ScrollBar.vertical.visible: schemesScrollView.ScrollBar.vertical.size < 1.0
+      gradientColor: Color.mSurface
 
       ColumnLayout {
-        width: {
-          // Always account for scrollbar width when it's visible (for testing with visible: true)
-          var scrollbarWidth = schemesScrollView.ScrollBar.vertical.visible ? (schemesScrollView.handleWidth + Style.marginS) : 0;
-          return parent.width - scrollbarWidth;
-        }
+        width: schemesScrollView.availableWidth
         spacing: Style.marginS
 
         Repeater {
@@ -912,7 +928,7 @@ Popup {
                 property bool isDownloaded: root.isSchemeDownloaded(schemeRow.schemeName)
 
                 icon: isDownloading ? "" : (isDownloaded ? "trash" : "download")
-                tooltipText: isDownloading ? I18n.tr("settings.color-scheme.download.downloading") : (isDownloaded ? I18n.tr("settings.color-scheme.download.delete") : I18n.tr("settings.color-scheme.download.download"))
+                tooltipText: isDownloading ? I18n.tr("panels.color-scheme.download-downloading") : (isDownloaded ? I18n.tr("common.delete") : I18n.tr("common.download"))
                 enabled: !downloading
                 Layout.alignment: Qt.AlignVCenter
                 visible: !isInstalled || isDownloaded // Show button only if not installed (can download) or if downloaded (can delete)
@@ -946,7 +962,7 @@ Popup {
       }
 
       NText {
-        text: I18n.tr("settings.color-scheme.download.empty")
+        text: I18n.tr("panels.color-scheme.download-empty")
         pointSize: Style.fontSizeM
         color: Color.mOnSurfaceVariant
         Layout.alignment: Qt.AlignHCenter

@@ -11,16 +11,20 @@ Item {
   required property var widgetScreen
   required property var widgetProps
 
-  property string barDensity: "default"
-  readonly property real scaling: barDensity === "mini" ? 0.8 : (barDensity === "compact" ? 0.9 : 1.0)
-
   // Extract section info from widgetProps
   readonly property string section: widgetProps ? (widgetProps.section || "") : ""
   readonly property int sectionIndex: widgetProps ? (widgetProps.sectionWidgetIndex || 0) : 0
 
-  // Don't reserve space unless the loaded widget is really visible
-  implicitWidth: getImplicitSize(loader.item, "implicitWidth")
-  implicitHeight: getImplicitSize(loader.item, "implicitHeight")
+  // Bar orientation and height for extended click areas
+  readonly property string barPosition: Settings.getBarPositionForScreen(widgetScreen?.name)
+  readonly property bool isVerticalBar: barPosition === "left" || barPosition === "right"
+  readonly property real barHeight: Style.getBarHeightForScreen(widgetScreen?.name)
+
+  // Request full bar dimension from layout to extend click areas above/below widgets
+  // For horizontal bars: full bar height, widget's content width
+  // For vertical bars: full bar width, widget's content height
+  implicitWidth: isVerticalBar ? barHeight : getImplicitSize(loader.item, "implicitWidth")
+  implicitHeight: isVerticalBar ? getImplicitSize(loader.item, "implicitHeight") : barHeight
 
   // Remove layout space left by hidden widgets
   visible: loader.item ? ((loader.item.opacity > 0.0) || (loader.item.hasOwnProperty("hideMode") && loader.item.hideMode === "transparent")) : false
@@ -69,6 +73,19 @@ Item {
 
       Logger.d("BarWidgetLoader", "Loading widget", widgetId, "on screen:", widgetScreen.name);
 
+      // Extend widget to fill full bar dimension for extended click areas
+      // For horizontal bars: widget fills bar height (content width preserved)
+      // For vertical bars: widget fills bar width (content height preserved)
+      if (root.isVerticalBar) {
+        item.width = Qt.binding(function () {
+          return root.barHeight;
+        });
+      } else {
+        item.height = Qt.binding(function () {
+          return root.barHeight;
+        });
+      }
+
       // Apply properties to loaded widget
       for (var prop in widgetProps) {
         if (item.hasOwnProperty(prop)) {
@@ -79,13 +96,6 @@ Item {
       // Set screen property
       if (item.hasOwnProperty("screen")) {
         item.screen = widgetScreen;
-      }
-
-      // Set scaling property
-      if (item.hasOwnProperty("scaling")) {
-        item.scaling = Qt.binding(function () {
-          return root.scaling;
-        });
       }
 
       // Inject plugin API for plugin widgets

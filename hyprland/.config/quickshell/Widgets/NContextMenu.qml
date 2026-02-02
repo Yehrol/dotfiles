@@ -23,7 +23,7 @@ import qs.Commons
 *       { "label": "Action 1", "action": "action1", "icon": "icon-name" },
 *       { "label": "Action 2", "action": "action2" }
 *     ]
-*     onTriggered: action => { console.log("Selected:", action) }
+*     onTriggered: action => { Logger.i("MyModule", "Selected:", action) }
 *   }
 *
 *   MouseArea {
@@ -71,11 +71,12 @@ Popup {
     interactive: contentHeight > root.height
     verticalPolicy: root.verticalPolicy
     horizontalPolicy: root.horizontalPolicy
+    reserveScrollbarSpace: false
     model: root.filteredModel
 
     delegate: ItemDelegate {
       id: menuItem
-      width: listView.width
+      width: listView.availableWidth
       height: root.itemHeight
       opacity: modelData.enabled !== false ? 1.0 : 0.5
       enabled: modelData.enabled !== false
@@ -84,7 +85,7 @@ Popup {
       property var popup: root
 
       background: Rectangle {
-        color: menuItem.hovered && menuItem.enabled ? Color.mHover : Color.transparent
+        color: menuItem.hovered && menuItem.enabled ? Color.mHover : "transparent"
         radius: Style.iRadiusS
 
         Behavior on color {

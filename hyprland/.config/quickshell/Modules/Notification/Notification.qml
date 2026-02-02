@@ -48,7 +48,7 @@ Variants {
       WlrLayershell.layer: (Settings.data.notifications?.overlayLayer) ? WlrLayer.Overlay : WlrLayer.Top
       WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
-      color: Color.transparent
+      color: "transparent"
 
       // Make shadow area click-through, only notification content is clickable
       mask: Region {
@@ -69,46 +69,50 @@ Variants {
       }
 
       // Parse location setting
-      readonly property string location: Settings.data.notifications?.location || "top_right"
+      readonly property string location: Settings.data.notifications.location || "top_right"
       readonly property bool isTop: location.startsWith("top")
       readonly property bool isBottom: location.startsWith("bottom")
       readonly property bool isLeft: location.endsWith("_left")
       readonly property bool isRight: location.endsWith("_right")
       readonly property bool isCentered: location === "top" || location === "bottom"
 
-      readonly property string barPos: Settings.data.bar.position
+      readonly property string barPos: Settings.getBarPositionForScreen(notifWindow.screen?.name)
       readonly property bool isFloating: Settings.data.bar.floating
+      readonly property real barHeight: Style.getBarHeightForScreen(notifWindow.screen?.name)
+
+      readonly property bool isFramed: Settings.data.bar.barType === "framed"
+      readonly property real frameThickness: Settings.data.bar.frameThickness ?? 8
 
       readonly property int notifWidth: Math.round(440 * Style.uiScaleRatio)
       readonly property int shadowPadding: Style.shadowBlurMax + Style.marginL
 
-      // Calculate bar offsets for each edge separately
+      // Calculate bar and frame offsets for each edge separately
       readonly property int barOffsetTop: {
         if (barPos !== "top")
-          return 0;
-        const floatMarginV = isFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0;
-        return Style.barHeight + floatMarginV;
+          return isFramed ? frameThickness : 0;
+        const floatMarginV = isFloating ? Math.ceil(Settings.data.bar.marginVertical) : 0;
+        return barHeight + floatMarginV;
       }
 
       readonly property int barOffsetBottom: {
         if (barPos !== "bottom")
-          return 0;
-        const floatMarginV = isFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0;
-        return Style.barHeight + floatMarginV;
+          return isFramed ? frameThickness : 0;
+        const floatMarginV = isFloating ? Math.ceil(Settings.data.bar.marginVertical) : 0;
+        return barHeight + floatMarginV;
       }
 
       readonly property int barOffsetLeft: {
         if (barPos !== "left")
-          return 0;
-        const floatMarginH = isFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0;
-        return Style.barHeight + floatMarginH;
+          return isFramed ? frameThickness : 0;
+        const floatMarginH = isFloating ? Math.ceil(Settings.data.bar.marginHorizontal) : 0;
+        return barHeight + floatMarginH;
       }
 
       readonly property int barOffsetRight: {
         if (barPos !== "right")
-          return 0;
-        const floatMarginH = isFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0;
-        return Style.barHeight + floatMarginH;
+          return isFramed ? frameThickness : 0;
+        const floatMarginH = isFloating ? Math.ceil(Settings.data.bar.marginHorizontal) : 0;
+        return barHeight + floatMarginH;
       }
 
       // Anchoring
@@ -119,7 +123,7 @@ Variants {
 
       // Margins for PanelWindow - only apply bar offset for the specific edge where the bar is
       margins.top: isTop ? barOffsetTop - shadowPadding + Style.marginM : 0
-      margins.bottom: isBottom ? barOffsetBottom - shadowPadding + Style.marginM : 0
+      margins.bottom: isBottom ? barOffsetBottom - shadowPadding : 0
       margins.left: isLeft ? barOffsetLeft - shadowPadding + Style.marginM : 0
       margins.right: isRight ? barOffsetRight - shadowPadding + Style.marginM : 0
 
@@ -197,7 +201,7 @@ Variants {
             readonly property int slideDistance: 300
 
             Layout.preferredWidth: notifWidth + notifWindow.shadowPadding * 2
-            Layout.preferredHeight: notificationContent.implicitHeight + Style.marginM * 2 + notifWindow.shadowPadding * 2
+            Layout.preferredHeight: notificationContent.implicitHeight + Style.marginXL + notifWindow.shadowPadding * 2
             Layout.maximumHeight: Layout.preferredHeight
 
             // Animation properties
@@ -230,15 +234,14 @@ Variants {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 2
-                color: Color.transparent
-
-                readonly property real availableWidth: parent.width - (2 * parent.radius)
+                color: "transparent"
 
                 Rectangle {
                   id: progressBar
+                  readonly property real progressWidth: cardBackground.width - (2 * cardBackground.radius)
                   height: parent.height
-                  x: parent.parent.radius + (parent.availableWidth * (1 - model.progress)) / 2
-                  width: parent.availableWidth * model.progress
+                  x: cardBackground.radius + (progressWidth * (1 - model.progress)) / 2
+                  width: progressWidth * model.progress
 
                   color: {
                     var baseColor = model.urgency === 2 ? Color.mError : model.urgency === 0 ? Color.mOnSurface : Color.mPrimary;
@@ -422,7 +425,7 @@ Variants {
                   Layout.alignment: Qt.AlignVCenter
                   radius: Math.min(Style.radiusL, Layout.preferredWidth / 2)
                   imagePath: model.originalImage || ""
-                  borderColor: Color.transparent
+                  borderColor: "transparent"
                   borderWidth: 0
                   fallbackIcon: "bell"
                   fallbackIconSize: 24
@@ -466,7 +469,7 @@ Variants {
                   }
 
                   NText {
-                    text: model.summary || I18n.tr("general.no-summary")
+                    text: model.summary || I18n.tr("common.no-summary")
                     pointSize: Style.fontSizeM
                     font.weight: Style.fontWeightMedium
                     color: Color.mOnSurface
@@ -545,7 +548,7 @@ Variants {
             // Close button
             NIconButton {
               icon: "close"
-              tooltipText: I18n.tr("tooltips.close")
+              tooltipText: I18n.tr("common.close")
               baseSize: Style.baseWidgetSize * 0.6
               anchors.top: cardBackground.top
               anchors.topMargin: Style.marginM

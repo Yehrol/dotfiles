@@ -11,8 +11,11 @@ Popup {
   modal: true
   dim: false
   anchors.centerIn: parent
+  property var screen: null
+  readonly property real maxHeight: screen ? screen.height * 0.9 : 800
+
   width: Math.max(settingsContent.implicitWidth + padding * 2, 500 * Style.uiScaleRatio)
-  height: settingsContent.implicitHeight + padding * 2
+  height: Math.min(settingsContent.implicitHeight + padding * 2, maxHeight)
   padding: Style.marginXL
 
   property var currentPlugin: null
@@ -39,7 +42,7 @@ Popup {
         Layout.fillWidth: true
 
         NText {
-          text: I18n.tr("settings.plugins.plugin-settings-title", {
+          text: I18n.tr("panels.plugins.plugin-settings-title", {
                           "plugin": root.currentPlugin?.name || ""
                         })
           pointSize: Style.fontSizeL
@@ -50,7 +53,7 @@ Popup {
 
         NIconButton {
           icon: "close"
-          tooltipText: I18n.tr("tooltips.close")
+          tooltipText: I18n.tr("common.close")
           onClicked: root.close()
         }
       }
@@ -63,9 +66,18 @@ Popup {
       }
 
       // Settings loader - pluginApi is passed via setSource() in openPluginSettings()
-      Loader {
-        id: settingsLoader
+      NScrollView {
+        id: settingsScrollView
         Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.minimumHeight: 100
+        horizontalPolicy: ScrollBar.AlwaysOff
+        gradientColor: Color.mSurface
+
+        Loader {
+          id: settingsLoader
+          width: settingsScrollView.availableWidth
+        }
       }
 
       // Action buttons
@@ -79,7 +91,7 @@ Popup {
         }
 
         NButton {
-          text: I18n.tr("common.cancel")
+          text: I18n.tr("common.close")
           outlined: true
           onClicked: root.close()
         }
@@ -90,9 +102,8 @@ Popup {
           onClicked: {
             if (settingsLoader.item && settingsLoader.item.saveSettings) {
               settingsLoader.item.saveSettings();
-              root.close();
               if (root.showToastOnSave) {
-                ToastService.showNotice(I18n.tr("settings.plugins.settings-saved"));
+                ToastService.showNotice(I18n.tr("panels.plugins.title"), I18n.tr("panels.plugins.settings-saved"));
               }
             }
           }
@@ -102,6 +113,8 @@ Popup {
   }
 
   onClosed: {
+    // Clear both source and sourceComponent to ensure full cleanup
+    settingsLoader.sourceComponent = null;
     settingsLoader.source = "";
     currentPlugin = null;
     currentPluginApi = null;
@@ -110,23 +123,23 @@ Popup {
   function openPluginSettings(pluginManifest) {
     currentPlugin = pluginManifest;
 
-    // Get plugin API
-    currentPluginApi = PluginService.getPluginAPI(pluginManifest.id);
+    // Use composite key if available (for custom plugins), otherwise use manifest ID (for official plugins)
+    var pluginId = pluginManifest.compositeKey || pluginManifest.id;
+
+    currentPluginApi = PluginService.getPluginAPI(pluginId);
     if (!currentPluginApi) {
-      Logger.e("NPluginSettingsPopup", "Cannot open settings: plugin not loaded:", pluginManifest.id);
+      Logger.e("NPluginSettingsPopup", "Cannot open settings: plugin not loaded:", pluginId);
       if (showToastOnSave) {
-        ToastService.showNotice(I18n.tr("settings.plugins.settings-error-not-loaded"));
+        ToastService.showError(I18n.tr("panels.plugins.title"), I18n.tr("panels.plugins.settings-error-not-loaded"));
       }
       return;
     }
 
     // Get plugin directory
-    var pluginDir = PluginRegistry.getPluginDir(pluginManifest.id);
+    var pluginDir = PluginRegistry.getPluginDir(pluginId);
     var settingsPath = pluginDir + "/" + pluginManifest.entryPoints.settings;
-    var loadVersion = PluginRegistry.pluginLoadVersions[pluginManifest.id] || 0;
 
-    // Load settings component (use version counter to avoid caching)
-    settingsLoader.setSource("file://" + settingsPath + "?v=" + loadVersion, {
+    settingsLoader.setSource("file://" + settingsPath, {
                                "pluginApi": currentPluginApi
                              });
 

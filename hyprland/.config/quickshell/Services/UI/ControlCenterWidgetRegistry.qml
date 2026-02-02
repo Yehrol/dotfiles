@@ -17,8 +17,9 @@ Singleton {
                            "NightLight": nightLightComponent,
                            "Notifications": notificationsComponent,
                            "PowerProfile": powerProfileComponent,
-                           "ScreenRecorder": screenRecorderComponent,
-                           "WiFi": wiFiComponent,
+                           "WiFi": networkComponent,
+                           "Network": networkComponent,
+                           "NoctaliaPerformance": noctaliaPerformanceComponent,
                            "WallpaperSelector": wallpaperSelectorComponent
                          })
 
@@ -56,11 +57,11 @@ Singleton {
   property Component powerProfileComponent: Component {
     PowerProfile {}
   }
-  property Component screenRecorderComponent: Component {
-    ScreenRecorder {}
+  property Component networkComponent: Component {
+    Network {}
   }
-  property Component wiFiComponent: Component {
-    WiFi {}
+  property Component noctaliaPerformanceComponent: Component {
+    NoctaliaPerformance {}
   }
   property Component wallpaperSelectorComponent: Component {
     WallpaperSelector {}

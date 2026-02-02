@@ -11,14 +11,12 @@ ColumnLayout {
   property string description: ""
   property string inputIconName: ""
   property bool readOnly: false
-  property bool enabled: true
   property color labelColor: Color.mOnSurface
   property color descriptionColor: Color.mOnSurfaceVariant
   property string fontFamily: Settings.data.ui.fontDefault
   property real fontSize: Style.fontSizeS
   property int fontWeight: Style.fontWeightRegular
-  property bool isSettings: false
-  property var defaultValue: ""
+  property var defaultValue: undefined
   property string settingsPath: ""
 
   property alias text: input.text
@@ -28,12 +26,13 @@ ColumnLayout {
 
   signal editingFinished
 
+  opacity: enabled ? 1.0 : 0.3
   spacing: Style.marginS
 
-  readonly property bool isValueChanged: isSettings && (text !== defaultValue)
-  readonly property string indicatorTooltip: isSettings ? I18n.tr("settings.indicator.default-value", {
-                                                                    "value": defaultValue === "" ? "(empty)" : String(defaultValue)
-                                                                  }) : ""
+  readonly property bool isValueChanged: (defaultValue !== undefined) && (text !== defaultValue)
+  readonly property string indicatorTooltip: defaultValue !== undefined ? I18n.tr("panels.indicator.default-value", {
+                                                                                    "value": defaultValue === "" ? "(empty)" : String(defaultValue)
+                                                                                  }) : ""
 
   NLabel {
     label: root.label
@@ -42,7 +41,7 @@ ColumnLayout {
     descriptionColor: root.descriptionColor
     visible: root.label !== "" || root.description !== ""
     Layout.fillWidth: true
-    showIndicator: root.isSettings && root.isValueChanged
+    showIndicator: root.isValueChanged
     indicatorTooltip: root.indicatorTooltip
   }
 
@@ -146,9 +145,8 @@ ColumnLayout {
 
             echoMode: TextInput.Normal
             readOnly: root.readOnly
-            enabled: root.enabled
-            color: Color.mOnSurface
             placeholderTextColor: Qt.alpha(Color.mOnSurfaceVariant, 0.6)
+            color: enabled ? Color.mOnSurface : Qt.alpha(Color.mOnSurface, 0.4)
 
             selectByMouse: true
 
@@ -208,18 +206,18 @@ ColumnLayout {
           NIconButton {
             id: clearButton
             icon: "x"
-            tooltipText: I18n.tr("widgets.text-input.clear")
+            tooltipText: (input.text.length > 0 && !root.readOnly && root.enabled) ? I18n.tr("common.clear") : ""
 
             Layout.alignment: Qt.AlignVCenter
             border.width: 0
 
-            colorBg: Color.transparent
-            colorBgHover: Color.transparent
+            colorBg: "transparent"
+            colorBgHover: "transparent"
             colorFg: Color.mOnSurface
             colorFgHover: Color.mError
 
             visible: input.text.length > 0 && !root.readOnly
-            enabled: input.text.length > 0 && !root.readOnly
+            enabled: input.text.length > 0 && !root.readOnly && root.enabled
 
             onClicked: {
               input.clear();

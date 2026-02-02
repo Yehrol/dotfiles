@@ -1,10 +1,8 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import "../../../Helpers/FuzzySort.js" as FuzzySort
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
@@ -14,9 +12,25 @@ ColumnLayout {
 
   property string selectedDirectory: ""
   property string selectedWallpaper: ""
+  property string previewCachedPath: ""
 
   signal directoryChanged(string directory)
   signal wallpaperChanged(string wallpaper)
+
+  onSelectedWallpaperChanged: {
+    if (!selectedWallpaper) {
+      previewCachedPath = "";
+      return;
+    }
+    if (ImageCacheService.initialized) {
+      ImageCacheService.getLarge(selectedWallpaper, Screen.width, Screen.height, function (path, success) {
+        if (root)
+          root.previewCachedPath = success ? path : selectedWallpaper;
+      });
+    } else {
+      previewCachedPath = selectedWallpaper;
+    }
+  }
 
   spacing: Style.marginL
 
@@ -74,11 +88,12 @@ ColumnLayout {
     // Image with rounded corners
     NImageRounded {
       anchors.fill: parent
-      visible: selectedWallpaper !== ""
-      imagePath: selectedWallpaper !== "" ? "file://" + selectedWallpaper : ""
+      visible: previewCachedPath !== ""
+      imagePath: previewCachedPath
       radius: Style.radiusL
-      borderColor: selectedWallpaper !== "" ? Color.mPrimary : Color.mOutline
-      borderWidth: selectedWallpaper !== "" ? 2 : 1
+      borderColor: previewCachedPath !== "" ? Color.mPrimary : Color.mOutline
+      borderWidth: previewCachedPath !== "" ? 2 : 1
+      imageFillMode: Image.PreserveAspectCrop
     }
 
     ColumnLayout {
@@ -120,15 +135,16 @@ ColumnLayout {
   // Wallpaper gallery strip
   Item {
     Layout.fillWidth: true
-    Layout.preferredHeight: 88
+    Layout.preferredHeight: 92
     visible: filteredWallpapers.length > 0
 
-    ScrollView {
+    NScrollView {
       id: galleryScroll
       anchors.fill: parent
-      clip: true
-      ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-      ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+      horizontalPolicy: ScrollBar.AsNeeded
+      verticalPolicy: ScrollBar.AlwaysOff
+      showGradientMasks: false
+      reserveScrollbarSpace: false
 
       // Enable vertical mouse wheel to scroll the horizontal strip by moving contentX
       WheelHandler {
@@ -159,51 +175,43 @@ ColumnLayout {
         Repeater {
           model: filteredWallpapers
           delegate: Item {
-            readonly property int borderWidth: Style.borderM
-            readonly property int imageMargin: 1
+            id: thumbDelegate
             readonly property int baseWidth: 120
             readonly property int baseHeight: 80
+            readonly property int thumbRadius: Style.radiusM
+            property string cachedPath: ""
 
-            Layout.preferredWidth: baseWidth + (borderWidth + imageMargin) * 2
-            Layout.preferredHeight: baseHeight + (borderWidth + imageMargin) * 2
+            Layout.preferredWidth: baseWidth
+            Layout.preferredHeight: baseHeight
 
-            // Border container with proper spacing to prevent clipping
-            Rectangle {
-              anchors.fill: parent
-              anchors.margins: imageMargin
-              color: Color.transparent
-              border.color: selectedWallpaper === modelData ? Color.mPrimary : Color.mOutline
-              border.width: borderWidth
-
-              // Cached thumbnail
-              NImageCached {
-                id: thumbCached
-                anchors.fill: parent
-                anchors.margins: borderWidth
-                source: "file://" + modelData
+            Component.onCompleted: {
+              if (ImageCacheService.initialized) {
+                ImageCacheService.getThumbnail(modelData, function (path, success) {
+                  if (thumbDelegate)
+                    thumbDelegate.cachedPath = success ? path : modelData;
+                });
+              } else {
+                cachedPath = modelData;
               }
             }
 
-            // Loading state
-            Rectangle {
+            // Rounded thumbnail using NImageRounded with caching
+            NImageRounded {
+              id: thumbImage
               anchors.fill: parent
-              color: Color.mSurfaceVariant
-              visible: thumbCached.status === Image.Loading
-
-              NIcon {
-                icon: "image"
-                pointSize: Style.fontSizeL
-                color: Color.mOnSurfaceVariant
-                anchors.centerIn: parent
-              }
+              imagePath: thumbDelegate.cachedPath
+              radius: thumbDelegate.thumbRadius
+              borderColor: selectedWallpaper === modelData ? Color.mPrimary : Color.mOutline
+              borderWidth: selectedWallpaper === modelData ? 2 : 1
+              imageFillMode: Image.PreserveAspectCrop
             }
 
-            // Error state
+            // Loading/error state background
             Rectangle {
               anchors.fill: parent
               color: Color.mSurfaceVariant
-              radius: Style.radiusM
-              visible: thumbCached.status === Image.Error
+              radius: thumbDelegate.thumbRadius
+              visible: thumbImage.status === Image.Loading || thumbImage.status === Image.Error || thumbDelegate.cachedPath === ""
 
               NIcon {
                 icon: "image"
@@ -215,13 +223,15 @@ ColumnLayout {
 
             NBusyIndicator {
               anchors.centerIn: parent
-              visible: thumbCached.status === Image.Loading || thumbCached.status === Image.Null
+              visible: thumbImage.status === Image.Loading || thumbDelegate.cachedPath === ""
               running: visible
               size: 18
             }
 
+            // Hover overlay
             Rectangle {
               anchors.fill: parent
+              radius: thumbDelegate.thumbRadius
               color: Color.mPrimary
               opacity: hoverHandler.hovered ? 0.1 : 0
               Behavior on opacity {
@@ -231,6 +241,7 @@ ColumnLayout {
               }
             }
 
+            // Selection badge
             Rectangle {
               visible: selectedWallpaper === modelData
               anchors.right: parent.right
@@ -315,11 +326,11 @@ ColumnLayout {
 
     NTextInputButton {
       id: wallpaperPathInput
-      label: I18n.tr("setup.wallpaper.dir.label")
-      description: I18n.tr("setup.wallpaper.dir.description")
+      label: I18n.tr("setup.wallpaper.dir-label")
+      description: I18n.tr("setup.wallpaper.dir-description")
       text: selectedDirectory
       buttonIcon: "folder-open"
-      buttonTooltip: I18n.tr("setup.wallpaper.dir.browse")
+      buttonTooltip: I18n.tr("setup.wallpaper.dir-browse")
       Layout.fillWidth: true
       onInputEditingFinished: {
         selectedDirectory = text;
@@ -356,7 +367,18 @@ ColumnLayout {
   }
 
   function readDirectoryImages(directoryPath) {
-    directoryScanner.command = ["find", directoryPath, "-type", "f", "\\(-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.bmp", "-o", "-iname", "*.webp", "-o", "-iname", "*.svg", "\\)"];
+    // Build find command args dynamically from ImageCacheService filters
+    var filters = ImageCacheService.imageFilters;
+    var findArgs = ["find", directoryPath, "-type", "f", "("];
+    for (var i = 0; i < filters.length; i++) {
+      if (i > 0) {
+        findArgs.push("-o");
+      }
+      findArgs.push("-iname");
+      findArgs.push(filters[i]);
+    }
+    findArgs.push(")");
+    directoryScanner.command = findArgs;
     directoryScanner.running = true;
     return [];
   }
@@ -404,7 +426,7 @@ ColumnLayout {
   NFilePicker {
     id: directoryPicker
     selectionMode: "folders"
-    title: I18n.tr("setup.wallpaper.dir.select-title")
+    title: I18n.tr("setup.wallpaper.dir-select-title")
     initialPath: selectedDirectory || Quickshell.env("HOME") + "/Pictures"
     onAccepted: paths => {
                   if (paths.length > 0) {
@@ -416,7 +438,7 @@ ColumnLayout {
 
   Process {
     id: directoryScanner
-    command: ["find", "", "-type", "f", "\\(-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.bmp", "-o", "-iname", "*.webp", "-o", "-iname", "*.svg", "\\)"]
+    command: []
     running: false
     stdout: StdioCollector {}
     stderr: StdioCollector {}

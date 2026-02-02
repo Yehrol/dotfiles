@@ -79,11 +79,13 @@ Singleton {
     "star-off": "star-off",
     "battery-exclamation": "battery-exclamation",
     "battery-charging": "battery-charging",
+    "battery-charging-2": "battery-charging-2",
     "battery-4": "battery-4",
     "battery-3": "battery-3",
     "battery-2": "battery-2",
     "battery-1": "battery-1",
     "battery": "battery",
+    "battery-off": "battery-off",
     "wifi-0": "wifi-0",
     "wifi-1": "wifi-1",
     "wifi-2": "wifi-2",
@@ -97,6 +99,9 @@ Singleton {
     "volume-low": "volume-2",
     "volume-high": "volume",
     "weather-sun": "sun",
+    "weather-moon": "moon",
+    "weather-moon-stars": "moon-stars",
+    "weather-cloud-off": "cloud-off",
     "weather-cloud": "cloud",
     "weather-cloud-haze": "cloud-fog",
     "weather-cloud-lightning": "cloud-bolt",
@@ -119,7 +124,6 @@ Singleton {
     "settings-color-scheme": "palette",
     "settings-wallpaper": "paint",
     "settings-wallpaper-selector": "library-photo",
-    "settings-screen-recorder": "video",
     "settings-hooks": "link",
     "settings-notifications": "bell",
     "settings-osd": "picture-in-picture",
@@ -173,7 +177,9 @@ Singleton {
     "filepicker-eye": "eye",
     "filepicker-eye-off": "eye-off",
     "filepicker-folder-current": "checks",
-    "plugin": "plug-connected"
+    "plugin": "plug-connected",
+    "info": "file-description",
+    "official-plugin": "shield-filled"
   }
 
   // Fonts Codepoints - do not change!
@@ -2105,7 +2111,7 @@ Singleton {
     "cloud-snow": "\u{ea73}",
     "cloud-star": "\u{f85b}",
     "cloud-storm": "\u{ea74}",
-    "cloud-sun": "\u{ea7a}",
+    "cloud-sun": "\u{ec6d}",
     "cloud-up": "\u{f85c}",
     "cloud-upload": "\u{ea75}",
     "cloud-x": "\u{f85d}",
