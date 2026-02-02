@@ -30,8 +30,8 @@
         "density": "comfortable",
         "exclusive": true,
         "floating": true,
-        "marginHorizontal": 0.25,
-        "marginVertical": 0.25,
+        "marginHorizontal": 0.15,
+        "marginVertical": 0.3,
         "monitors": [
         ],
         "outerCorners": false,
@@ -56,6 +56,34 @@
                 }
             ],
             "left": [
+                {
+                    "hideMode": "alwaysExpanded",
+                    "icon": "menu",
+                    "id": "CustomButton",
+                    "leftClickExec": "qs ipc call launcher toggle",
+                    "leftClickUpdateText": false,
+                    "maxTextLength": {
+                        "horizontal": 10,
+                        "vertical": 10
+                    },
+                    "middleClickExec": "",
+                    "middleClickUpdateText": false,
+                    "parseJson": false,
+                    "rightClickExec": "",
+                    "rightClickUpdateText": false,
+                    "showIcon": true,
+                    "textCollapse": "",
+                    "textCommand": "",
+                    "textIntervalMs": 3000,
+                    "textStream": false,
+                    "wheelDownExec": "",
+                    "wheelDownUpdateText": false,
+                    "wheelExec": "",
+                    "wheelMode": "unified",
+                    "wheelUpExec": "",
+                    "wheelUpUpdateText": false,
+                    "wheelUpdateText": false
+                },
                 {
                     "compactMode": false,
                     "diskPath": "/",
@@ -84,7 +112,8 @@
                         "Ankama Launcher1",
                         "Passwords.kdbx [Locked] - KeePassXC",
                         "Passwords - KeePassXC",
-                        "Nextcloud: Last sync was successful."
+                        "Nextcloud: Last sync was successful.",
+                        "udiskie"
                     ]
                 },
                 {
@@ -216,7 +245,7 @@
         "shortcuts": {
             "left": [
                 {
-                    "id": "WiFi"
+                    "id": "Network"
                 },
                 {
                     "id": "Bluetooth"
@@ -271,11 +300,11 @@
         "dimmerOpacity": 0.2,
         "enableShadows": true,
         "forceBlackScreenCorners": false,
-        "iRadiusRatio": 1,
+        "iRadiusRatio": 0.5,
         "language": "",
         "lockOnSuspend": true,
-        "radiusRatio": 0.3,
-        "scaleRatio": 1.2,
+        "radiusRatio": 0.5,
+        "scaleRatio": 1.1,
         "screenRadiusRatio": 1,
         "shadowDirection": "bottom_right",
         "shadowOffsetX": 2,
@@ -472,9 +501,9 @@
         "bluetoothDetailsViewMode": "grid",
         "bluetoothHideUnnamedDevices": false,
         "fontDefault": "JetBrainsMono Nerd Font",
-        "fontDefaultScale": 1.1,
+        "fontDefaultScale": 1.2,
         "fontFixed": "JetBrainsMono Nerd Font",
-        "fontFixedScale": 1.1,
+        "fontFixedScale": 1.2,
         "panelBackgroundOpacity": 0.9,
         "panelsAttachedToBar": false,
         "settingsPanelMode": "centered",
@@ -482,11 +511,11 @@
         "wifiDetailsViewMode": "grid"
     },
     "wallpaper": {
-        "directory": "/home/yehrol/dotfiles/wallpapers",
+        "directory": "/home/yehrol/Pictures/Wallpapers",
         "enableMultiMonitorDirectories": false,
         "enabled": true,
         "fillColor": "#000000",
-        "fillMode": "center",
+        "fillMode": "crop",
         "hideWallpaperFilenames": false,
         "monitorDirectories": [
         ],
@@ -496,7 +525,7 @@
         "randomIntervalSec": 300,
         "recursiveSearch": true,
         "setWallpaperOnAllMonitors": true,
-        "transitionDuration": 1500,
+        "transitionDuration": 500,
         "transitionEdgeSmoothness": 0.05,
         "transitionType": "random",
         "useWallhaven": false,
