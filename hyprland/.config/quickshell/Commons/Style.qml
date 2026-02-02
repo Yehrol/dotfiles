@@ -198,7 +198,7 @@ Singleton {
       h = Math.round(barHeight * 0.75);
       break;
     case "spacious":
-      h = Math.round(barHeight * 0.65);
+      h = Math.round(barHeight * 0.80);
       break;
     default:
       h = Math.round(barHeight * 0.82);

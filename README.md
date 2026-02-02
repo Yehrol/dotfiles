@@ -56,8 +56,7 @@ gnome-keyring
 
 - change value of in `noctalia-shell/Commons/Style.qml`
   - in 3.8, change value of `readonly property real capsuleHeight` (set comfortable to 1)
-  - in 4.1, change `spacious` of `readonly property real barHeight` to `60:60`
-    - still need to fix bottom margin
+  - in 4.3, change `spacious` of `getCapsuleHeightForDensity` to `0.80`
 
 # Other
 
