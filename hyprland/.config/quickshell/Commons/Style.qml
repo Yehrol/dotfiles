@@ -139,7 +139,7 @@ Singleton {
   readonly property real _barBaseFontSize: Math.max(1, (Style.barHeight / Style.capsuleHeight) * Style.fontSizeXXS)
   readonly property real barFontSize: (Settings.data.bar.position === "left" || Settings.data.bar.position === "right") ? _barBaseFontSize * 0.9 : _barBaseFontSize
 
-  readonly property color capsuleColor: Settings.data.bar.showCapsule ? Qt.alpha(Color.mSurfaceVariant, Settings.data.bar.capsuleOpacity) : "transparent"
+  readonly property color capsuleColor: Settings.data.bar.showCapsule ? Qt.alpha(Settings.data.bar.capsuleColorKey !== "none" ? Color.resolveColorKey(Settings.data.bar.capsuleColorKey) : Color.mSurfaceVariant, Settings.data.bar.capsuleOpacity) : "transparent"
 
   readonly property color capsuleBorderColor: Settings.data.bar.showOutline ? Color.mPrimary : "transparent"
   readonly property int capsuleBorderWidth: Settings.data.bar.showOutline ? Style.borderS : 0
@@ -198,7 +198,7 @@ Singleton {
       h = Math.round(barHeight * 0.75);
       break;
     case "spacious":
-      h = Math.round(barHeight * 0.80);
+      h = Math.round(barHeight * 0.8);
       break;
     default:
       h = Math.round(barHeight * 0.82);
