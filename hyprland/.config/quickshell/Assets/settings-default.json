@@ -99,16 +99,32 @@
     "clockStyle": "custom",
     "clockFormat": "hh\\nmm",
     "lockScreenMonitors": [],
-    "lockScreenBlur": 0.0,
-    "lockScreenTint": 0.0,
+    "lockScreenBlur": 0,
+    "lockScreenTint": 0,
     "keybinds": {
-      "keyUp": "Up",
-      "keyDown": "Down",
-      "keyLeft": "Left",
-      "keyRight": "Right",
-      "keyEnter": "Return",
-      "keyEscape": "Esc"
-    }
+      "keyUp": [
+        "Up"
+      ],
+      "keyDown": [
+        "Down"
+      ],
+      "keyLeft": [
+        "Left"
+      ],
+      "keyRight": [
+        "Right"
+      ],
+      "keyEnter": [
+        "Return"
+      ],
+      "keyEscape": [
+        "Esc"
+      ],
+      "keyRemove": [
+        "Del"
+      ]
+    },
+    "reverseScroll": false
   },
   "ui": {
     "fontDefault": "",
@@ -173,6 +189,7 @@
     "randomIntervalSec": 300,
     "transitionDuration": 1500,
     "transitionType": "random",
+    "skipStartupTransition": false,
     "transitionEdgeSmoothness": 0.05,
     "panelPosition": "follow_bar",
     "hideWallpaperFilenames": false,
@@ -189,7 +206,8 @@
     "wallhavenResolutionMode": "atleast",
     "wallhavenResolutionWidth": "",
     "wallhavenResolutionHeight": "",
-    "sortOrder": "name"
+    "sortOrder": "name",
+    "favorites": []
   },
   "appLauncher": {
     "enableClipboardHistory": false,
@@ -211,6 +229,7 @@
     "showIconBackground": false,
     "enableSettingsSearch": true,
     "enableWindowsSearch": true,
+    "enableSessionSearch": true,
     "ignoreMouseInput": false,
     "screenshotAnnotationTool": "",
     "overviewLayer": false,
@@ -293,13 +312,7 @@
     "diskAvailCriticalThreshold": 10,
     "batteryWarningThreshold": 20,
     "batteryCriticalThreshold": 5,
-    "cpuPollingInterval": 1000,
-    "gpuPollingInterval": 3000,
     "enableDgpuMonitoring": false,
-    "memPollingInterval": 1000,
-    "diskPollingInterval": 30000,
-    "networkPollingInterval": 1000,
-    "loadAvgPollingInterval": 3000,
     "useCustomColors": false,
     "warningColor": "",
     "criticalColor": "",
@@ -309,6 +322,7 @@
     "enabled": true,
     "position": "bottom",
     "displayMode": "auto_hide",
+    "dockType": "floating",
     "backgroundOpacity": 1,
     "floatingRatio": 1,
     "size": 1,
@@ -319,53 +333,65 @@
     "pinnedStatic": false,
     "inactiveIndicators": false,
     "deadOpacity": 0.6,
-    "animationSpeed": 1
+    "animationSpeed": 1,
+    "sitOnFrame": false,
+    "showFrameIndicator": true
   },
   "network": {
     "wifiEnabled": true,
+    "airplaneModeEnabled": false,
     "bluetoothRssiPollingEnabled": false,
-    "bluetoothRssiPollIntervalMs": 10000,
+    "bluetoothRssiPollIntervalMs": 60000,
     "wifiDetailsViewMode": "grid",
     "bluetoothDetailsViewMode": "grid",
-    "bluetoothHideUnnamedDevices": false
+    "bluetoothHideUnnamedDevices": false,
+    "disableDiscoverability": false
   },
   "sessionMenu": {
     "enableCountdown": true,
     "countdownDuration": 10000,
     "position": "center",
     "showHeader": true,
+    "showKeybinds": true,
     "largeButtonsStyle": true,
     "largeButtonsLayout": "single-row",
-    "showNumberLabels": true,
     "powerOptions": [
       {
         "action": "lock",
-        "enabled": true
+        "enabled": true,
+        "keybind": "1"
       },
       {
         "action": "suspend",
-        "enabled": true
+        "enabled": true,
+        "keybind": "2"
       },
       {
         "action": "hibernate",
-        "enabled": true
+        "enabled": true,
+        "keybind": "3"
       },
       {
         "action": "reboot",
-        "enabled": true
+        "enabled": true,
+        "keybind": "4"
       },
       {
         "action": "logout",
-        "enabled": true
+        "enabled": true,
+        "keybind": "5"
       },
       {
         "action": "shutdown",
-        "enabled": true
+        "enabled": true,
+        "keybind": "6"
       }
     ]
   },
   "notifications": {
     "enabled": true,
+    "enableMarkdown": false,
+    "density": "default",
     "monitors": [],
     "location": "top_right",
     "overlayLayer": true,
@@ -374,6 +400,7 @@
     "lowUrgencyDuration": 3,
     "normalUrgencyDuration": 8,
     "criticalUrgencyDuration": 15,
+    "clearDismissed": true,
     "saveToHistory": {
       "low": true,
       "normal": true,

@@ -51,6 +51,11 @@ Item {
   readonly property bool showNum: (widgetSettings.showNumLock !== undefined) ? widgetSettings.showNumLock : widgetMetadata.showNumLock
   readonly property bool showScroll: (widgetSettings.showScrollLock !== undefined) ? widgetSettings.showScrollLock : widgetMetadata.showScrollLock
 
+  visible: !root.hideWhenOff || (root.showCaps && LockKeysService.capsLockOn) || (root.showNum && LockKeysService.numLockOn) || (root.showScroll && LockKeysService.scrollLockOn)
+
+  Component.onCompleted: LockKeysService.registerComponent("bar-lockkeys:" + (screen?.name || "unknown"))
+  Component.onDestruction: LockKeysService.unregisterComponent("bar-lockkeys:" + (screen?.name || "unknown"))
+
   implicitHeight: contentHeight
   implicitWidth: contentWidth
 
@@ -78,8 +83,6 @@ Item {
   // Visual capsule centered in parent
   Rectangle {
     id: visualCapsule
-
-    visible: !root.hideWhenOff || (root.showCaps && LockKeysService.capsLockOn) || (root.showNum && LockKeysService.numLockOn) || (root.showScroll && LockKeysService.scrollLockOn)
     anchors.centerIn: parent
     color: Style.capsuleColor
     width: root.contentWidth
