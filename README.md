@@ -41,9 +41,11 @@ Current=abstractdark-sddm-theme
 - install xorg-xhost and hyprpolkitagent for process that need privilege (ex: timeshift)
 
 ## UWSM
-
+- TODO clean
 ```
 systemctl --user enable --now hyprpolkitagent.service
+input-remapper
+env var
 ```
 
 ## Packages
@@ -59,6 +61,11 @@ gnome-keyring
   - in 4.3, change `spacious` of `getCapsuleHeightForDensity` to `0.80`
 
 # Other
+
+## Downgrade package
+```
+sudo pacman -U ~/.cache/yay/xpadneo-dkms/xpadneo-dkms-0.9.8-1-any.pkg.tar.zst
+```
 
 ## Make
 
