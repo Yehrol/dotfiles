@@ -61,3 +61,7 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath' # FIXME: find
 # TODO: check if and how it is installed
 eval "$(fzf --zsh)"
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh # git installed
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
