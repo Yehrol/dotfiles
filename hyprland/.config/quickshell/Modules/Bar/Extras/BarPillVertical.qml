@@ -13,11 +13,12 @@ Item {
   property string icon: ""
   property string text: ""
   property string suffix: ""
-  property var tooltipText: ""
+  property var tooltipText
   property bool autoHide: false
   property bool forceOpen: false
   property bool forceClose: false
   property bool oppositeDirection: false
+  property string iconPosition: ""
   property bool hovered: false
   property bool rotateText: false
   property color customBackgroundColor: "transparent"
@@ -45,12 +46,13 @@ Item {
   readonly property real barFontSize: Style.getBarFontSizeForScreen(screen?.name)
   readonly property int pillHeight: buttonSize
   readonly property int pillOverlap: Math.round(buttonSize * 0.5)
-  readonly property int maxPillWidth: rotateText ? Math.max(buttonSize, Math.round(textItem.implicitHeight + Style.marginXL)) : buttonSize
-  readonly property int maxPillHeight: rotateText ? Math.max(1, Math.round(textItem.implicitWidth + Style.marginXL + Math.round(iconCircle.height / 4))) : Math.max(1, Math.round(textItem.implicitHeight + Style.marginXL))
+  readonly property int maxPillWidth: rotateText ? Math.max(buttonSize, Math.round(textItem.implicitHeight + Style.margin2M)) : buttonSize
+  readonly property int maxPillHeight: rotateText ? Math.max(1, Math.round(textItem.implicitWidth + Style.margin2M + Math.round(iconCircle.height / 4))) : Math.max(1, Math.round(textItem.implicitHeight + Style.margin2M))
 
-  // Determine pill direction based on section position
-  readonly property bool openDownward: oppositeDirection
-  readonly property bool openUpward: !oppositeDirection
+  // Determine pill direction based on icon position (fallback to oppositeDirection if not set)
+  // For vertical bar: iconPosition="left" (top) means icon at top, text expands downward
+  readonly property bool openDownward: (iconPosition === "left" || iconPosition === "right") ? (iconPosition === "left") : oppositeDirection
+  readonly property bool openUpward: (iconPosition === "left" || iconPosition === "right") ? (iconPosition === "right") : !oppositeDirection
 
   // Effective shown state (true if animated open or forced, but not if force closed)
   readonly property bool revealed: !forceClose && (forceOpen || showPill)

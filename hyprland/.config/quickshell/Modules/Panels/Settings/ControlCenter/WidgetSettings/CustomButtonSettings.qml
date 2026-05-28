@@ -20,15 +20,15 @@ ColumnLayout {
   QtObject {
     id: _settings
 
-    property string icon: (widgetData && widgetData.icon !== undefined) ? widgetData.icon : (widgetMetadata && widgetMetadata.icon ? widgetMetadata.icon : "")
-    property string onClicked: (widgetData && widgetData.onClicked !== undefined) ? widgetData.onClicked : (widgetMetadata && widgetMetadata.onClicked ? widgetMetadata.onClicked : "")
-    property string onRightClicked: (widgetData && widgetData.onRightClicked !== undefined) ? widgetData.onRightClicked : (widgetMetadata && widgetMetadata.onRightClicked ? widgetMetadata.onRightClicked : "")
-    property string onMiddleClicked: (widgetData && widgetData.onMiddleClicked !== undefined) ? widgetData.onMiddleClicked : (widgetMetadata && widgetMetadata.onMiddleClicked ? widgetMetadata.onMiddleClicked : "")
+    property string icon: widgetData.icon !== undefined ? widgetData.icon : widgetMetadata.icon
+    property string onClicked: widgetData.onClicked !== undefined ? widgetData.onClicked : widgetMetadata.onClicked
+    property string onRightClicked: widgetData.onRightClicked !== undefined ? widgetData.onRightClicked : widgetMetadata.onRightClicked
+    property string onMiddleClicked: widgetData.onMiddleClicked !== undefined ? widgetData.onMiddleClicked : widgetMetadata.onMiddleClicked
     property ListModel _stateChecksListModel: ListModel {}
     property string stateChecksJson: "[]"
-    property string generalTooltipText: (widgetData && widgetData.generalTooltipText !== undefined) ? widgetData.generalTooltipText : (widgetMetadata && widgetMetadata.generalTooltipText ? widgetMetadata.generalTooltipText : "")
-    property bool enableOnStateLogic: (widgetData && widgetData.enableOnStateLogic !== undefined) ? widgetData.enableOnStateLogic : (widgetMetadata && widgetMetadata.enableOnStateLogic !== undefined ? widgetMetadata.enableOnStateLogic : false)
-    property bool showExecTooltip: (widgetData && widgetData.showExecTooltip !== undefined) ? widgetData.showExecTooltip : (widgetMetadata && widgetMetadata.showExecTooltip !== undefined ? widgetMetadata.showExecTooltip : true)
+    property string generalTooltipText: widgetData.generalTooltipText !== undefined ? widgetData.generalTooltipText : widgetMetadata.generalTooltipText
+    property bool enableOnStateLogic: widgetData.enableOnStateLogic !== undefined ? widgetData.enableOnStateLogic : widgetMetadata.enableOnStateLogic
+    property bool showExecTooltip: widgetData.showExecTooltip !== undefined ? widgetData.showExecTooltip : widgetMetadata.showExecTooltip
 
     function populateStateChecks() {
       try {
@@ -135,61 +135,66 @@ ColumnLayout {
 
   NTextInput {
     Layout.fillWidth: true
-    label: I18n.tr("panels.control-center.shortcuts-custom-button-general-tooltip-text-label")
-    description: I18n.tr("panels.control-center.shortcuts-custom-button-general-tooltip-text-description")
+    label: I18n.tr("bar.custom-button.general-tooltip-text-label")
+    description: I18n.tr("bar.custom-button.general-tooltip-text-description")
     placeholderText: I18n.tr("placeholders.enter-tooltip")
     text: _settings.generalTooltipText
-    onEditingFinished: {
+    onTextChanged: {
       _settings.generalTooltipText = text;
       saveSettings();
     }
+    defaultValue: widgetMetadata.generalTooltipText
   }
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("panels.control-center.shortcuts-custom-button-show-exec-tooltip-label")
-    description: I18n.tr("panels.control-center.shortcuts-custom-button-show-exec-tooltip-description")
+    label: I18n.tr("bar.custom-button.show-exec-tooltip-label")
+    description: I18n.tr("bar.custom-button.show-exec-tooltip-description")
     checked: _settings.showExecTooltip
     onToggled: checked => {
                  _settings.showExecTooltip = checked;
                  saveSettings();
                }
+    defaultValue: widgetMetadata.showExecTooltip
   }
 
   NTextInput {
     Layout.fillWidth: true
-    label: I18n.tr("panels.control-center.shortcuts-custom-button-on-clicked-label")
-    description: I18n.tr("panels.control-center.shortcuts-custom-button-on-clicked-description")
+    label: I18n.tr("bar.custom-button.left-click-label")
+    description: I18n.tr("bar.custom-button.left-click-description")
     placeholderText: I18n.tr("placeholders.enter-command")
     text: _settings.onClicked
-    onEditingFinished: {
+    onTextChanged: {
       _settings.onClicked = text;
       saveSettings();
     }
+    defaultValue: widgetMetadata.onClicked
   }
 
   NTextInput {
     Layout.fillWidth: true
-    label: I18n.tr("panels.control-center.shortcuts-custom-button-on-right-clicked-label")
-    description: I18n.tr("panels.control-center.shortcuts-custom-button-on-right-clicked-description")
+    label: I18n.tr("bar.custom-button.right-click-label")
+    description: I18n.tr("bar.custom-button.right-click-description")
     placeholderText: I18n.tr("placeholders.enter-command")
     text: _settings.onRightClicked
-    onEditingFinished: {
+    onTextChanged: {
       _settings.onRightClicked = text;
       saveSettings();
     }
+    defaultValue: widgetMetadata.onRightClicked
   }
 
   NTextInput {
     Layout.fillWidth: true
-    label: I18n.tr("panels.control-center.shortcuts-custom-button-on-middle-clicked-label")
-    description: I18n.tr("panels.control-center.shortcuts-custom-button-on-middle-clicked-description")
+    label: I18n.tr("bar.custom-button.middle-click-label")
+    description: I18n.tr("bar.custom-button.middle-click-description")
     placeholderText: I18n.tr("placeholders.enter-command")
     text: _settings.onMiddleClicked
-    onEditingFinished: {
+    onTextChanged: {
       _settings.onMiddleClicked = text;
       saveSettings();
     }
+    defaultValue: widgetMetadata.onMiddleClicked
   }
 
   NDivider {}
@@ -204,6 +209,7 @@ ColumnLayout {
                  _settings.enableOnStateLogic = checked;
                  saveSettings();
                }
+    defaultValue: widgetMetadata.enableOnStateLogic
   }
 
   ColumnLayout {
@@ -232,7 +238,7 @@ ColumnLayout {
             Layout.fillWidth: true
             placeholderText: I18n.tr("panels.control-center.shortcuts-custom-button-state-checks-command")
             text: model.command
-            onEditingFinished: {
+            onTextChanged: {
               updateStateCheck(currentIndex, text, model.icon);
             }
           }

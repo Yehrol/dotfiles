@@ -17,27 +17,38 @@ Loader {
   active: false
 
   // Track if the visualizer should be shown (lockscreen active + media playing + non-compact mode)
-  readonly property bool needsCava: root.active && !Settings.data.general.compactLockScreen && Settings.data.audio.visualizerType !== "" && Settings.data.audio.visualizerType !== "none"
+  readonly property bool needsSpectrum: root.active && !Settings.data.general.compactLockScreen && Settings.data.audio.visualizerType !== "" && Settings.data.audio.visualizerType !== "none"
 
   onActiveChanged: {
-    if (root.active && root.needsCava) {
-      CavaService.registerComponent("lockscreen");
+    if (root.active && root.needsSpectrum) {
+      SpectrumService.registerComponent("lockscreen");
     } else {
-      CavaService.unregisterComponent("lockscreen");
+      SpectrumService.unregisterComponent("lockscreen");
+    }
+
+    if (root.active) {
+      LockKeysService.registerComponent("lockscreen");
+    } else {
+      LockKeysService.unregisterComponent("lockscreen");
     }
   }
 
-  onNeedsCavaChanged: {
-    if (root.needsCava) {
-      CavaService.registerComponent("lockscreen");
+  onNeedsSpectrumChanged: {
+    if (root.needsSpectrum) {
+      SpectrumService.registerComponent("lockscreen");
     } else {
-      CavaService.unregisterComponent("lockscreen");
+      SpectrumService.unregisterComponent("lockscreen");
     }
   }
 
   Component.onCompleted: {
     // Register with panel service
     PanelService.lockScreen = this;
+  }
+
+  Component.onDestruction: {
+    SpectrumService.unregisterComponent("lockscreen");
+    LockKeysService.unregisterComponent("lockscreen");
   }
 
   Timer {
@@ -67,6 +78,14 @@ Loader {
         }
       }
 
+      // Whether any monitor from the user's lockScreenMonitors list is currently connected.
+      readonly property bool anyConfiguredMonitorConnected: {
+        const configured = Settings.data.general.lockScreenMonitors;
+        if (!configured || configured.length === 0)
+          return false;
+        return (Quickshell.screens || []).some(s => configured.includes(s.name));
+      }
+
       WlSessionLock {
         id: lockSession
         locked: root.active
@@ -77,7 +96,7 @@ Loader {
           Loader {
             anchors.fill: parent
             active: true
-            sourceComponent: (Settings.data.general.lockScreenMonitors.length === 0 || Settings.data.general.lockScreenMonitors.includes(lockSurface.screen.name)) ? fullLockScreenComponent : blackScreenComponent
+            sourceComponent: (!lockContainer.anyConfiguredMonitorConnected || Settings.data.general.lockScreenMonitors.includes(lockSurface.screen?.name)) ? fullLockScreenComponent : blackScreenComponent
           }
 
           Component {
@@ -114,8 +133,10 @@ Loader {
                   anchors.fill: parent
                   hoverEnabled: true
                   acceptedButtons: Qt.NoButton
-                  onPositionChanged: {
-                    if (passwordInput) {
+                  onEntered: {
+                    // Avoid repeatedly forcing focus on every mouse move.
+                    // This can churn text-input surface state during monitor/suspend transitions.
+                    if (passwordInput && !passwordInput.activeFocus) {
                       passwordInput.forceActiveFocus();
                     }
                   }
@@ -269,13 +290,21 @@ Loader {
                   height: 0
                   visible: false
                   enabled: !lockContext.unlockInProgress
-                  font.pointSize: Style.fontSizeM
-                  color: Color.mPrimary
                   echoMode: TextInput.Password
-                  passwordCharacter: "•"
                   passwordMaskDelay: 0
-                  text: lockContext.currentText
-                  onTextChanged: lockContext.currentText = text
+
+                  // Bidirectional sync — avoids a declarative binding which breaks on input
+                  onTextChanged: {
+                    if (lockContext.currentText !== text)
+                      lockContext.currentText = text;
+                  }
+                  Connections {
+                    target: lockContext
+                    function onCurrentTextChanged() {
+                      if (passwordInput.text !== lockContext.currentText)
+                        passwordInput.text = lockContext.currentText;
+                    }
+                  }
 
                   Keys.onPressed: function (event) {
                     if (Keybinds.checkKey(event, 'enter', Settings)) {
@@ -306,9 +335,49 @@ Loader {
           Component {
             id: blackScreenComponent
 
+            // Black surface for disabled monitors — still captures keyboard for password entry
             Rectangle {
               anchors.fill: parent
               color: "black"
+
+              TextInput {
+                id: blackScreenPasswordInput
+                width: 0
+                height: 0
+                visible: false
+                enabled: !lockContext.unlockInProgress
+                echoMode: TextInput.Password
+                passwordMaskDelay: 0
+
+                // Bidirectional sync — avoids a declarative binding which breaks on input
+                onTextChanged: {
+                  if (lockContext.currentText !== text)
+                    lockContext.currentText = text;
+                }
+                Connections {
+                  target: lockContext
+                  function onCurrentTextChanged() {
+                    if (blackScreenPasswordInput.text !== lockContext.currentText)
+                      blackScreenPasswordInput.text = lockContext.currentText;
+                  }
+                }
+
+                Keys.onPressed: function (event) {
+                  if (Keybinds.checkKey(event, 'enter', Settings)) {
+                    lockContext.tryUnlock();
+                    event.accepted = true;
+                  }
+                }
+
+                Component.onCompleted: forceActiveFocus()
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
+                onPositionChanged: blackScreenPasswordInput.forceActiveFocus()
+              }
             }
           }
         }

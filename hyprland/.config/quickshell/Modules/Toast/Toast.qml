@@ -19,17 +19,18 @@ Item {
 
   signal hidden
 
-  readonly property int notificationWidth: Math.round(440 * Style.uiScaleRatio)
+  readonly property bool isCompact: Settings.data.notifications?.density === "compact"
+  readonly property int notificationWidth: Math.round((isCompact ? 320 : 440) * Style.uiScaleRatio)
   readonly property int shadowPadding: Style.shadowBlurMax + Style.marginL
 
   width: notificationWidth + shadowPadding * 2
-  height: Math.round(contentLayout.implicitHeight + Style.marginXL * 2 + shadowPadding * 2)
+  height: Math.round(contentLayout.implicitHeight + Style.margin2M * 2 + shadowPadding * 2)
   visible: true
   opacity: 0
   scale: initialScale
 
   property real progress: 1.0
-  property int hoverCount: 0
+  property bool isHovered: false
   property real swipeOffset: 0
   property real swipeOffsetY: 0
   property real pressGlobalX: 0
@@ -64,14 +65,17 @@ Item {
     return deltaY;
   }
 
-  onHoverCountChanged: {
-    if (hoverCount > 0) {
-      resumeTimer.stop();
-      if (progressAnimation.running && !progressAnimation.paused) {
-        progressAnimation.pause();
+  HoverHandler {
+    onHoveredChanged: {
+      isHovered = hovered;
+      if (isHovered) {
+        resumeTimer.stop();
+        if (progressAnimation.running && !progressAnimation.paused) {
+          progressAnimation.pause();
+        }
+      } else {
+        resumeTimer.start();
       }
-    } else {
-      resumeTimer.start();
     }
   }
 
@@ -80,7 +84,7 @@ Item {
     interval: 50
     repeat: false
     onTriggered: {
-      if (hoverCount === 0 && progressAnimation.paused) {
+      if (!isHovered && progressAnimation.paused) {
         progressAnimation.resume();
       }
     }
@@ -92,7 +96,7 @@ Item {
     anchors.fill: parent
     anchors.margins: shadowPadding
     radius: Style.radiusL
-    color: Qt.alpha(Color.mSurface, Settings.data.notifications.backgroundOpacity || 1.0)
+    color: Qt.alpha(Color.mSurface, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0)
 
     // Colored border based on type
     border.width: Style.borderS
@@ -106,7 +110,7 @@ Item {
         baseColor = Color.mOutline;
         break;
       }
-      return Qt.alpha(baseColor, Settings.data.notifications.backgroundOpacity || 1.0);
+      return Qt.alpha(baseColor, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0);
     }
 
     // Progress bar
@@ -138,7 +142,7 @@ Item {
             baseColor = Color.mPrimary; // Match standard notification color
             break;
           }
-          return Qt.alpha(baseColor, Settings.data.notifications.backgroundOpacity || 1.0);
+          return Qt.alpha(baseColor, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0);
         }
       }
     }
@@ -218,12 +222,6 @@ Item {
     anchors.fill: background
     acceptedButtons: Qt.LeftButton
     hoverEnabled: true
-    onEntered: {
-      root.hoverCount++;
-    }
-    onExited: {
-      root.hoverCount--;
-    }
     onPressed: mouse => {
                  const globalPoint = toastDragArea.mapToGlobal(mouse.x, mouse.y);
                  root.pressGlobalX = globalPoint.x;
@@ -285,11 +283,11 @@ Item {
   RowLayout {
     id: contentLayout
     anchors.fill: background
-    anchors.topMargin: Style.marginM
-    anchors.bottomMargin: Style.marginM
-    anchors.leftMargin: Style.marginXL
-    anchors.rightMargin: Style.marginXL
-    spacing: Style.marginL
+    anchors.topMargin: isCompact ? Style.marginS : Style.marginM
+    anchors.bottomMargin: isCompact ? Style.marginS : Style.marginM
+    anchors.leftMargin: isCompact ? Style.marginM : Style.margin2M
+    anchors.rightMargin: isCompact ? Style.marginM : Style.margin2M
+    spacing: isCompact ? Style.marginM : Style.marginL
 
     // Icon
     NIcon {
@@ -312,7 +310,7 @@ Item {
           return Color.mOnSurface;
         }
       }
-      pointSize: Style.fontSizeXXL * 1.5
+      pointSize: isCompact ? Style.fontSizeXL : Style.fontSizeXXL * 1.5
       Layout.alignment: Qt.AlignVCenter
     }
 
@@ -326,7 +324,7 @@ Item {
         Layout.fillWidth: true
         text: root.title
         color: Color.mOnSurface
-        pointSize: Style.fontSizeL
+        pointSize: isCompact ? Style.fontSizeM : Style.fontSizeL
         font.weight: Style.fontWeightBold
         wrapMode: Text.WordWrap
         visible: text.length > 0
@@ -336,8 +334,10 @@ Item {
         Layout.fillWidth: true
         text: root.description
         color: Color.mOnSurface
-        pointSize: Style.fontSizeM
+        pointSize: isCompact ? Style.fontSizeS : Style.fontSizeM
         wrapMode: Text.WordWrap
+        maximumLineCount: isCompact ? 2 : 20
+        elide: isCompact ? Text.ElideRight : Text.ElideNone
         visible: text.length > 0
       }
 
@@ -352,9 +352,6 @@ Item {
         hoverColor: Color.mHover
         outlined: false
         implicitHeight: 24
-
-        onEntered: root.hoverCount++
-        onExited: root.hoverCount--
 
         onClicked: {
           if (root.actionCallback) {
@@ -383,7 +380,7 @@ Item {
     opacity = 1.0;
     scale = 1.0;
     progress = 1.0;
-    hoverCount = 0;
+    isHovered = false;
     isSwiping = false;
     swipeOffset = 0;
     swipeOffsetY = 0;

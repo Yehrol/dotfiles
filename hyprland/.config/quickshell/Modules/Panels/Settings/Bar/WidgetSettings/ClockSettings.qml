@@ -20,25 +20,12 @@ ColumnLayout {
   // Local state
   property string valueClockColor: widgetData.clockColor !== undefined ? widgetData.clockColor : widgetMetadata.clockColor
   property bool valueUseCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
-  property string valueCustomFont: widgetData.customFont !== undefined ? widgetData.customFont : (widgetMetadata.customFont !== undefined ? widgetMetadata.customFont : "")
-  property string valueFormatHorizontal: widgetData.formatHorizontal !== undefined ? widgetData.formatHorizontal : (widgetMetadata.formatHorizontal !== undefined ? widgetMetadata.formatHorizontal : "")
-  property string valueFormatVertical: widgetData.formatVertical !== undefined ? widgetData.formatVertical : (widgetMetadata.formatVertical !== undefined ? widgetMetadata.formatVertical : "")
-  property string valueTooltipFormat: widgetData.tooltipFormat !== undefined ? widgetData.tooltipFormat : (widgetMetadata.tooltipFormat !== undefined ? widgetMetadata.tooltipFormat : "")
+  property string valueCustomFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.customFont
+  property string valueFormatHorizontal: widgetData.formatHorizontal !== undefined ? widgetData.formatHorizontal : widgetMetadata.formatHorizontal
+  property string valueFormatVertical: widgetData.formatVertical !== undefined ? widgetData.formatVertical : widgetMetadata.formatVertical
+  property string valueTooltipFormat: widgetData.tooltipFormat !== undefined ? widgetData.tooltipFormat : widgetMetadata.tooltipFormat
 
-  readonly property color textColor: {
-    switch (valueClockColor) {
-    case "primary":
-      return Color.mPrimary;
-    case "secondary":
-      return Color.mSecondary;
-    case "tertiary":
-      return Color.mTertiary;
-    case "error":
-      return Color.mError;
-    default:
-      return Color.mOnSurface;
-    }
-  }
+  readonly property color textColor: Color.resolveColorKey(valueClockColor)
 
   // Track the currently focused input field
   property var focusedInput: null
@@ -90,6 +77,7 @@ ColumnLayout {
                   valueClockColor = key;
                   saveSettings();
                 }
+    defaultValue: widgetMetadata.clockColor
   }
 
   NToggle {
@@ -101,6 +89,7 @@ ColumnLayout {
                  valueUseCustomFont = checked;
                  saveSettings();
                }
+    defaultValue: widgetMetadata.useCustomFont
   }
 
   NSearchableComboBox {
@@ -118,6 +107,7 @@ ColumnLayout {
       valueCustomFont = key;
       saveSettings();
     }
+    defaultValue: Settings.data.ui.fontDefault
   }
 
   NDivider {
@@ -150,8 +140,10 @@ ColumnLayout {
         description: I18n.tr("bar.clock.horizontal-bar-description")
         placeholderText: "HH:mm ddd, MMM dd"
         text: valueFormatHorizontal
-        onTextChanged: valueFormatHorizontal = text
-        onEditingFinished: saveSettings()
+        onTextChanged: {
+          valueFormatHorizontal = text;
+          saveSettings();
+        }
         Component.onCompleted: {
           if (inputItem) {
             inputItem.onActiveFocusChanged.connect(function () {
@@ -161,6 +153,7 @@ ColumnLayout {
             });
           }
         }
+        defaultValue: widgetMetadata.formatHorizontal
       }
 
       Item {
@@ -175,8 +168,10 @@ ColumnLayout {
         // Tokens are Qt format tokens and must not be localized
         placeholderText: "HH mm dd MM"
         text: valueFormatVertical
-        onTextChanged: valueFormatVertical = text
-        onEditingFinished: saveSettings()
+        onTextChanged: {
+          valueFormatVertical = text;
+          saveSettings();
+        }
         Component.onCompleted: {
           if (inputItem) {
             inputItem.onActiveFocusChanged.connect(function () {
@@ -186,6 +181,7 @@ ColumnLayout {
             });
           }
         }
+        defaultValue: widgetMetadata.formatVertical
       }
 
       NTextInput {
@@ -195,8 +191,10 @@ ColumnLayout {
         description: I18n.tr("bar.clock.tooltip-format-description")
         placeholderText: "HH:mm, ddd MMM dd"
         text: valueTooltipFormat
-        onTextChanged: valueTooltipFormat = text
-        onEditingFinished: saveSettings()
+        onTextChanged: {
+          valueTooltipFormat = text;
+          saveSettings();
+        }
         Component.onCompleted: {
           if (inputItem) {
             inputItem.onActiveFocusChanged.connect(function () {
@@ -206,6 +204,7 @@ ColumnLayout {
             });
           }
         }
+        defaultValue: widgetMetadata.tooltipFormat
       }
     }
 

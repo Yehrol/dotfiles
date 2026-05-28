@@ -22,18 +22,18 @@ SmartPanel {
     id: panelContent
     color: "transparent"
 
-    property real contentPreferredHeight: Math.min(root.preferredHeight, mainColumn.implicitHeight + Style.marginL * 2)
+    property real contentPreferredHeight: Math.min(root.preferredHeight, mainColumn.implicitHeight + Style.margin2L)
 
     ColumnLayout {
       id: mainColumn
       anchors.fill: parent
-      anchors.margins: Style.marginM
+      anchors.margins: Style.marginL
       spacing: Style.marginM
 
       // Header
       NBox {
         Layout.fillWidth: true
-        Layout.preferredHeight: headerRow.implicitHeight + Style.marginXL
+        Layout.preferredHeight: headerRow.implicitHeight + Style.margin2M
 
         RowLayout {
           id: headerRow
@@ -54,9 +54,17 @@ SmartPanel {
           NToggle {
             id: bluetoothSwitch
             checked: BluetoothService.enabled
-            enabled: !Settings.data.network.airplaneModeEnabled && BluetoothService.bluetoothAvailable
+            enabled: !NetworkService.airplaneModeEnabled && BluetoothService.bluetoothAvailable
             onToggled: checked => BluetoothService.setBluetoothEnabled(checked)
             baseSize: Style.baseWidgetSize * 0.65
+          }
+
+          NIconButton {
+            icon: Settings.data.network.bluetoothAutoConnect ? "bluetooth-connected" : "bluetooth"
+            tooltipText: Settings.data.network.bluetoothAutoConnect ? I18n.tr("tooltips.bluetooth-auto-connect-on") : I18n.tr("tooltips.bluetooth-auto-connect-off")
+            colorFg: Settings.data.network.bluetoothAutoConnect ? Color.mPrimary : Color.mOnSurfaceVariant
+            baseSize: Style.baseWidgetSize * 0.8
+            onClicked: Settings.data.network.bluetoothAutoConnect = !Settings.data.network.bluetoothAutoConnect
           }
 
           NIconButton {
@@ -96,7 +104,7 @@ SmartPanel {
             id: disabledBox
             visible: !BluetoothService.enabled
             Layout.fillWidth: true
-            Layout.preferredHeight: disabledColumn.implicitHeight + Style.marginXL
+            Layout.preferredHeight: disabledColumn.implicitHeight + Style.margin2M
 
             ColumnLayout {
               id: disabledColumn
@@ -147,7 +155,7 @@ SmartPanel {
               return (btSource.pairedDevices.length === 0 && btSource.connectedDevices.length === 0);
             }
             Layout.fillWidth: true
-            Layout.preferredHeight: emptyColumn.implicitHeight + Style.marginXL
+            Layout.preferredHeight: emptyColumn.implicitHeight + Style.margin2M
 
             ColumnLayout {
               id: emptyColumn

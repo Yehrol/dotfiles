@@ -10,11 +10,11 @@ RowLayout {
   property string description: I18n.tr("common.select-color-description")
   property string tooltip: ""
   property string currentKey: ""
-  property var defaultValue: "none"
+  property var defaultValue: undefined
   property var noneColor: undefined      // color declared as var so we can nullify
   property var noneOnColor: undefined    // color declared as var so we can nullify
 
-  readonly property bool isValueChanged: currentKey !== defaultValue
+  readonly property bool isValueChanged: (defaultValue !== undefined) && (currentKey !== defaultValue)
   readonly property string indicatorTooltip: {
     I18n.tr("panels.indicator.default-value", {
               "value": defaultValue === "" ? "(empty)" : String(defaultValue)
@@ -34,6 +34,8 @@ RowLayout {
 
   RowLayout {
     id: colourRow
+
+    opacity: enabled ? 1.0 : 0.6
     Layout.minimumWidth: root.diameter * Color.colorKeyModel.length
 
     Repeater {

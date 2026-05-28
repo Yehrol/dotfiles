@@ -14,7 +14,7 @@ FloatingWindow {
   minimumSize: Qt.size(840 * Style.uiScaleRatio, 910 * Style.uiScaleRatio)
   implicitWidth: Math.round(840 * Style.uiScaleRatio)
   implicitHeight: Math.round(910 * Style.uiScaleRatio)
-  color: Color.mSurface
+  color: "transparent"
 
   visible: false
 
@@ -25,27 +25,42 @@ FloatingWindow {
 
   property bool isInitialized: false
 
+  // Navigate to a specific tab and optional subtab.
+  // Works whether the window is already visible or just becoming visible.
+  function navigateTo(tab, subTab) {
+    const tabId = tab !== undefined ? tab : 0;
+    const subTabId = (subTab !== undefined && subTab !== null && subTab >= 0) ? subTab : -1;
+    if (isInitialized) {
+      settingsContent.navigateToTab(tabId, subTabId);
+    } else {
+      settingsContent.requestedTab = tabId;
+      if (subTabId >= 0)
+        settingsContent._pendingSubTab = subTabId;
+      settingsContent.initialize();
+      isInitialized = true;
+      // Tab content persists in window mode; if no subtab specified and the
+      // tab content is still loaded (same tab), reset to first subtab
+      if (subTabId < 0 && settingsContent.activeTabContent)
+        settingsContent.setSubTabIndex(0);
+    }
+  }
+
+  // Navigate to a search result entry.
+  // Works whether the window is already visible or just becoming visible.
+  function navigateToEntry(entry) {
+    if (isInitialized) {
+      Qt.callLater(() => settingsContent.navigateToResult(entry));
+    } else {
+      settingsContent.requestedTab = entry.tab;
+      settingsContent.initialize();
+      Qt.callLater(() => settingsContent.navigateToResult(entry));
+      isInitialized = true;
+    }
+  }
+
   // Sync visibility with service
   onVisibleChanged: {
     if (visible) {
-      if (!isInitialized) {
-        // Check if we have a search entry to navigate to
-        if (SettingsPanelService.requestedEntry) {
-          const entry = SettingsPanelService.requestedEntry;
-          SettingsPanelService.requestedEntry = null;
-          settingsContent.requestedTab = entry.tab;
-          settingsContent.initialize();
-          Qt.callLater(() => settingsContent.navigateToResult(entry));
-        } else {
-          settingsContent.requestedTab = SettingsPanelService.requestedTab;
-          if (SettingsPanelService.requestedSubTab >= 0) {
-            settingsContent._pendingSubTab = SettingsPanelService.requestedSubTab;
-            SettingsPanelService.requestedSubTab = -1;
-          }
-          settingsContent.initialize();
-        }
-        isInitialized = true;
-      }
       SettingsPanelService.isWindowOpen = true;
     } else {
       isInitialized = false;
@@ -72,22 +87,38 @@ FloatingWindow {
     onActivated: settingsContent.selectPreviousTab()
   }
 
-  Shortcut {
-    sequence: "Up"
-    enabled: !PanelService.isKeybindRecording
-    onActivated: settingsContent.scrollUp()
+  Instantiator {
+    model: Settings.data.general.keybinds.keyUp || []
+    Shortcut {
+      sequence: modelData
+      enabled: !PanelService.isKeybindRecording
+      onActivated: {
+        if (settingsContent.searchText.trim() !== "")
+          settingsContent.searchSelectPrevious();
+        else
+          settingsContent.scrollUp();
+      }
+    }
   }
 
-  Shortcut {
-    sequence: "Down"
-    enabled: !PanelService.isKeybindRecording
-    onActivated: settingsContent.scrollDown()
+  Instantiator {
+    model: Settings.data.general.keybinds.keyDown || []
+    Shortcut {
+      sequence: modelData
+      enabled: !PanelService.isKeybindRecording
+      onActivated: {
+        if (settingsContent.searchText.trim() !== "")
+          settingsContent.searchSelectNext();
+        else
+          settingsContent.scrollDown();
+      }
+    }
   }
 
   // Main content
   Rectangle {
     anchors.fill: parent
-    color: "transparent"
+    color: Qt.alpha(Color.mSurface, Settings.data.ui.panelBackgroundOpacity)
     radius: Style.radiusL
 
     SettingsContent {

@@ -7,3 +7,6 @@ RELEASE.md
 __pycache__
 result
 build
+/debian/
+.direnv/
+.envrc

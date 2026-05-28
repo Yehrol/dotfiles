@@ -28,11 +28,15 @@ ColumnLayout {
     delegate: NBox {
       id: monitorCard
       Layout.fillWidth: true
-      implicitHeight: cardContent.implicitHeight + Style.marginL * 2
+      implicitHeight: cardContent.implicitHeight + Style.margin2L
       color: Color.mSurface
 
       required property var modelData
       readonly property string screenName: modelData.name || "Unknown"
+      readonly property real compositorScale: {
+        const info = CompositorService.displayScales[screenName];
+        return (info && info.scale) ? info.scale : 1.0;
+      }
       readonly property bool barEnabled: (Settings.data.bar.monitors || []).indexOf(screenName) !== -1
       readonly property bool hasOverride: Settings.hasScreenOverride(screenName)
 
@@ -67,12 +71,11 @@ ColumnLayout {
 
             NText {
               text: {
-                const compositorScale = CompositorService.getDisplayScale(monitorCard.screenName);
                 return I18n.tr("system.monitor-description", {
                                  "model": monitorCard.modelData.model || I18n.tr("common.unknown"),
-                                 "width": Math.round(monitorCard.modelData.width * compositorScale),
-                                 "height": Math.round(monitorCard.modelData.height * compositorScale),
-                                 "scale": compositorScale
+                                 "width": Math.round(monitorCard.modelData.width * monitorCard.compositorScale),
+                                 "height": Math.round(monitorCard.modelData.height * monitorCard.compositorScale),
+                                 "scale": monitorCard.compositorScale
                                });
               }
               pointSize: Style.fontSizeS

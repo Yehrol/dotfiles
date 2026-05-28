@@ -30,6 +30,7 @@ import qs.Modules.Panels.Settings
 import qs.Modules.Toast
 import qs.Services.Control
 import qs.Services.Hardware
+import qs.Services.Keyboard
 import qs.Services.Location
 import qs.Services.Networking
 import qs.Services.Noctalia
@@ -106,18 +107,24 @@ ShellRoot {
         Qt.callLater(function () {
           LocationService.init();
           NightLightService.apply();
-          HooksService.init();
-          BluetoothService.init();
           IdleInhibitorService.init();
+          IdleService.init();
           PowerProfileService.init();
           HostService.init();
+          NotificationRulesService.init();
           GitHubService.init();
           SupporterService.init();
           CustomButtonIPCService.init();
           IPCService.init(screenDetector);
+
+          // Force ClipboardService initialization so clipboard watchers
+          // start immediately instead of waiting for first launcher open
+          if (Settings.data.appLauncher.enableClipboardHistory) {
+            ClipboardService.checkCliphistAvailability();
+          }
         });
 
-        delayedInitTimer.running = true;
+        delayedInitTimer.restart();
       }
 
       Overview {}
@@ -138,6 +145,7 @@ ShellRoot {
       }
 
       LockScreen {}
+      FadeOverlay {}
 
       // Settings window mode (single window across all monitors)
       SettingsPanelWindow {}
@@ -162,14 +170,13 @@ ShellRoot {
     }
   }
 
-  // ---------------------------------------------
   // Delayed initialization and wizard/changelog
-  // ---------------------------------------------
   Timer {
     id: delayedInitTimer
     running: false
     interval: 1500
     onTriggered: {
+      HooksService.init();
       FontService.init();
       UpdateService.init();
       showWizardOrChangelog();

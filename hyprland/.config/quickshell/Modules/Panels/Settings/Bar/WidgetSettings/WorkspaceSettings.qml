@@ -22,6 +22,7 @@ ColumnLayout {
 
   // Grouped mode settings
   property bool valueShowApplications: widgetData.showApplications !== undefined ? widgetData.showApplications : widgetMetadata.showApplications
+  property bool valueShowApplicationsHover: widgetData.showApplicationsHover !== undefined ? widgetData.showApplicationsHover : widgetMetadata.showApplicationsHover
   property bool valueShowLabelsOnlyWhenOccupied: widgetData.showLabelsOnlyWhenOccupied !== undefined ? widgetData.showLabelsOnlyWhenOccupied : widgetMetadata.showLabelsOnlyWhenOccupied
   property bool valueColorizeIcons: widgetData.colorizeIcons !== undefined ? widgetData.colorizeIcons : widgetMetadata.colorizeIcons
   property real valueUnfocusedIconsOpacity: widgetData.unfocusedIconsOpacity !== undefined ? widgetData.unfocusedIconsOpacity : widgetMetadata.unfocusedIconsOpacity
@@ -33,6 +34,7 @@ ColumnLayout {
   property string valueEmptyColor: widgetData.emptyColor !== undefined ? widgetData.emptyColor : widgetMetadata.emptyColor
   property bool valueShowBadge: widgetData.showBadge !== undefined ? widgetData.showBadge : widgetMetadata.showBadge
   property real valuePillSize: widgetData.pillSize !== undefined ? widgetData.pillSize : widgetMetadata.pillSize
+  property string valueFontWeight: widgetData.fontWeight !== undefined ? widgetData.fontWeight : widgetMetadata.fontWeight
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -41,6 +43,7 @@ ColumnLayout {
     settings.characterCount = valueCharacterCount;
     settings.followFocusedScreen = valueFollowFocusedScreen;
     settings.showApplications = valueShowApplications;
+    settings.showApplicationsHover = valueShowApplicationsHover;
     settings.showLabelsOnlyWhenOccupied = valueShowLabelsOnlyWhenOccupied;
     settings.colorizeIcons = valueColorizeIcons;
     settings.unfocusedIconsOpacity = valueUnfocusedIconsOpacity;
@@ -52,6 +55,7 @@ ColumnLayout {
     settings.emptyColor = valueEmptyColor;
     settings.showBadge = valueShowBadge;
     settings.pillSize = valuePillSize;
+    settings.fontWeight = valueFontWeight;
     settingsChanged(settings);
   }
 
@@ -105,12 +109,44 @@ ColumnLayout {
     to: 1.0
     stepSize: 0.01
     value: valuePillSize
+    defaultValue: widgetMetadata.pillSize
+    showReset: true
     onMoved: value => {
                valuePillSize = value;
                saveSettings();
              }
     text: Math.round(valuePillSize * 100) + "%"
     visible: !valueShowApplications
+  }
+
+  NComboBox {
+    id: fontWeightCombo
+    label: I18n.tr("bar.workspace.font-weight-label")
+    description: I18n.tr("bar.workspace.font-weight-description")
+    model: [
+      {
+        "key": "regular",
+        "name": I18n.tr("common.font-weight-regular")
+      },
+      {
+        "key": "medium",
+        "name": I18n.tr("common.font-weight-medium")
+      },
+      {
+        "key": "semibold",
+        "name": I18n.tr("common.font-weight-semibold")
+      },
+      {
+        "key": "bold",
+        "name": I18n.tr("common.font-weight-bold")
+      },
+    ]
+    currentKey: widgetData.fontWeight || widgetMetadata.fontWeight
+    onSelected: key => {
+                  valueFontWeight = key;
+                  saveSettings();
+                }
+    minimumWidth: 200
   }
 
   NToggle {
@@ -168,6 +204,17 @@ ColumnLayout {
   }
 
   NToggle {
+    label: I18n.tr("bar.workspace.show-applications-hover-label")
+    description: I18n.tr("bar.workspace.show-applications-hover-description")
+    checked: valueShowApplicationsHover
+    onToggled: checked => {
+                 valueShowApplicationsHover = checked;
+                 saveSettings();
+               }
+    visible: valueShowApplications
+  }
+
+  NToggle {
     label: I18n.tr("bar.workspace.show-badge-label")
     description: I18n.tr("bar.workspace.show-badge-description")
     checked: valueShowBadge
@@ -195,7 +242,9 @@ ColumnLayout {
     from: 0
     to: 1
     stepSize: 0.01
+    showReset: true
     value: valueUnfocusedIconsOpacity
+    defaultValue: widgetMetadata.unfocusedIconsOpacity
     onMoved: value => {
                valueUnfocusedIconsOpacity = value;
                saveSettings();
@@ -210,7 +259,9 @@ ColumnLayout {
     from: 0
     to: 1
     stepSize: 0.01
+    showReset: true
     value: valueGroupedBorderOpacity
+    defaultValue: widgetMetadata.groupedBorderOpacity
     onMoved: value => {
                valueGroupedBorderOpacity = value;
                saveSettings();
@@ -225,7 +276,9 @@ ColumnLayout {
     from: 0.5
     to: 1
     stepSize: 0.01
+    showReset: true
     value: valueIconScale
+    defaultValue: widgetMetadata.iconScale
     onMoved: value => {
                valueIconScale = value;
                saveSettings();
@@ -238,93 +291,33 @@ ColumnLayout {
     Layout.fillWidth: true
   }
 
-  NComboBox {
-    id: focusedColorCombo
+  NColorChoice {
     label: I18n.tr("bar.workspace.focused-color-label")
     description: I18n.tr("bar.workspace.focused-color-description")
-    model: [
-      {
-        "key": "none",
-        "name": I18n.tr("common.none")
-      },
-      {
-        "key": "primary",
-        "name": I18n.tr("common.primary")
-      },
-      {
-        "key": "secondary",
-        "name": I18n.tr("common.secondary")
-      },
-      {
-        "key": "tertiary",
-        "name": I18n.tr("common.tertiary")
-      }
-    ]
     currentKey: valueFocusedColor
     onSelected: key => {
                   valueFocusedColor = key;
                   saveSettings();
                 }
-    minimumWidth: 200
   }
 
-  NComboBox {
-    id: occupiedColorCombo
+  NColorChoice {
     label: I18n.tr("bar.workspace.occupied-color-label")
     description: I18n.tr("bar.workspace.occupied-color-description")
-    model: [
-      {
-        "key": "none",
-        "name": I18n.tr("common.none")
-      },
-      {
-        "key": "primary",
-        "name": I18n.tr("common.primary")
-      },
-      {
-        "key": "secondary",
-        "name": I18n.tr("common.secondary")
-      },
-      {
-        "key": "tertiary",
-        "name": I18n.tr("common.tertiary")
-      }
-    ]
     currentKey: valueOccupiedColor
     onSelected: key => {
                   valueOccupiedColor = key;
                   saveSettings();
                 }
-    minimumWidth: 200
   }
 
-  NComboBox {
-    id: emptyColorCombo
+  NColorChoice {
     label: I18n.tr("bar.workspace.empty-color-label")
     description: I18n.tr("bar.workspace.empty-color-description")
-    model: [
-      {
-        "key": "none",
-        "name": I18n.tr("common.none")
-      },
-      {
-        "key": "primary",
-        "name": I18n.tr("common.primary")
-      },
-      {
-        "key": "secondary",
-        "name": I18n.tr("common.secondary")
-      },
-      {
-        "key": "tertiary",
-        "name": I18n.tr("common.tertiary")
-      }
-    ]
     currentKey: valueEmptyColor
     onSelected: key => {
                   valueEmptyColor = key;
                   saveSettings();
                 }
-    minimumWidth: 200
   }
 }

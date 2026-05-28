@@ -119,7 +119,7 @@ ColumnLayout {
       buttonIcon: "folder-open"
       buttonTooltip: I18n.tr("panels.wallpaper.settings-folder-label")
       Layout.fillWidth: true
-      onInputEditingFinished: Settings.data.wallpaper.directory = text
+      onInputTextChanged: text => Settings.data.wallpaper.directory = text
       onButtonClicked: root.openMainFolderPicker()
     }
 
@@ -138,7 +138,7 @@ ColumnLayout {
       color: Color.mSurface
       border.color: Color.mOutline
       border.width: Style.borderS
-      implicitHeight: contentCol.implicitHeight + Style.marginL * 2
+      implicitHeight: contentCol.implicitHeight + Style.margin2L
       clip: true
 
       ColumnLayout {
@@ -160,15 +160,51 @@ ColumnLayout {
             }
 
             NTextInputButton {
+              id: monitorDirInput
               text: WallpaperService.getMonitorDirectory(modelData.name)
               buttonIcon: "folder-open"
               buttonTooltip: I18n.tr("panels.wallpaper.settings-monitor-specific-tooltip")
               Layout.fillWidth: true
-              onInputEditingFinished: WallpaperService.setMonitorDirectory(modelData.name, text)
+              onInputEditingFinished: WallpaperService.setMonitorDirectory(modelData.name, monitorDirInput.text)
               onButtonClicked: root.openMonitorFolderPicker(modelData.name)
             }
           }
         }
+      }
+    }
+  }
+
+  NDivider {
+    Layout.fillWidth: true
+  }
+
+  NToggle {
+    label: I18n.tr("panels.wallpaper.settings-use-original-images-label")
+    description: I18n.tr("panels.wallpaper.settings-use-original-images-description")
+    checked: Settings.data.wallpaper.useOriginalImages
+    enabled: Settings.data.wallpaper.enabled
+    onToggled: checked => Settings.data.wallpaper.useOriginalImages = checked
+    defaultValue: Settings.getDefaultValue("wallpaper.useOriginalImages")
+  }
+
+  RowLayout {
+    spacing: Style.marginM
+    Layout.fillWidth: true
+    enabled: Settings.data.wallpaper.enabled
+
+    NLabel {
+      label: I18n.tr("panels.wallpaper.settings-clear-cache-label")
+      description: I18n.tr("panels.wallpaper.settings-clear-cache-description")
+      Layout.fillWidth: true
+    }
+
+    NButton {
+      icon: "trash"
+      text: I18n.tr("panels.wallpaper.settings-clear-cache-button")
+      outlined: true
+      onClicked: {
+        ImageCacheService.clearLarge();
+        ToastService.showNotice(I18n.tr("panels.wallpaper.settings-clear-cache-toast"));
       }
     }
   }
@@ -194,13 +230,13 @@ ColumnLayout {
 
     NValueSlider {
       Layout.fillWidth: true
-      enabled: Settings.data.wallpaper.overviewEnabled
+      visible: Settings.data.wallpaper.overviewEnabled
       label: I18n.tr("panels.wallpaper.settings-overview-blur-strength-label")
       description: I18n.tr("panels.wallpaper.settings-overview-blur-strength-description")
-      visible: CompositorService.isNiri
       from: 0.0
       to: 1.0
       stepSize: 0.01
+      showReset: true
       value: Settings.data.wallpaper.overviewBlur
       onMoved: value => Settings.data.wallpaper.overviewBlur = value
       text: ((Settings.data.wallpaper.overviewBlur) * 100).toFixed(0) + "%"
@@ -209,13 +245,13 @@ ColumnLayout {
 
     NValueSlider {
       Layout.fillWidth: true
-      enabled: Settings.data.wallpaper.overviewEnabled
+      visible: Settings.data.wallpaper.overviewEnabled
       label: I18n.tr("panels.wallpaper.settings-overview-tint-label")
       description: I18n.tr("panels.wallpaper.settings-overview-tint-description")
-      visible: CompositorService.isNiri
       from: 0.0
       to: 1.0
       stepSize: 0.01
+      showReset: true
       value: Settings.data.wallpaper.overviewTint
       onMoved: value => Settings.data.wallpaper.overviewTint = value
       text: ((Settings.data.wallpaper.overviewTint) * 100).toFixed(0) + "%"

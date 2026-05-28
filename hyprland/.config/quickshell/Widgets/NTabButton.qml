@@ -2,16 +2,16 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import qs.Commons
+import qs.Services.UI
 import qs.Widgets
 
 Rectangle {
   id: root
 
   // Public properties
-  // Public properties
   property string text: ""
   property string icon: ""
-  property string tooltipText: ""
+  property var tooltipText
   property bool checked: false
   property int tabIndex: 0
   property real pointSize: Style.fontSizeM
@@ -25,15 +25,15 @@ Rectangle {
 
   // Sizing
   Layout.fillHeight: true
-  implicitWidth: contentLayout.implicitWidth + Style.marginXL
+  implicitWidth: contentLayout.implicitWidth + Style.margin2M
 
   topLeftRadius: isFirst ? Style.iRadiusM : Style.iRadiusXXXS
   bottomLeftRadius: isFirst ? Style.iRadiusM : Style.iRadiusXXXS
   topRightRadius: isLast ? Style.iRadiusM : Style.iRadiusXXXS
   bottomRightRadius: isLast ? Style.iRadiusM : Style.iRadiusXXXS
 
-  color: root.isHovered ? Color.mHover : (root.checked ? Color.mPrimary : Color.mSurface)
-  border.color: Color.mOutline
+  color: root.isHovered ? Color.mHover : (root.checked ? Color.mPrimary : Color.smartAlpha(Color.mSurface))
+  border.color: root.checked ? Color.mPrimary : Color.mOutline
   border.width: Style.borderS
 
   Behavior on color {
@@ -48,7 +48,7 @@ Rectangle {
   RowLayout {
     id: contentLayout
     anchors.centerIn: parent
-    width: Math.min(implicitWidth, parent.width - (Style.marginS * 2))
+    width: Math.min(implicitWidth, parent.width - Style.margin2S)
     spacing: (root.icon !== "" && root.text !== "") ? Style.marginXS : 0
 
     NIcon {
@@ -93,7 +93,7 @@ Rectangle {
     id: tooltipTimer
     interval: 500
     onTriggered: {
-      if (root.isHovered && root.tooltipText !== "") {
+      if (root.isHovered && root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
         TooltipService.show(root, root.tooltipText);
       }
     }
@@ -105,14 +105,14 @@ Rectangle {
     cursorShape: Qt.PointingHandCursor
     onEntered: {
       root.isHovered = true;
-      if (root.tooltipText !== "") {
+      if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
         tooltipTimer.start();
       }
     }
     onExited: {
       root.isHovered = false;
       tooltipTimer.stop();
-      if (root.tooltipText !== "") {
+      if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
         TooltipService.hide();
       }
     }

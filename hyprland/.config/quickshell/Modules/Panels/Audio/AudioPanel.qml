@@ -27,6 +27,9 @@ SmartPanel {
     property bool localInputVolumeChanging: false
     property int lastSourceId: -1
 
+    readonly property bool outputVolumeGuard: outputVolumeSlider.sliderActive || localOutputVolumeChanging
+    readonly property bool inputVolumeGuard: inputVolumeSlider.sliderActive || localInputVolumeChanging
+
     // UI state (lazy-loaded with panelContent)
     property int currentTabIndex: 0
 
@@ -84,17 +87,7 @@ SmartPanel {
     Connections {
       target: AudioService
       function onVolumeChanged() {
-        if (!panelContent.localOutputVolumeChanging && AudioService.sink && AudioService.sink.id === panelContent.lastSinkId) {
-          var vol = AudioService.volume;
-          panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
-        }
-      }
-    }
-
-    Connections {
-      target: AudioService.sink?.audio ? AudioService.sink?.audio : null
-      function onVolumeChanged() {
-        if (!panelContent.localOutputVolumeChanging && AudioService.sink && AudioService.sink.id === panelContent.lastSinkId) {
+        if (!panelContent.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.id === panelContent.lastSinkId) {
           var vol = AudioService.volume;
           panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -104,7 +97,7 @@ SmartPanel {
     Connections {
       target: AudioService
       function onInputVolumeChanged() {
-        if (!panelContent.localInputVolumeChanging && AudioService.source && AudioService.source.id === panelContent.lastSourceId) {
+        if (!panelContent.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.id === panelContent.lastSourceId) {
           var vol = AudioService.inputVolume;
           panelContent.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -112,9 +105,19 @@ SmartPanel {
     }
 
     Connections {
-      target: AudioService.source?.audio ? AudioService.source?.audio : null
-      function onVolumeChanged() {
-        if (!panelContent.localInputVolumeChanging && AudioService.source && AudioService.source.id === panelContent.lastSourceId) {
+      target: outputVolumeSlider
+      function onSliderActiveChanged() {
+        if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.id === panelContent.lastSinkId) {
+          var vol = AudioService.volume;
+          panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+        }
+      }
+    }
+
+    Connections {
+      target: inputVolumeSlider
+      function onSliderActiveChanged() {
+        if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.id === panelContent.lastSourceId) {
           var vol = AudioService.inputVolume;
           panelContent.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -149,7 +152,7 @@ SmartPanel {
     readonly property var appStreams: AudioService.appStreams
 
     // Use implicitHeight from content + margins to avoid binding loops
-    property real contentPreferredHeight: mainColumn.implicitHeight + Style.marginL * 2
+    property real contentPreferredHeight: mainColumn.implicitHeight + Style.margin2L
 
     ColumnLayout {
       id: mainColumn
@@ -160,7 +163,7 @@ SmartPanel {
       // HEADER
       NBox {
         Layout.fillWidth: true
-        implicitHeight: header.implicitHeight + (Style.marginXL)
+        implicitHeight: header.implicitHeight + Style.margin2M
 
         ColumnLayout {
           id: header
@@ -238,7 +241,7 @@ SmartPanel {
             // Output Volume
             NBox {
               Layout.fillWidth: true
-              Layout.preferredHeight: outputVolumeColumn.implicitHeight + (Style.marginXL)
+              Layout.preferredHeight: outputVolumeColumn.implicitHeight + Style.margin2M
 
               ColumnLayout {
                 id: outputVolumeColumn
@@ -272,6 +275,7 @@ SmartPanel {
                   spacing: Style.marginM
 
                   NValueSlider {
+                    id: outputVolumeSlider
                     Layout.fillWidth: true
                     from: 0
                     to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
@@ -287,7 +291,7 @@ SmartPanel {
                   }
 
                   NText {
-                    text: Math.round(localOutputVolume * 100) + "%"
+                    text: Math.round((panelContent.outputVolumeGuard ? localOutputVolume : AudioService.volume) * 100) + "%"
                     pointSize: Style.fontSizeM
                     family: Settings.data.ui.fontFixed
                     color: Color.mOnSurface
@@ -313,7 +317,7 @@ SmartPanel {
             // Input Volume
             NBox {
               Layout.fillWidth: true
-              Layout.preferredHeight: inputVolumeColumn.implicitHeight + (Style.marginXL)
+              Layout.preferredHeight: inputVolumeColumn.implicitHeight + Style.margin2M
 
               ColumnLayout {
                 id: inputVolumeColumn
@@ -347,6 +351,7 @@ SmartPanel {
                   spacing: Style.marginM
 
                   NValueSlider {
+                    id: inputVolumeSlider
                     Layout.fillWidth: true
                     from: 0
                     to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
@@ -362,7 +367,7 @@ SmartPanel {
                   }
 
                   NText {
-                    text: Math.round(localInputVolume * 100) + "%"
+                    text: Math.round((panelContent.inputVolumeGuard ? localInputVolume : AudioService.inputVolume) * 100) + "%"
                     pointSize: Style.fontSizeM
                     family: Settings.data.ui.fontFixed
                     color: Color.mOnSurface
@@ -398,7 +403,7 @@ SmartPanel {
                 id: appBox
                 required property PwNode modelData
                 Layout.fillWidth: true
-                Layout.preferredHeight: appRow.implicitHeight + (Style.marginXL)
+                Layout.preferredHeight: appRow.implicitHeight + Style.margin2M
                 visible: !isCaptureStream
 
                 // Track individual node to ensure properties are bound
@@ -512,6 +517,45 @@ SmartPanel {
                   return result || "Unknown App";
                 }
 
+                // Tab / page / track label (browsers: media.title/name; players: artist+title when PW exposes it).
+                // Many apps (notably some Spotify builds) only set a generic media.name — then there is nothing useful to show.
+                readonly property string appStreamTitle: {
+                  if (!modelData) {
+                    return "";
+                  }
+                  var props = modelData.properties;
+                  var artist = "";
+                  var title = "";
+                  var mediaName = "";
+                  if (props) {
+                    artist = (props["media.artist"] || "").trim();
+                    title = (props["media.title"] || "").trim();
+                    mediaName = (props["media.name"] || "").trim();
+                  }
+                  var raw = "";
+                  if (title && artist) {
+                    raw = artist + " — " + title;
+                  } else if (title) {
+                    raw = title;
+                  } else if (artist) {
+                    raw = artist;
+                  } else if (mediaName) {
+                    raw = mediaName;
+                  }
+                  if (!raw) {
+                    raw = (modelData.description || "").trim();
+                  }
+                  if (!raw) {
+                    return "";
+                  }
+                  var norm = raw.toLowerCase();
+                  var mainNorm = appName.trim().toLowerCase();
+                  if (norm === mainNorm) {
+                    return "";
+                  }
+                  return raw;
+                }
+
                 readonly property string appIcon: {
                   if (!modelData)
                     return ThemeIcons.iconFromName("application-x-executable", "application-x-executable");
@@ -614,6 +658,17 @@ SmartPanel {
                       Layout.fillWidth: true
                     }
 
+                    NText {
+                      visible: appBox.appStreamTitle !== ""
+                      text: appBox.appStreamTitle
+                      pointSize: Style.fontSizeS
+                      color: Color.mOnSurfaceVariant
+                      elide: Text.ElideRight
+                      wrapMode: Text.NoWrap
+                      maximumLineCount: 1
+                      Layout.fillWidth: true
+                    }
+
                     RowLayout {
                       Layout.fillWidth: true
                       spacing: Style.marginM
@@ -629,6 +684,7 @@ SmartPanel {
                         onMoved: function (value) {
                           if (appBox.nodeAudio && appBox.modelData && appBox.modelData.ready === true) {
                             appBox.nodeAudio.volume = value;
+                            AudioService.setPanelAppStreamVolume(appBox.modelData, value);
                           }
                         }
                       }
@@ -653,7 +709,9 @@ SmartPanel {
                         enabled: !!(appBox.nodeAudio && appBox.modelData && appBox.modelData.ready === true)
                         onClicked: {
                           if (appBox.nodeAudio && appBox.modelData && appBox.modelData.ready === true) {
-                            appBox.nodeAudio.muted = !appBox.appMuted;
+                            var newMuted = !appBox.appMuted;
+                            appBox.nodeAudio.muted = newMuted;
+                            AudioService.setPanelAppStreamMuted(appBox.modelData, newMuted);
                           }
                         }
                       }
@@ -698,7 +756,7 @@ SmartPanel {
 
             NBox {
               Layout.fillWidth: true
-              Layout.preferredHeight: outputColumn.implicitHeight + (Style.marginXL)
+              Layout.preferredHeight: outputColumn.implicitHeight + Style.margin2M
 
               ColumnLayout {
                 id: outputColumn
@@ -740,7 +798,7 @@ SmartPanel {
 
             NBox {
               Layout.fillWidth: true
-              Layout.preferredHeight: inputColumn.implicitHeight + (Style.marginXL)
+              Layout.preferredHeight: inputColumn.implicitHeight + Style.margin2M
 
               ColumnLayout {
                 id: inputColumn

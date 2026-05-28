@@ -35,6 +35,7 @@ SmartPanel {
 
   // Combined model of running apps and pinned apps
   property var dockApps: []
+  property var groupCycleIndices: ({})
 
   // Track the session order of apps (transient reordering)
   property var sessionAppOrder: []
@@ -55,9 +56,23 @@ SmartPanel {
     }
   }
 
+  onAnyAppHoveredChanged: {
+    if (anyAppHovered) {
+      hoverCloseTimer.stop();
+    } else if (!panelHovered && !menuHovered && !dockHovered && !isDockHovered) {
+      hoverCloseTimer.restart();
+    }
+  }
+
   onClosed: {
     hoverCloseTimer.stop();
     isDockHovered = false;
+  }
+
+  onOpened: {
+    // Don't auto-start close timer here — the peek zone's onExited in Dock.qml
+    // starts hideTimer which checks panel.isDockHovered, giving the user time
+    // to move into the panel without it closing prematurely.
   }
 
   panelAnchorTop: dockPosition === "top"
@@ -89,6 +104,10 @@ SmartPanel {
   function getAppKey(appData) {
     if (!appData)
       return null;
+
+    if (Settings.data.dock.groupApps) {
+      return appData.appId;
+    }
 
     // Use stable appId for pinned apps to maintain their slot regardless of running state
     if (appData.type === "pinned" || appData.type === "pinned-running") {
@@ -191,7 +210,38 @@ SmartPanel {
     if (!appId || !pinnedApps || pinnedApps.length === 0)
       return false;
     const normalizedId = normalizeAppId(appId);
-    return pinnedApps.some(pinnedId => normalizeAppId(pinnedId) === normalizedId);
+    // Direct match
+    if (pinnedApps.some(pinnedId => normalizeAppId(pinnedId) === normalizedId))
+      return true;
+    // Resolve via desktop entry lookup (handles StartupWMClass != .desktop filename)
+    const resolved = resolveToDesktopEntryId(appId);
+    if (resolved !== appId) {
+      const normalizedResolved = normalizeAppId(resolved);
+      return pinnedApps.some(pinnedId => normalizeAppId(pinnedId) === normalizedResolved);
+    }
+    return false;
+  }
+
+  // Desktop entry ID resolution cache (cleared when DesktopEntries change)
+  property var _desktopEntryIdCache: ({})
+
+  // Resolve a toplevel appId to its canonical .desktop entry ID via heuristic lookup.
+  function resolveToDesktopEntryId(appId) {
+    if (!appId)
+      return appId;
+    if (_desktopEntryIdCache.hasOwnProperty(appId))
+      return _desktopEntryIdCache[appId];
+    try {
+      if (typeof DesktopEntries !== 'undefined' && DesktopEntries.heuristicLookup) {
+        const entry = DesktopEntries.heuristicLookup(appId);
+        if (entry && entry.id) {
+          _desktopEntryIdCache[appId] = entry.id;
+          return entry.id;
+        }
+      }
+    } catch (e) {}
+    _desktopEntryIdCache[appId] = appId;
+    return appId;
   }
 
   // Helper function to get app name from desktop entry
@@ -221,6 +271,91 @@ SmartPanel {
     return appId;
   }
 
+  function getToplevelsForEntry(appData) {
+    if (!appData)
+      return [];
+
+    if (appData.toplevels && appData.toplevels.length > 0) {
+      return appData.toplevels.filter(toplevel => toplevel && (!Settings.data.dock.onlySameOutput || !toplevel.screens || toplevel.screens.includes(screen)));
+    }
+
+    if (!appData.toplevel)
+      return [];
+
+    if (Settings.data.dock.onlySameOutput && appData.toplevel.screens && !appData.toplevel.screens.includes(screen))
+      return [];
+
+    return [appData.toplevel];
+  }
+
+  function getPrimaryToplevelForEntry(appData) {
+    const toplevels = getToplevelsForEntry(appData);
+    if (toplevels.length === 0)
+      return null;
+
+    if (ToplevelManager && ToplevelManager.activeToplevel && toplevels.includes(ToplevelManager.activeToplevel))
+      return ToplevelManager.activeToplevel;
+
+    return toplevels[0];
+  }
+
+  // Build grouped render model without mutating the raw toplevel list.
+  function buildGroupedDockApps(apps) {
+    if (!Settings.data.dock.groupApps) {
+      return apps.map(app => {
+                        const entry = Object.assign({}, app);
+                        entry.toplevels = getToplevelsForEntry(app);
+                        return entry;
+                      });
+    }
+
+    const grouped = [];
+    const groupedById = new Map();
+
+    apps.forEach(app => {
+                   const appId = app.appId;
+                   const toplevels = getToplevelsForEntry(app);
+                   const existing = groupedById.get(appId);
+
+                   if (existing) {
+                     toplevels.forEach(toplevel => {
+                                         if (!existing.toplevels.includes(toplevel)) {
+                                           existing.toplevels.push(toplevel);
+                                         }
+                                       });
+                     if (app.type === "pinned" || app.type === "pinned-running") {
+                       existing.isPinned = true;
+                     }
+                   } else {
+                     const entry = {
+                       "type": app.type,
+                       "appId": appId,
+                       "title": app.title,
+                       "toplevels": toplevels.slice(),
+                       "isPinned": app.type === "pinned" || app.type === "pinned-running"
+                     };
+                     grouped.push(entry);
+                     groupedById.set(appId, entry);
+                   }
+                 });
+
+    grouped.forEach(entry => {
+                      entry.toplevel = getPrimaryToplevelForEntry(entry);
+                      if (entry.toplevels.length > 0 && entry.isPinned) {
+                        entry.type = "pinned-running";
+                      } else if (entry.toplevels.length > 0) {
+                        entry.type = "running";
+                      } else {
+                        entry.type = "pinned";
+                      }
+                      if (entry.toplevel && entry.toplevel.title && entry.toplevel.title.trim() !== "") {
+                        entry.title = entry.toplevel.title;
+                      }
+                    });
+
+    return grouped;
+  }
+
   // Function to update the combined dock apps model
   function updateDockApps() {
     const runningApps = ToplevelManager ? (ToplevelManager.toplevels.values || []) : [];
@@ -245,6 +380,7 @@ SmartPanel {
         combined.push({
                         "type": appType,
                         "toplevel": toplevel,
+                        "toplevels": toplevel ? [toplevel] : [],
                         "appId": canonicalId,
                         "title": title
                       });
@@ -257,6 +393,7 @@ SmartPanel {
         combined.push({
                         "type": appType,
                         "toplevel": toplevel,
+                        "toplevels": [],
                         "appId": canonicalId,
                         "title": title
                       });
@@ -280,7 +417,17 @@ SmartPanel {
     function pushPinned() {
       pinnedApps.forEach(pinnedAppId => {
                            // Find all running instances of this pinned app using robust matching
-                           const matchingToplevels = runningApps.filter(app => app && normalizeAppId(app.appId) === normalizeAppId(pinnedAppId));
+                           // Also resolve toplevel appId via desktop entry lookup to handle
+                           // StartupWMClass != .desktop filename (e.g. zen -> zen-browser-bin)
+                           const normalizedPinned = normalizeAppId(pinnedAppId);
+                           const matchingToplevels = runningApps.filter(app => {
+                                                                          if (!app)
+                                                                          return false;
+                                                                          if (normalizeAppId(app.appId) === normalizedPinned)
+                                                                          return true;
+                                                                          const resolved = resolveToDesktopEntryId(app.appId);
+                                                                          return resolved !== app.appId && normalizeAppId(resolved) === normalizedPinned;
+                                                                        });
 
                            if (matchingToplevels.length > 0) {
                              // Add all running instances as pinned-running
@@ -305,7 +452,16 @@ SmartPanel {
       pushPinned();
     }
 
-    dockApps = sortDockApps(combined);
+    const sortedApps = sortDockApps(combined);
+    dockApps = buildGroupedDockApps(sortedApps);
+    const cycleState = root.groupCycleIndices || {};
+    const nextCycleState = {};
+    dockApps.forEach(app => {
+                       if (app && app.appId && cycleState[app.appId] !== undefined) {
+                         nextCycleState[app.appId] = cycleState[app.appId];
+                       }
+                     });
+    root.groupCycleIndices = nextCycleState;
 
     // Sync session order if needed
     if (!sessionAppOrder || sessionAppOrder.length === 0) {
@@ -355,6 +511,9 @@ SmartPanel {
     function onOnlySameOutputChanged() {
       updateDockApps();
     }
+    function onGroupAppsChanged() {
+      updateDockApps();
+    }
   }
 
   // Initial update when component is ready
@@ -369,6 +528,7 @@ SmartPanel {
     target: DesktopEntries.applications
     function onValuesChanged() {
       root.iconRevision++;
+      root._desktopEntryIdCache = {};
     }
   }
 
@@ -388,7 +548,7 @@ SmartPanel {
     id: hoverCloseTimer
     interval: hideDelay
     onTriggered: {
-      if (root.menuHovered || (root.currentContextMenu && root.currentContextMenu.visible)) {
+      if (root.dockHovered || root.isDockHovered || root.anyAppHovered || root.menuHovered || (root.currentContextMenu && root.currentContextMenu.visible)) {
         restart();
         return;
       }
@@ -405,20 +565,27 @@ SmartPanel {
     property real contentPreferredWidth: Math.round(dockContainerWrapper.width) - (isVertical ? frameThickness : 0)
     property real contentPreferredHeight: Math.round(dockContainerWrapper.height) - (!isVertical ? frameThickness : 0)
 
-    // Detect hover over panel content (including DockContent)
-    HoverHandler {
-      id: dockHoverHandler
-      acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-      onHoveredChanged: {
-        root.panelHovered = hovered;
-        if (hovered) {
-          root.isDockHovered = true;
-          hoverCloseTimer.stop();
-        } else {
-          if (root.menuHovered || (root.currentContextMenu && root.currentContextMenu.visible)) {
+    Item {
+      id: hoverArea
+      anchors.fill: dockContainerWrapper
+      anchors.margins: -frameThickness
+
+      // Detect hover over dock area including frame thickness
+      HoverHandler {
+        id: dockHoverArea
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onHoveredChanged: {
+          root.panelHovered = hovered;
+          if (hovered) {
+            root.isDockHovered = true;
             hoverCloseTimer.stop();
           } else {
-            hoverCloseTimer.restart();
+            root.isDockHovered = false;
+            if (root.menuHovered || (root.currentContextMenu && root.currentContextMenu.visible)) {
+              hoverCloseTimer.stop();
+            } else {
+              hoverCloseTimer.restart();
+            }
           }
         }
       }

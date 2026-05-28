@@ -40,6 +40,14 @@ ColumnLayout {
     onToggled: checked => Settings.data.plugins.autoUpdate = checked
   }
 
+  // Update notification toggle
+  NToggle {
+    label: I18n.tr("panels.plugins.notify-updates")
+    description: I18n.tr("panels.plugins.notify-updates-description")
+    checked: Settings.data.plugins.notifyUpdates
+    onToggled: checked => Settings.data.plugins.notifyUpdates = checked
+  }
+
   // Check for updates button
   NButton {
     property bool isChecking: Object.keys(PluginService.activeFetches).length > 0
@@ -147,7 +155,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.leftMargin: Style.borderS
         Layout.rightMargin: Style.borderS
-        implicitHeight: Math.round(contentColumn.implicitHeight + Style.marginL * 2)
+        implicitHeight: Math.round(contentColumn.implicitHeight + Style.margin2L)
         color: Color.mSurface
 
         ColumnLayout {
@@ -178,8 +186,8 @@ ColumnLayout {
               visible: modelData.official === true
               color: Color.mSecondary
               radius: Style.radiusXS
-              implicitWidth: officialBadgeRow.implicitWidth + Style.marginS * 2
-              implicitHeight: officialBadgeRow.implicitHeight + Style.marginXS * 2
+              implicitWidth: officialBadgeRow.implicitWidth + Style.margin2S
+              implicitHeight: officialBadgeRow.implicitHeight + Style.margin2XS
 
               RowLayout {
                 id: officialBadgeRow
@@ -230,8 +238,11 @@ ColumnLayout {
               icon: "external-link"
               tooltipText: I18n.tr("panels.plugins.open-plugin-page")
               baseSize: Style.baseWidgetSize * 0.7
-              visible: modelData.isFromOfficialRepo
-              onClicked: Qt.openUrlExternally("https://noctalia.dev/plugins/" + modelData.id)
+              visible: true
+              onClicked: {
+                var sourceUrl = PluginRegistry.getPluginSourceUrl(modelData.compositeKey) || "";
+                Qt.openUrlExternally(sourceUrl && !PluginRegistry.isMainSource(sourceUrl) ? sourceUrl : "https://noctalia.dev/plugins/" + modelData.id);
+              }
             }
 
             NIconButton {

@@ -49,7 +49,7 @@ Item {
   readonly property var availableDevices: {
     var list = root.unnamedAvailableDevices;
 
-    if (Settings.data && Settings.data.ui && Settings.data.network.bluetoothHideUnnamedDevices) {
+    if (Settings.data.network.bluetoothHideUnnamedDevices) {
       list = list.filter(function (dev) {
         var dn = dev.name || dev.deviceName || "";
         var s = String(dn).trim();
@@ -78,7 +78,7 @@ Item {
 
   // For managing expanded device details
   property string expandedDeviceKey: ""
-  property bool detailsGrid: (Settings.data && Settings.data.ui && Settings.data.network.bluetoothDetailsViewMode !== undefined) ? (Settings.data.network.bluetoothDetailsViewMode === "grid") : true
+  property bool detailsGrid: (Settings.data.network.bluetoothDetailsViewMode === "grid")
 
   // Combined visibility check: tab must be visible AND the window must be visible
   readonly property bool effectivelyVisible: root.visible && Window.window && Window.window.visible
@@ -113,10 +113,10 @@ Item {
       }
     } else {
       Logger.d("BluetoothPrefs", "Panel/tab inactive");
-      if (isScanningActive) {
+      if (isScanningActive && !showOnlyLists) {
         BluetoothService.setScanActive(false);
       }
-      if (isDiscoverable) {
+      if (isDiscoverable && !showOnlyLists) {
         BluetoothService.setDiscoverable(false);
       }
     }
@@ -124,11 +124,11 @@ Item {
 
   Component.onDestruction: {
     // Ensure scanning is stopped when component is closed
-    if (isScanningActive) {
+    if (isScanningActive && !showOnlyLists) {
       BluetoothService.setScanActive(false);
     }
     // Ensure discoverable is disabled when component is closed
-    if (isDiscoverable) {
+    if (isDiscoverable && !showOnlyLists) {
       BluetoothService.setDiscoverable(false);
     }
     Logger.d("BluetoothPrefs", "Panel closed");
@@ -138,13 +138,13 @@ Item {
     id: mainLayout
     anchors.left: parent.left
     anchors.right: parent.right
-    spacing: Style.marginL
+    spacing: root.showOnlyLists ? Style.marginM : Style.marginL
 
     // Master Control Section
     NBox {
       visible: !root.showOnlyLists
       Layout.fillWidth: true
-      Layout.preferredHeight: masterControlCol.implicitHeight + (Style.marginL * 2)
+      Layout.preferredHeight: masterControlCol.implicitHeight + Style.margin2L
       color: Color.mSurface
 
       ColumnLayout {
@@ -161,7 +161,7 @@ Item {
             label: I18n.tr("common.bluetooth")
             icon: BluetoothService.enabled ? "bluetooth" : "bluetooth-off"
             checked: BluetoothService.enabled
-            enabled: !Settings.data.network.airplaneModeEnabled && BluetoothService.bluetoothAvailable
+            enabled: !NetworkService.airplaneModeEnabled && BluetoothService.bluetoothAvailable && !BluetoothService.blocked
             onToggled: checked => BluetoothService.setBluetoothEnabled(checked)
             Layout.alignment: Qt.AlignVCenter
           }
@@ -196,16 +196,17 @@ Item {
       id: connectedDevicesBox
       visible: root.connectedDevices.length > 0 && BluetoothService.enabled
       Layout.fillWidth: true
-      Layout.preferredHeight: connectedDevicesCol.implicitHeight + Style.marginXL
+      Layout.preferredHeight: connectedDevicesCol.implicitHeight + Style.margin2M
       border.color: showOnlyLists ? Style.boxBorderColor : "transparent"
+      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: connectedDevicesCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginM : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginM : 0
+        anchors.leftMargin: showOnlyLists ? Style.marginL : 0
+        anchors.rightMargin: showOnlyLists ? Style.marginL : 0
         spacing: Style.marginM
 
         NLabel {
@@ -226,16 +227,17 @@ Item {
       id: pairedDevicesBox
       visible: root.pairedDevices.length > 0 && BluetoothService.enabled
       Layout.fillWidth: true
-      Layout.preferredHeight: pairedDevicesCol.implicitHeight + Style.marginXL
+      Layout.preferredHeight: pairedDevicesCol.implicitHeight + Style.margin2M
       border.color: showOnlyLists ? Style.boxBorderColor : "transparent"
+      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: pairedDevicesCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginM : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginM : 0
+        anchors.leftMargin: showOnlyLists ? Style.marginL : 0
+        anchors.rightMargin: showOnlyLists ? Style.marginL : 0
         spacing: Style.marginM
 
         NLabel {
@@ -256,16 +258,15 @@ Item {
       id: availableDevicesBox
       visible: !root.showOnlyLists && root.unnamedAvailableDevices.length > 0 && BluetoothService.enabled
       Layout.fillWidth: true
-      Layout.preferredHeight: availableDevicesCol.implicitHeight + Style.marginXL
+      Layout.preferredHeight: availableDevicesCol.implicitHeight + Style.margin2M
       border.color: "transparent"
+      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: availableDevicesCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginM : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginM : 0
         spacing: Style.marginM
 
         RowLayout {
@@ -306,7 +307,7 @@ Item {
       id: miscSettingsBox
       visible: !root.showOnlyLists && BluetoothService.enabled
       Layout.fillWidth: true
-      Layout.preferredHeight: miscSettingsCol.implicitHeight + (Style.marginXL * 2)
+      Layout.preferredHeight: miscSettingsCol.implicitHeight + Style.margin2XL
       color: Color.mSurface
 
       ColumnLayout {
@@ -314,6 +315,13 @@ Item {
         anchors.fill: parent
         anchors.margins: Style.marginXL
         spacing: Style.marginM
+
+        NToggle {
+          label: I18n.tr("panels.connections.bluetooth-auto-connect-label")
+          description: I18n.tr("panels.connections.bluetooth-auto-connect-description")
+          checked: Settings.data.network.bluetoothAutoConnect
+          onToggled: checked => Settings.data.network.bluetoothAutoConnect = checked
+        }
 
         NToggle {
           label: I18n.tr("panels.connections.hide-unnamed-devices-label")
@@ -368,20 +376,25 @@ Item {
       readonly property bool isBusy: BluetoothService.isDeviceBusy(modelData)
       readonly property bool isExpanded: root.expandedDeviceKey === BluetoothService.deviceKey(modelData)
 
-      function getContentColor(defaultColor = Color.mOnSurface) {
-        if (modelData.pairing || modelData.state === BluetoothDeviceState.Connecting)
-          return Color.mPrimary;
-        if (modelData.blocked || modelData.state === BluetoothDeviceState.Disconnecting)
-          return Color.mError;
-        return defaultColor;
+      function getContentColors(defaultColors = [Color.mSurface, Color.mOnSurface]) {
+        if (modelData.pairing || modelData.state === BluetoothDeviceState.Connecting) {
+          return [Color.mPrimary, Color.mOnPrimary];
+        }
+        if (modelData.connected && modelData.state !== BluetoothDeviceState.Disconnecting) {
+          return [Color.mPrimary, Color.mOnPrimary];
+        }
+        if (modelData.blocked || modelData.state === BluetoothDeviceState.Disconnecting) {
+          return [Color.mError, Color.mOnError];
+        }
+        return defaultColors;
       }
 
       Layout.fillWidth: true
       Layout.preferredHeight: deviceColumn.implicitHeight + (Style.marginXL)
       radius: Style.radiusM
       clip: true
-
-      color: (modelData.connected && modelData.state !== BluetoothDeviceState.Disconnecting) ? Qt.alpha(Color.mPrimary, 0.15) : Color.mSurface
+      forceOpaque: true
+      color: device.getContentColors()[0]
 
       ColumnLayout {
         id: deviceColumn
@@ -396,10 +409,11 @@ Item {
           Layout.alignment: Qt.AlignVCenter
 
           NIcon {
+            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+            horizontalAlignment: Text.AlignLeft
             icon: BluetoothService.getDeviceIcon(modelData)
             pointSize: Style.fontSizeXXL
-            color: modelData.connected ? Color.mPrimary : device.getContentColor(Color.mOnSurface)
-            Layout.alignment: Qt.AlignVCenter
+            color: device.getContentColors()[1]
           }
 
           ColumnLayout {
@@ -411,7 +425,7 @@ Item {
               pointSize: Style.fontSizeM
               font.weight: modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
               elide: Text.ElideRight
-              color: device.getContentColor(Color.mOnSurface)
+              color: device.getContentColors()[1]
               Layout.fillWidth: true
             }
 
@@ -430,7 +444,7 @@ Item {
               }
               visible: text !== ""
               pointSize: Style.fontSizeXS
-              color: device.getContentColor(Color.mOnSurfaceVariant)
+              color: Qt.alpha(device.getContentColors([Color.mSurfaceVariant, Color.mOnSurfaceVariant])[1], Style.opacityHeavy)
             }
 
             RowLayout {
@@ -442,7 +456,7 @@ Item {
                   return BatteryService.getIcon(b !== null ? b : 0, false, false, b !== null);
                 }
                 pointSize: Style.fontSizeXS
-                color: device.getContentColor(Color.mOnSurface)
+                color: Qt.alpha(device.getContentColors()[1], Style.opacityHeavy)
               }
               NText {
                 text: {
@@ -450,7 +464,7 @@ Item {
                   return b === null ? "-" : (b + "%");
                 }
                 pointSize: Style.fontSizeXS
-                color: device.getContentColor(Color.mOnSurfaceVariant)
+                color: Qt.alpha(device.getContentColors([Color.mSurfaceVariant, Color.mOnSurfaceVariant])[1], Style.opacityHeavy)
               }
             }
           }
@@ -462,11 +476,22 @@ Item {
           RowLayout {
             spacing: Style.marginS
 
+            NBusyIndicator {
+              visible: isBusy
+              running: visible && root.effectivelyVisible
+              color: device.getContentColors()[1]
+              size: Style.baseWidgetSize * 0.5
+            }
+
             NIconButton {
-              visible: modelData.connected
+              visible: modelData.connected && modelData.state !== BluetoothDeviceState.Disconnecting
               icon: "info"
               tooltipText: I18n.tr("common.info")
-              baseSize: Style.baseWidgetSize * 0.8
+              baseSize: Style.baseWidgetSize * 0.75
+              colorBg: Color.mSurfaceVariant
+              colorFg: Color.mOnSurface
+              colorBorder: "transparent"
+              colorBorderHover: "transparent"
               onClicked: {
                 const key = BluetoothService.deviceKey(modelData);
                 root.expandedDeviceKey = (root.expandedDeviceKey === key) ? "" : key;
@@ -477,17 +502,21 @@ Item {
               visible: !root.showOnlyLists && (modelData.paired || modelData.trusted) && !modelData.connected && !isBusy && !modelData.blocked
               icon: "trash"
               tooltipText: I18n.tr("common.unpair")
-              baseSize: Style.baseWidgetSize * 0.8
+              baseSize: Style.baseWidgetSize * 0.75
+              colorBg: Color.mPrimary
+              colorFg: Color.mOnPrimary
+              colorBorder: "transparent"
+              colorBorderHover: "transparent"
               onClicked: BluetoothService.unpairDevice(modelData)
             }
 
             NButton {
               id: button
-              visible: (modelData.state !== BluetoothDeviceState.Connecting)
+              visible: modelData.state !== BluetoothDeviceState.Connecting && modelData.state !== BluetoothDeviceState.Disconnecting
               enabled: (canConnect || canDisconnect || (root.showOnlyLists ? false : canPair)) && !isBusy
-              outlined: !button.hovered
               fontSize: Style.fontSizeS
-              backgroundColor: modelData.connected ? Color.mError : Color.mPrimary
+              backgroundColor: modelData.connected ? Color.mSurfaceVariant : Color.mPrimary
+              textColor: modelData.connected ? Color.mOnSurface : Color.mOnPrimary
               text: {
                 if (modelData.pairing)
                   return I18n.tr("common.pairing");
@@ -499,7 +528,6 @@ Item {
                   return I18n.tr("common.pair");
                 return I18n.tr("common.connect");
               }
-              icon: (isBusy ? "busy" : null)
               onClicked: {
                 if (modelData.connected) {
                   BluetoothService.disconnectDevice(modelData);
@@ -519,11 +547,11 @@ Item {
         Rectangle {
           visible: device.isExpanded
           Layout.fillWidth: true
-          implicitHeight: infoColumn.implicitHeight + Style.marginS * 2
-          radius: Style.radiusS
+          implicitHeight: infoColumn.implicitHeight + Style.margin2S
+          radius: Style.radiusXS
           color: Color.mSurfaceVariant
           border.width: Style.borderS
-          border.color: Color.mOutline
+          border.color: Style.boxBorderColor
           clip: true
 
           NIconButton {
@@ -532,12 +560,10 @@ Item {
             anchors.margins: Style.marginS
             icon: root.detailsGrid ? "layout-list" : "layout-grid"
             tooltipText: root.detailsGrid ? I18n.tr("tooltips.list-view") : I18n.tr("tooltips.grid-view")
-            baseSize: Style.baseWidgetSize * 0.8
+            baseSize: Style.baseWidgetSize * 0.65
             onClicked: {
               root.detailsGrid = !root.detailsGrid;
-              if (Settings.data && Settings.data.ui) {
-                Settings.data.network.bluetoothDetailsViewMode = root.detailsGrid ? "grid" : "list";
-              }
+              Settings.data.network.bluetoothDetailsViewMode = root.detailsGrid ? "grid" : "list";
             }
             z: 1
           }
@@ -546,10 +572,13 @@ Item {
             id: infoColumn
             anchors.fill: parent
             anchors.margins: Style.marginS
+            flow: root.detailsGrid ? GridLayout.TopToBottom : GridLayout.LeftToRight
+            rows: root.detailsGrid ? 3 : 6
             columns: root.detailsGrid ? 2 : 1
             columnSpacing: Style.marginM
             rowSpacing: Style.marginXS
 
+            // --- Item 1: Signal Strength ---
             RowLayout {
               Layout.fillWidth: true
               Layout.preferredWidth: 1
@@ -566,6 +595,8 @@ Item {
                 Layout.fillWidth: true
               }
             }
+
+            // --- Item 2: Battery ---
             RowLayout {
               Layout.fillWidth: true
               Layout.preferredWidth: 1
@@ -588,8 +619,10 @@ Item {
                 Layout.fillWidth: true
               }
             }
+            // --- Item 3: Pair state ---
             RowLayout {
               Layout.fillWidth: true
+              Layout.preferredWidth: 1
               spacing: Style.marginXS
               NIcon {
                 icon: "link"
@@ -603,8 +636,10 @@ Item {
                 Layout.fillWidth: true
               }
             }
+            // --- Item 4: Trust state ---
             RowLayout {
               Layout.fillWidth: true
+              Layout.preferredWidth: 1
               spacing: Style.marginXS
               NIcon {
                 icon: "shield-check"
@@ -618,9 +653,10 @@ Item {
                 Layout.fillWidth: true
               }
             }
+            // --- Item 5: Address ---
             RowLayout {
               Layout.fillWidth: true
-              Layout.columnSpan: infoColumn.columns === 2 ? 2 : 1
+              Layout.preferredWidth: 1
               spacing: Style.marginXS
               NIcon {
                 icon: "hash"
@@ -632,6 +668,25 @@ Item {
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
                 Layout.fillWidth: true
+              }
+            }
+            // --- Item 6: Auto-connect ---
+            RowLayout {
+              Layout.fillWidth: true
+              Layout.preferredWidth: 1
+              Layout.topMargin: -Style.marginXXS
+              spacing: Style.marginXS
+              visible: Settings.data.network.bluetoothAutoConnect
+              NIcon {
+                icon: BluetoothService.getDeviceAutoConnect(modelData) ? "repeat" : "repeat-off"
+                pointSize: Style.fontSizeXS
+              }
+              NCheckbox {
+                label: I18n.tr("common.auto-connect")
+                labelSize: Style.fontSizeXS
+                baseSize: Style.baseWidgetSize * 0.5
+                checked: BluetoothService.getDeviceAutoConnect(modelData)
+                onToggled: checked => BluetoothService.setDeviceAutoConnect(modelData, checked)
               }
             }
           }
@@ -646,7 +701,7 @@ Item {
     visible: !root.showOnlyLists && BluetoothService.pinRequired
     anchors.centerIn: parent
     width: Math.min(parent.width * 0.9, 400)
-    height: pinCol.implicitHeight + Style.marginL * 2
+    height: pinCol.implicitHeight + Style.margin2L
     color: Color.mSurface
     radius: Style.radiusM
     border.color: Style.boxBorderColor
@@ -699,7 +754,7 @@ Item {
             inputItem.forceActiveFocus();
           }
         }
-        inputItem.onAccepted: {
+        inputItem.onEditingFinished: {
           if (text.length > 0) {
             BluetoothService.submitPin(text);
             text = "";

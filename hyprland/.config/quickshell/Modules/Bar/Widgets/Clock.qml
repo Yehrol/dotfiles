@@ -18,7 +18,7 @@ Item {
   property int sectionWidgetIndex: -1
   property int sectionWidgetsCount: 0
 
-  property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId]
+  property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId] ?? {}
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
@@ -48,8 +48,8 @@ Item {
   readonly property color textColor: Color.resolveColorKey(clockColor)
 
   // Content dimensions for implicit sizing
-  readonly property real contentWidth: isBarVertical ? capsuleHeight : Math.round((isBarVertical ? verticalLoader.implicitWidth : horizontalLoader.implicitWidth) + Style.marginXL)
-  readonly property real contentHeight: isBarVertical ? Math.round(verticalLoader.implicitHeight + Style.marginS * 2) : capsuleHeight
+  readonly property real contentWidth: isBarVertical ? capsuleHeight : Math.round((isBarVertical ? verticalLoader.implicitWidth : horizontalLoader.implicitWidth) + Style.margin2M)
+  readonly property real contentHeight: isBarVertical ? Math.round(verticalLoader.implicitHeight + Style.margin2S) : capsuleHeight
 
   // Size: use implicit width/height
   // BarWidgetLoader sets explicit width/height to extend click area
@@ -105,6 +105,9 @@ Item {
               color: textColor
               wrapMode: Text.WordWrap
               Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+              features: ({
+                           "tnum": 1
+                         })
             }
           }
         }
@@ -129,6 +132,9 @@ Item {
               color: textColor
               wrapMode: Text.WordWrap
               Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+              features: ({
+                           "tnum": 1
+                         })
             }
           }
         }
@@ -181,7 +187,7 @@ Item {
     hoverEnabled: true
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onEntered: {
-      if (!PanelService.getPanel("clockPanel", screen)?.active) {
+      if (!PanelService.getPanel("clockPanel", screen)?.isPanelOpen) {
         TooltipService.show(root, buildTooltipText(), BarService.getTooltipDirection(root.screen?.name));
         tooltipRefreshTimer.start();
       }
@@ -205,7 +211,7 @@ Item {
     interval: 1000
     repeat: true
     onTriggered: {
-      if (clockMouseArea.containsMouse && !PanelService.getPanel("clockPanel", screen)?.active) {
+      if (clockMouseArea.containsMouse && !PanelService.getPanel("clockPanel", screen)?.isPanelOpen) {
         TooltipService.updateText(buildTooltipText());
       }
     }

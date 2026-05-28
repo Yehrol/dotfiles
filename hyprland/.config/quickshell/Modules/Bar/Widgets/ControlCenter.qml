@@ -21,7 +21,7 @@ NIconButton {
   property int sectionWidgetIndex: -1
   property int sectionWidgetsCount: 0
 
-  property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId]
+  property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId] ?? {}
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
@@ -43,24 +43,19 @@ NIconButton {
   readonly property color iconColor: {
     if (!enableColorization)
       return Color.mOnSurface;
-    switch (colorizeSystemIcon) {
-    case "primary":
-      return Color.mPrimary;
-    case "secondary":
-      return Color.mSecondary;
-    case "tertiary":
-      return Color.mTertiary;
-    case "error":
-      return Color.mError;
-    default:
-      return Color.mOnSurface;
-    }
+    return Color.resolveColorKey(colorizeSystemIcon);
   }
 
   // If we have a custom path and not using distro logo, use the theme icon.
   // If using distro logo, don't use theme icon.
   icon: (customIconPath === "" && !useDistroLogo) ? customIcon : ""
-  tooltipText: I18n.tr("tooltips.open-control-center")
+  tooltipText: {
+    if (!screen || PanelService.getPanel("controlCenterPanel", screen)?.isPanelOpen) {
+      return "";
+    } else {
+      return I18n.tr("tooltips.open-control-center");
+    }
+  }
   tooltipDirection: BarService.getTooltipDirection(screen?.name)
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
