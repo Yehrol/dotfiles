@@ -13,11 +13,6 @@ local browserPerso = "firefox" -- --profile "/home/yehrol/.mozilla/firefox/4seUQ
 local calendar = "thunderbird"
 local reloadHypr = "hyprctl reload && notify-send \"Hyprland configuration reloaded\""
 
--- ------------------------------------ OPT ----------------------------------- #
-local discord = "vesktop --start-minimized"
-local musicPlayer = "spotify-launcher" -- feishin
-local gameLauncher = "lutris"
-
 -- ---------------------------------- DESKTOP --------------------------------- #
 local openhue = "openhue set room Chambre -b"
 local brightness0 = "ddcutil setvcp 10 0 --display 1 & ddcutil setvcp 10 0 --display 2 & ddcutil setvcp 10 0 --display 3"
@@ -30,31 +25,25 @@ local brightness2 = "ddcutil setvcp 10 25 --display 1 & ddcutil setvcp 10 25 --d
 
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
--- ----------------------- RELOAD HYPRLAND CONFIGURATION ---------------------- #
-hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd(reloadHypr))
-
--- --------------------------- MINI KEYBOARD CONTROL -------------------------- #
-hl.bind(mainMod .. " + CTRL + ALT + 1", hl.dsp.exec_cmd(brightness0))
-hl.bind(mainMod .. " + CTRL + ALT + 2", hl.dsp.exec_cmd(brightness1))
-hl.bind(mainMod .. " + CTRL + ALT + 3", hl.dsp.exec_cmd(brightness2))
-hl.bind(mainMod .. " + CTRL + ALT + 4", hl.dsp.exec_cmd("~/git/dmh.sh"))
-hl.bind(mainMod .. " + CTRL + ALT + 5", hl.dsp.exec_cmd(openhue .. " 1"))
-hl.bind(mainMod .. " + CTRL + ALT + 6", hl.dsp.exec_cmd(openhue .. " 50"))
-hl.bind(mainMod .. " + CTRL + ALT + 7", hl.dsp.exec_cmd(openhue .. " 80"))
-hl.bind(mainMod .. " + CTRL + ALT + 8", hl.dsp.exec_cmd(openhue .. " 100"))
--- 9 : last button on third row. others are media control
-hl.bind(mainMod .. " + CTRL + ALT + 9", hl.dsp.exec_cmd(reloadHypr))
-
 -- ---------------------------- LAUNCH APPLICATION ---------------------------- #
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(launcher))
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browserPerso))
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("$browserWork"))
--- bind = $mainMod, D, exec, $discord
--- bind = $mainMod, G, exec, $gameLauncher
--- bind = $mainMod, M, exec, $musicPlayer
+-- hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(browserWork))
 hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd(screenshot))
+
+-- --------------------------- MINI KEYBOARD CONTROL -------------------------- #
+hl.bind(mainMod .. " + CTRL + ALT + 1", hl.dsp.exec_cmd(brightness0))
+hl.bind(mainMod .. " + CTRL + ALT + 2", hl.dsp.exec_cmd(brightness1))
+hl.bind(mainMod .. " + CTRL + ALT + 3", hl.dsp.exec_cmd(brightness2))
+-- hl.bind(mainMod .. " + CTRL + ALT + 4", hl.dsp.exec_cmd("~/git/dmh.sh"))
+hl.bind(mainMod .. " + CTRL + ALT + 5", hl.dsp.exec_cmd(openhue .. " 1"))
+hl.bind(mainMod .. " + CTRL + ALT + 6", hl.dsp.exec_cmd(openhue .. " 50"))
+hl.bind(mainMod .. " + CTRL + ALT + 7", hl.dsp.exec_cmd(openhue .. " 80"))
+hl.bind(mainMod .. " + CTRL + ALT + 8", hl.dsp.exec_cmd(openhue .. " 100"))
+-- 9 : last button on third row. the 3 before are media control
+hl.bind(mainMod .. " + CTRL + ALT + 9", hl.dsp.exec_cmd(reloadHypr))
 
 -- ----------------------------------- AUDIO ---------------------------------- #
 -- bindel = ,XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+

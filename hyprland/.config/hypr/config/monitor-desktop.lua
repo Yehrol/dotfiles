@@ -95,19 +95,9 @@ hl.workspace_rule({
     persistent = true,
 })
 
+-- when third monitor is plugged
 -- workspace = 6, monitor:HDMI-A-1, persistent:true
 -- workspace = 7, monitor:HDMI-A-1, persistent:true
 -- workspace = 8, monitor:HDMI-A-1, persistent:true
 -- workspace = 9, monitor:HDMI-A-1, persistent:true
 -- workspace = 10,monitor:HDMI-A-1, persistent:true
-
--- ============================================================================ #
---                                     EXEC                                     #
--- ============================================================================ #
-
-hl.on("hyprland.start", function()
-    hl.exec_cmd("$browserPerso", { workspace = "1" })
-    hl.exec_cmd("$musicPlayer", { workspace = "6 silent" })
-    hl.exec_cmd("$calendar", { workspace = "7 silent" })
-    hl.exec_cmd("sleep 2 && $discord", { workspace = "8 silent" })
-end)
