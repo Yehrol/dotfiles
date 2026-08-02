@@ -5,7 +5,6 @@
 require("config.monitor-desktop")
 -- require("config.monitor-laptop")
 
--- require("config.programs")
 require("config.autostart")
 -- require("config.environment") -- Only when not using uwsm
 require("config.esthetic")

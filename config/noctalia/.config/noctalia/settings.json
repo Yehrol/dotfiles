@@ -46,7 +46,7 @@
         "barType": "floating",
         "capsuleColorKey": "none",
         "capsuleOpacity": 0.9500000000000001,
-        "contentPadding": 2,
+        "contentPadding": 0,
         "density": "spacious",
         "displayMode": "always_visible",
         "enableExclusionZoneInset": true,
@@ -176,7 +176,8 @@
                         "Nextcloud: Last sync was successful.",
                         "udiskie",
                         "CoolerControl",
-                        "OpenRGB"
+                        "OpenRGB",
+                        "DL speed: *"
                     ]
                 },
                 {
@@ -657,10 +658,6 @@
     },
     "templates": {
         "activeTemplates": [
-            {
-                "enabled": true,
-                "id": "hyprland"
-            }
         ],
         "enableUserTheming": false
     },

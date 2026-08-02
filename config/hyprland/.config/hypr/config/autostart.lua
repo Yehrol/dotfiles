@@ -9,9 +9,11 @@ hl.on("hyprland.start", function()
     -- hl.exec_cmd("uwsm app -- solaar -w hide")
     -- hl.exec_cmd("systemctl --user start hyprpolkitagent")
     -- hl.exec_cmd("systemctl start input-remapper")
+end)
 
-    -- DESKTOP ONLY
-    -- TODO find a way to trigger only on desktop
+-- DESKTOP ONLY
+-- TODO find a way to trigger only on desktop
+hl.on("hyprland.start", function()
     hl.exec_cmd("firefox", { workspace = "1" })
     hl.exec_cmd("spotify-launcher", { workspace = "6 silent" }) -- feishin
     hl.exec_cmd("thunderbird", { workspace = "7 silent" })

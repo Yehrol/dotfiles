@@ -10,7 +10,6 @@ local fileManager = "thunar" -- TODO: switch to yazi ?
 local screenshot = "hyprshot -m region"
 local browserPerso = "firefox" -- --profile "/home/yehrol/.mozilla/firefox/4seUQjF1.Profile 1" # FIXME no way of doing this with new profile for now
 -- $browserWork = firefox #-P "Work" # FIXME no way of doing this with new profile for now
-local calendar = "thunderbird"
 local reloadHypr = "hyprctl reload && notify-send \"Hyprland configuration reloaded\""
 
 -- ---------------------------------- DESKTOP --------------------------------- #
