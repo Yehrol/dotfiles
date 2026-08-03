@@ -1,6 +1,6 @@
-curl -sL https://github.com/noctalia-dev/noctalia-shell/releases/latest/download/noctalia-latest.tar.gz | tar -xz --strip-components=1 -C ~/dotfiles/hyprland/.config/quickshell
+curl -sL https://github.com/noctalia-dev/noctalia-shell/releases/latest/download/noctalia-latest.tar.gz | tar -xz --strip-components=1 -C ~/dotfiles/config/hyprland/.config/quickshell
 
-STYLE_FILE=~/dotfiles/hyprland/.config/quickshell/Commons/Style.qml
+STYLE_FILE=~/dotfiles/config/hyprland/.config/quickshell/Commons/Style.qml
 
 if [[ ! -f "$STYLE_FILE" ]]; then
 	echo "Error: missing file: $STYLE_FILE" >&2

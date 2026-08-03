@@ -677,7 +677,7 @@
     },
     "wallpaper": {
         "automationEnabled": false,
-        "directory": "/home/yehrol/Pictures/Wallpapers",
+        "directory": "/home/yehrol/dotfiles/esthetic/wallpapers",
         "enableMultiMonitorDirectories": false,
         "enabled": true,
         "favorites": [

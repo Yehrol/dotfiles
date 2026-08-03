@@ -221,15 +221,15 @@
         },
         "escape": true,
         "on-click": "playerctl --player=spotify play-pause",
-        // "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py 2> /dev/null" // TODO: DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
-        "exec": "$HOME/dotfiles/hyprland/.config/waybar/scripts/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+        // "exec": "$HOME/dotfiles/config/hyprland/.config/waybar/scripts/mediaplayer.py 2> /dev/null" // TODO: DONT FORGET TO MAKE THE SCRIPT EXECUTABLE
+        "exec": "$HOME/dotfiles/config/hyprland/.config/waybar/scripts/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "custom/power": {
         "format" : " ",
 		"tooltip": false,
         "on-click": "wlogout" // FIXME: style bugged
 		// "menu": "on-click",
-		// "menu-file": "$HOME/dotfiles/hyprland/.config/waybar/power_menu.xml",
+		// "menu-file": "$HOME/dotfiles/config/hyprland/.config/waybar/power_menu.xml",
 		// "menu-actions": {
 		// 	"lock": "hyprlock",
 		// 	"shutdown": "shutdown -h now",

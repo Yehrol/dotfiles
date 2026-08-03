@@ -6,9 +6,6 @@
 
 ## Usage
 
-
-`stow --target ~ .`
-
 1. clone the repo in the home folder
 2. `stow <package name>` to load a package (ex: `stow zsh` inside `dotfiles`)
    - `stow -t <target-dir> <package name>` to select target dir (ex: `stow -t /etc/coolercontrol cooler-control`)
@@ -25,7 +22,7 @@ localectl set-x11-keymap ch
 
 ### theme
 
-- copy the dir `dotfiles/themes/sddm/abstractdark-sddm-theme` to `/usr/share/sddm/themes`
+- copy the dir `dotfiles/esthetic/themes/sddm/abstractdark-sddm-theme` to `/usr/share/sddm/themes`
 - edit the file `/etc/sddm.conf` and set to:
 
 ```
@@ -35,7 +32,7 @@ Current=abstractdark-sddm-theme
 
 ## Grub
 
-- copy the right dir in `dotfiles/themes/grub` to `/boot/grub/themes` and rename it to `yorha`
+- copy the right dir in `dotfiles/esthetic/themes/grub` to `/boot/grub/themes` and rename it to `yorha`
 - edit the file `/etc/default/grub` and set `GRUB_THEME="/boot/grub/themes/yorha/theme.txt"`
 - update grub `sudo grub-mkconfig -o /boot/grub/grub.cfg`
 

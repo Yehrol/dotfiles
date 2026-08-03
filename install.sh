@@ -2,6 +2,12 @@
 # Should check if the packages are already installed, the os and add arguments
 # to select what to install
 
+# YAY
+sudo pacman -S --needed git base-devel
+git clone https://aur.archlinux.org/yay.git
+cd yay
+makepkg -si
+
 # Oh My Posh
 curl -s https://ohmyposh.dev/install.sh | bash -s
 oh-my-posh font install JetBrainsMono
@@ -25,3 +31,7 @@ sudo pacman -S fzf
 # thunar_archive_plugin # TODO change
 # file-roller # TODO change
 # ...
+
+# things to install and setup
+# rclone
+# nextcloud

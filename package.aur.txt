@@ -1,0 +1,13 @@
+input-remapper-git
+openhue-cli
+rtl8761b-firmware
+vesktop
+snap-pac-grub
+xpadneo-dkms
+xwaylandvideobridge
+coolercontrol
+visual-studio-code-bin
+
+xivlauncher
+
+noctalia-qs 0.0.12-1
