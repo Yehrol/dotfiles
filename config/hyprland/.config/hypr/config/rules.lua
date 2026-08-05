@@ -27,7 +27,7 @@ local floatClass = {
     ".*blueman-manager.*",
     ".*nm-connection-editor.*",
     ".*coolercontrol.*",
-    ".*Dofus.*",
+    -- ".*Dofus.*",
     ".*Ganymede.*",
     ".*Waydroid.*",
     ".*pavucontrol.*",
@@ -181,13 +181,13 @@ hl.window_rule({
 -- })
 
 -- ------------------------------- SIZE/POSITION ------------------------------ #
-hl.window_rule({
-    match = {
-        class = ".*Dofus.*",
-    },
-    size = "2536 1365",
-    center = true,
-})
+-- hl.window_rule({
+--     match = {
+--         class = ".*Dofus.*",
+--     },
+--     size = "2536 1365",
+--     center = true,
+-- })
 
 hl.window_rule({
     match = {
@@ -200,14 +200,5 @@ hl.window_rule({
 })
 
 -- ------------------------ POPUP/DROPDOWN CLOSING FIX ------------------------ #
--- FIXME: causes issue if need to grant access from browser
-hl.window_rule({
-    match = {
-        title = "^Nextcloud$",
-    },
-    stay_focused = true,
-})
-
--- windowrule = min_size 1 1, title:.*Nextcloud.*
 -- windowrule = stay_focused on, match:class ^zoom$
 -- windowrule = stayfocused, title:^menu window$, class:^zoom$
