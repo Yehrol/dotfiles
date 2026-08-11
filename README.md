@@ -43,20 +43,13 @@ Current=abstractdark-sddm-theme
 ## UWSM
 - TODO clean
 ```
-systemctl --user enable --now hyprpolkitagent.service
-input-remapper
-env var
-```
-
-## Packages
-
-```
-gnome-keyring
+sudo systemctl --user enable --now hyprpolkitagent.service
+sudo systemctl --user enable --now input-remapper
 ```
 
 ## Noctalia scaling
 
-- change value of in `noctalia-shell/Commons/Style.qml`
+- change value in `noctalia-shell/Commons/Style.qml`
   - in 3.8, change value of `readonly property real capsuleHeight` (set comfortable to 1)
   - in 4.3, change `spacious` of `getCapsuleHeightForDensity` to `0.80`
 
@@ -82,13 +75,6 @@ set `MAKEFLAGS="--jobs=$(nproc)"` in /etc/makepkg.conf to use all core
 
 - https://wiki.archlinux.org/title/Snapper#Booting_into_read-only_snapshots
 - add `grub-btrfs-overlayfs` to the end of the `HOOKS` array in `/etc/mkinitcpio.conf`, then `mkinitcpio -P` to regenerate initramfs
-
-# TODO
-
-- add all required packages to install
-- clean files
-  - zshenv, zshrc
-- auto install/setup script
 
 ## Polkit
 - https://wiki.archlinux.org/title/Polkit#Bypass_password_prompt
