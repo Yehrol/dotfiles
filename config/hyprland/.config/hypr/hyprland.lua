@@ -1,9 +1,16 @@
 -- Refer to the wiki for more information.
 -- https://wiki.hypr.land/Configuring/Start/
 
--- TODO: detect which machine and loading config accordingly
-require("config.monitor-desktop")
--- require("config.monitor-laptop")
+require("lib.hostname")
+local hostname = getHostnameSuffix() 
+
+if hostname == "desktop" then
+	require("config.monitor-desktop")
+elseif hostname == "laptop" then
+	require("config.monitor-laptop")
+else
+	-- TODO error notif ?
+end
 
 require("config.autostart")
 -- require("config.environment") -- Only when not using uwsm
@@ -13,14 +20,3 @@ require("config.input")
 require("config.keybinds")
 require("config.rules")
 require("noctalia.noctalia-colors")
-
-
--- NOTE desktop/laptop detection
--- local function getHostname()
---     local f = io.popen ("/bin/hostname")
---     local hostname = f:read("*a") or ""
---     f:close()
---     hostname =string.gsub(hostname, "\n$", "")
---     return hostname
--- end
--- local host = getHostname() 
