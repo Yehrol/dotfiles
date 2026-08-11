@@ -53,7 +53,7 @@ eval "$(oh-my-posh init zsh --config $HOME/.config/oh-my-posh/omp.toml)"
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}' # ignore case
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}" # color completion
 zstyle ':completion:*' menu no
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath' # FIXME: find a way to see hidden files
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -a --color $realpath' # FIXME: find a way to see hidden files
 
 # ============================================================================ #
 #                               SHELL INTEGRATION                              #
@@ -61,7 +61,3 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath' # FIXME: find
 # TODO: check if and how it is installed
 eval "$(fzf --zsh)"
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh # git installed
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
