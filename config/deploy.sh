@@ -10,3 +10,5 @@ stow --target ~ retroarch
 stow --target ~ udiskie
 stow --target ~ uwsm
 stow --target ~ zsh
+
+# stow --target ~ */ # TODO test and fix if needed
