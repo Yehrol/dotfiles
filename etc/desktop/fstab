@@ -1,0 +1,32 @@
+# Static information about the filesystems.
+# See fstab(5) for details.
+
+# <file system> <dir> <type> <options> <dump> <pass>
+
+# Root filesystem
+UUID=85eb44c9-12c6-4188-ab9c-b05a0b55c13b /               btrfs  rw,relatime,ssd,discard=async,nospace_cache,subvol=@          0 0
+
+# Home subvolume
+UUID=85eb44c9-12c6-4188-ab9c-b05a0b55c13b /home           btrfs  rw,relatime,ssd,discard=async,nospace_cache,subvol=@home      0 0
+
+# Snapshots subvolume
+UUID=85eb44c9-12c6-4188-ab9c-b05a0b55c13b /.snapshots     btrfs  rw,relatime,ssd,discard=async,nospace_cache,subvol=@snapshots 0 0
+
+# Btrfs top-level subvolume
+UUID=85eb44c9-12c6-4188-ab9c-b05a0b55c13b /.btrfsroot    btrfs  rw,relatime,ssd,discard=async,nospace_cache,subvol=/          0 0
+
+# EFI partition
+UUID=8CD6-649D /efi vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro 0 2
+
+# Swap
+/swap/swapfile none swap defaults 0 0
+
+# Additional storage
+UUID=08041859-2ef3-4d70-a084-3e6ad907fb50 /mnt/nvme_games    auto nosuid,nodev,nofail 0 0
+UUID=3b1c45e4-7f20-4af7-aa1c-b0463e58c4f5 /mnt/sata_ssd_1tb  auto nosuid,nodev,nofail 0 0
+UUID=737f9b50-9b04-475d-ad73-38c195cd3ff9 /mnt/sata_ssd_2tb  auto nosuid,nodev,nofail 0 0
+
+# Disabled storage
+#UUID=0fb141ab-ac1a-40f8-b67b-bfacb198d83e /mnt/sata_ssd_files auto nosuid,nodev,nofail 0 0
+#UUID=b06cfd6f-f97e-44c5-bc14-ff96c7ca0915 /mnt/hdd_backup     auto nosuid,nodev,nofail 0 0
+#UUID=8e1dc1f0-10b4-46db-91bf-c093980d293e /mnt/nvme_1tb       auto nosuid,nodev,nofail 0 0
