@@ -1,0 +1,121 @@
+# explicit installed : pacman -Qqe
+
+# Base
+amd-ucode
+base
+base-devel
+blueman
+brightnessctl
+cmake
+# dhcpcd
+efibootmgr
+git
+git-lfs
+grub
+grub-btrfs
+# iwd
+libnewt
+linux
+linux-firmware
+linux-headers
+linux-lts
+linux-lts-headers
+make
+networkmanager
+snap-pac
+snapper
+sudo
+uwsm
+
+# Hyprland
+hyprland
+hyprpolkitagent
+xdg-desktop-portal-gtk
+xdg-desktop-portal-hyprland
+xorg-xhost
+
+# Fonts
+noto-fonts
+# noto-fonts-cjk
+noto-fonts-extra
+# otf-font-awesome
+ttf-nerd-fonts-symbols-mono
+# ttf-noto-nerd
+# ttf-ubuntu-nerd
+# woff2-font-awesome
+
+# Cli
+alacritty
+ansible
+bat
+btop
+duf
+fastfetch
+fzf
+htop
+jq
+jujutsu
+kitty
+lazygit
+npm
+nvtop
+rclone
+stow
+tldr
+tmux
+wget
+yay
+zip
+zsh
+
+# Gaming
+gamemode
+goverlay
+lutris
+mangohud
+retroarch
+retroarch-assets-ozone
+retroarch-assets-xmb
+steam
+
+# 
+btrfs-assistant
+calibre
+cups
+docker
+docker-compose
+feishin
+file-roller
+filezilla
+firefox
+flameshot
+flatpak
+gedit
+gimp
+gnome-keyring
+gparted
+keepassxc
+mpv
+nano
+neovim
+network-manager-applet
+nextcloud-client
+noctalia-qs
+nwg-look
+obs-studio
+obsidian
+openrgb
+pavucontrol
+playerctl
+protontricks
+qbittorrent
+sbt
+signal-desktop
+solaar
+spotify-launcher
+thunar
+thunar-archive-plugin
+thunderbird
+timeshift
+udiskie
+vlc

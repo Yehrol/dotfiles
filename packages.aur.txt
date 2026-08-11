@@ -1,0 +1,23 @@
+# explicit installed : pacman -Qqe
+
+# Base
+rtl8761b-firmware
+snap-pac-grub
+# snapper-rollback
+xwaylandvideobridge
+
+# Hyprland
+noctalia-qs
+
+# Cli
+openhue-cli
+
+# Gaming
+xivlauncher
+
+#
+coolercontrol
+input-remapper-git
+vesktop
+visual-studio-code-bin
+xpadneo-dkms
