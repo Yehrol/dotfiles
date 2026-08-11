@@ -36,7 +36,7 @@ xorg-xhost
 
 # Fonts
 noto-fonts
-# noto-fonts-cjk
+noto-fonts-cjk
 noto-fonts-extra
 # otf-font-awesome
 ttf-nerd-fonts-symbols-mono
@@ -94,6 +94,7 @@ gedit
 gimp
 gnome-keyring
 gparted
+inetutils
 keepassxc
 mpv
 nano
